@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-use ./hosts.nu 
+use ./hosts.nu
 use ./hosts.nu get_available_host_names
 use ./hosts.nu get_available_hosts
 use ./hosts.nu get_built_host_name
@@ -15,7 +15,7 @@ def raise_configuration_error [configuration: string] {
   print (hosts)
 
   exit 1
-  
+
 }
 
 def validate_configuration [configuration: string] {
@@ -62,7 +62,7 @@ def validate_source_and_target [source?: string target?: string] {
 def get_shared_configuration_files [configuration?: string] {
   if ($configuration | is-empty) {
     return (
-      fd 
+      fd
         --exclude ".git"
         --exclude ".gitignore"
         --exclude ".pre-commit-config.yaml"
@@ -89,7 +89,7 @@ def get_shared_configuration_files [configuration?: string] {
 
     return (
       (
-        fd 
+        fd
           --exclude ".git"
           --exclude ".gitignore"
           --exclude ".pre-commit-config.yaml"
@@ -112,7 +112,7 @@ def get_shared_configuration_files [configuration?: string] {
             if $exclude in $line {
               $keep = false
               break
-            }            
+            }
           }
 
           $keep
@@ -123,22 +123,22 @@ def get_shared_configuration_files [configuration?: string] {
 }
 
 def format_files [
-  files: string 
+  files: string
   unique_files: bool
-  configuration?: string 
+  configuration?: string
 ] {
   let include_shared = not $unique_files
   let darwin_hosts = (get_darwin_hosts)
 
   let files = (
-    $files 
+    $files
     | lines
     | each {
-        |line| 
-        
+        |line|
+
         let directories = (
-          $line 
-          | path split 
+          $line
+          | path split
         )
 
         let $base = ($directories | first)
@@ -152,7 +152,7 @@ def format_files [
         }
 
         (
-          $line 
+          $line
           | str replace $"($file_configuration)/" ""
         ) + $" [($file_configuration)/]"
     }
@@ -172,7 +172,7 @@ def format_files [
     $files
     | sort
     | each {
-        |line| 
+        |line|
 
         if "[" in $line {
           let file_configuration = if "bumbirich" in $line {
@@ -253,8 +253,8 @@ def format_files [
           }
 
           $"(ansi $color)($line)(ansi reset)"
-        } else { 
-          $line 
+        } else {
+          $line
         }
     }
     | to text
@@ -268,10 +268,10 @@ def split_paths [paths: list<string>] {
     $paths
     | each {|file| $file | path parse}
     | insert system {
-        |row| 
-        
+        |row|
+
         let dirname = (
-          $row.parent 
+          $row.parent
           | path dirname
         )
 
@@ -288,14 +288,14 @@ def split_paths [paths: list<string>] {
 def get_excluded_paths_pattern [name: string] {
   return (
     {
-      benrosen: "work"      
-      bumbirich: "ruzia"      
-      ruzia: "bumbirich"      
-      work: "benrosen"      
-    } 
+      benrosen: "work"
+      bumbirich: "ruzia"
+      ruzia: "bumbirich"
+      work: "benrosen"
+    }
     | get $name
   )
-  
+
 }
 
 def get_host_files [host_directory: string --with-shared] {
@@ -318,19 +318,19 @@ def get_host_files [host_directory: string --with-shared] {
       let exclude_pattern = (get_excluded_paths_pattern $host_name)
 
       (
-        fd 
-          --exclude $"*($exclude_pattern)*" 
-          --hidden 
-          --type "file" 
-          "" 
+        fd
+          --exclude $"*($exclude_pattern)*"
+          --hidden
+          --type "file"
+          ""
           $system_directory
       )
     } else {
       (
-        fd 
-          --hidden 
-          --type "file" 
-          "" 
+        fd
+          --hidden
+          --type "file"
+          ""
           $system_directory
       )
     }
@@ -343,12 +343,12 @@ def get_host_files [host_directory: string --with-shared] {
     if $with_shared {
       $host_files ++ (
         split_paths (
-          get_shared_configuration_files 
+          get_shared_configuration_files
           | lines
         )
       )
     } else {
-      $host_files  
+      $host_files
     }
   )
 }
@@ -356,7 +356,7 @@ def get_host_files [host_directory: string --with-shared] {
 def get_file_and_system [row: record] {
   return {
     file: (
-      ($row | reject system) 
+      ($row | reject system)
       | path join
     )
 
@@ -377,14 +377,14 @@ def get_full_path [file: record] {
 }
 
 def get_common_files [
-  target: string 
+  target: string
   source_files: list
   target_files: list
 ] {
-  let systems = (get_systems) 
+  let systems = (get_systems)
 
   let available_hosts = (
-    (get_available_host_names) 
+    (get_available_host_names)
     | append ""
   )
 
@@ -395,12 +395,12 @@ def get_common_files [
 
   for source_file in $source_files {
     let matching_files = (
-      $target_files 
+      $target_files
       | filter {
           |target_file|
 
           (
-            $target_file.stem == $source_file.stem 
+            $target_file.stem == $source_file.stem
             and (
               $target_file.parent == $source_file.parent
               or $target_file.parent in $available_hosts
@@ -457,7 +457,7 @@ def list_files [unique_files: bool configuration?: string] {
   let nixos_hosts = (get_nixos_hosts)
 
   let configuration_files = (
-    $configurations 
+    $configurations
     | each {
         |configuration|
 
@@ -474,13 +474,13 @@ def list_files [unique_files: bool configuration?: string] {
           }
 
           let exclude_pattern = (get_excluded_paths_pattern $configuration)
-    
+
           (
-            fd 
-              --exclude $"*($exclude_pattern)*" 
-              --hidden 
-              --type file 
-              "" 
+            fd
+              --exclude $"*($exclude_pattern)*"
+              --hidden
+              --type file
+              ""
               $system_directory
           )
           | lines
@@ -496,14 +496,14 @@ def list_files [unique_files: bool configuration?: string] {
 
 def get_matching_files [files: string file: string] {
   return (
-    $files 
+    $files
     | rg $file
     | lines
     | each {
         |line|
 
         let parent = (
-          $line 
+          $line
           | split row " "
           | last
           | str replace "[" ""
@@ -511,12 +511,12 @@ def get_matching_files [files: string file: string] {
         )
 
         let file = (
-          $line 
+          $line
           | split row " "
           | first
         )
 
-        $"($parent)($file)" 
+        $"($parent)($file)"
         | ansi strip
     }
   )
@@ -592,9 +592,9 @@ export def main [
   let target_files = (get_host_files $target_directory)
 
   let common_files = (
-    get_common_files 
+    get_common_files
       $target
-      $source_files 
+      $source_files
       $target_files
   )
 

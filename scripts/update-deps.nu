@@ -68,20 +68,20 @@ export def main [
             | get inputs
             | transpose input darwin
             | each {
-                |input| 
+                |input|
 
-                $input 
+                $input
                 | update darwin (get_input_status "darwin" $input.input)
             }
             | insert nixos ""
             | each {
-                |input| 
+                |input|
 
-                $input 
+                $input
                 | update nixos (get_input_status "nixos" $input.input)
             }
             | table --index false
-        ) 
+        )
     }
 
     if $all {

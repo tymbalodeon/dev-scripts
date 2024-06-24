@@ -23,7 +23,7 @@ def make_command_output [
   output: string
   end: string
 ] {
-  return $"($start)\n\n($output)\n\n($end)"
+  return $"($start)\n\n($output)\n\n($end)\n"
 }
 
 # Update README command output

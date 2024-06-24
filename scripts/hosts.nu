@@ -110,7 +110,7 @@ export def get_darwin_hosts [--with-system] {
     if $with_system {
       ($hosts | append "darwin")
     } else {
-      $hosts 
+      $hosts
     }
   )
 }
@@ -122,7 +122,7 @@ export def get_nixos_hosts [--with-system] {
     if $with_system {
       ($hosts | append "nixos")
     } else {
-      $hosts 
+      $hosts
     }
   )
 }
