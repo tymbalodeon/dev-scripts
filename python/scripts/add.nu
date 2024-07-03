@@ -5,8 +5,8 @@ export def main [
   --dev # Add dependencies to the development group
 ] {
   if $dev {
-      pdm add --dev ...$dependencies
+    pdm add --dev ...$dependencies
   } else {
-      pdm add ...$dependencies
+    pdm add ...$dependencies
   }
 }
