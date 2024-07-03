@@ -2,7 +2,7 @@
 
 # View remote repository
 export def main [
-  --web # Open the remote repository website in the browser
+    --web # Open the remote repository website in the browser
 ] {
-  gh repo view (if $web { "--web" } else { "" })
+    gh repo view (if $web { "--web" } else { "" })
 }
