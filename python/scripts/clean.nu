@@ -13,8 +13,6 @@ export def main [
         [coverage .coverage/]
         [dist [dist/ .pdm-build/]]
         [ds-store **/.DS_Store]
-        [lilypond **/*-matrices.ly]
-        [pdfs **/*.pdf]
         [profiles profiles/]
         [pycache **/__pycache__/]
         [pytest .pytest_cache/]
@@ -29,8 +27,6 @@ export def main [
     let default_files_to_clean = [
         coverage
         ds-store
-        lilypond
-        pdfs
         profiles
         pycache
         pytest

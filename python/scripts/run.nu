@@ -3,7 +3,7 @@
 use ./command.nu
 
 export def main [
-  args: list<string>
+    args: list<string>
 ] {
-  pdm run (command) ...$args
+    pdm run (command) ...$args
 }

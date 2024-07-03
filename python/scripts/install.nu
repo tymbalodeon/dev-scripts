@@ -1,6 +1,8 @@
 #!/usr/bin/env nu
 
+use ./build.nu
 use ./command.nu
+use ./deps.nu
 use ./version.nu
 
 def not-installed [command: string] {
@@ -25,9 +27,9 @@ def install [
 ] {
     if $dry_run {
         if $app or $prod {
-            just dependencies --prod
+            deps --prod
         } else {
-            just dependencies
+            deps
         }
 
         exit
@@ -53,18 +55,18 @@ def install [
     }
 
     if $minimal {
-        just _install_and_run pdm run pre-commit install out+err> /dev/null
+        pdm run pre-commit install out+err> /dev/null
     } else {
         if $app or $prod {
             pdm install --prod
         } else {
             pdm install
-            just _install_and_run pdm run pre-commit install
+            pdm run pre-commit install
         }
     }
 
     if $app {
-        just build
+        build
 
         (
             pdm run python -m pipx install
