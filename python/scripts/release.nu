@@ -1,5 +1,7 @@
 #!/usr/bin/env nu
 
+use ./command.nu
+
 export def main [
   target: string # Type of release to target (major, minor, or patch)
   --preview # Preview new additions to the CHANGELOG without modifyiing anything
@@ -57,7 +59,7 @@ export def main [
       exit
   }
 
-  let init_file = $"{{ application-command }}/__init__.py"
+  let init_file = $"($command)/__init__.py"
   let current_version = $current_version_numbers | str join "."
   let files = [$init_file tests/main_test.py]
 

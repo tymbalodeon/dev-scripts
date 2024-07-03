@@ -2,199 +2,50 @@
 @add *args:
     ./scripts/add.nu {{ args }}
 
-# Remove dependencies
-@remove *args:
-    ./scripts/remove.nu {{ args }}
+# Build and install the application
+@build *help:
+    ./scripts/build.nu {{ help }}
 
-# Install dependencies
-@install *args:
-    ./scripts/install {{ args }}
+# Remove generated files
+@clean *args:
+    ./scripts/clean.nu {{ args }}
 
-# Update dependencies
-@update *args:
-    ./scripts/upgrade {{ args }}
+# Run coverage report
+@coverage *fail_under:
+    ./scripts/coverage.nu {{ fail_under }}
 
 # Show application dependencies
 @dependencies *args:
     ./scripts/show-dependencies {{ args }}
 
-# Open an interactive python shell
-@shell *args:
-    ./scripts/shell {{ args }}
+# Install dependencies
+@install *args:
+    ./scripts/install {{ args }}
+
+# Profile a command and view results
+@profile *args:
+    ./scripts/profile.nu {{ args }}
+
+# Release a new version of the application
+@release *args:
+    ./scripts/release.nu {{ args }}
+
+# Remove dependencies
+@remove *dependencies:
+    ./scripts/remove.nu {{ dependencies }}
 
 # Run the application
 @run *args:
     ./scripts/run.nu {{ args }}
 
-# Profile a command and view results
-profile *args:
-    #!/usr/bin/env nu
-
-    # Profile a command and view results
-    def profile [
-        ...args: string # Arguments to the command being profiled
-    ] {
-        just install --minimal
-
-        let output_directory = "profiles"
-        mkdir $output_directory
-
-        let output_file = $"($output_directory)/profile.json"
-
-        (
-            just _install_and_run sudo pdm run py-spy record
-                --format speedscope
-                --output $output_file
-                --subprocesses
-                -- pdm run python -m {{ application-command }} $args
-        )
-
-        speedscope $output_file
-    }
-
-    profile {{ args }}
-
-# Run coverage report
-coverage *args:
-    #!/usr/bin/env nu
-
-    # Run coverage report
-    def coverage [
-        --fail-under: string # Fail if coverage is less than this percentage
-    ] {
-        just test out+err> /dev/null
-
-        if not ($fail_under | is-empty) {
-            (
-                just _install_and_run pdm run coverage report -m
-                    --skip-covered
-                    --sort "cover"
-                    --fail-under $fail_under
-            )
-        } else {
-            (
-                just _install_and_run pdm run coverage report -m
-                    --skip-covered
-                    --sort "cover"
-            )
-        }
-    }
-
-    coverage {{ args }}
+# Open an interactive python shell
+@shell *help:
+    ./scripts/shell {{ help }}
 
 # Run tests
-test *args:
-    #!/usr/bin/env nu
+@test *help:
+    ./scripts/test.nu {{ help }}
 
-    # Run tests
-    def test [] {
-        just _install_and_run pdm run coverage run -m pytest tests
-    }
-
-    test {{ args }}
-
-# Build and install the application
-build *args:
-    #!/usr/bin/env nu
-
-    # Build and install the application
-    def build [] {
-        let application_command = {{ application-command }}
-        let version = just _get-application-version
-        let file_name = $"($application_command)-($version)"
-
-        let extensions = [
-            "-py3-none-any.whl"
-            ".tar.gz"
-        ]
-
-        let dependencies = $"($application_command)/**/*.py"
-
-        for extension in $extensions {
-            checkexec $"dist/($file_name)($extension)" $dependencies -- pdm build
-        }
-    }
-
-    build {{ args }}
-
-generated_files := """
-[
-    [Option "Files to clean"];
-    [<default> "<all EXCEPT dist and venv>"]
-    [--all <all>]
-    [coverage .coverage/]
-    [dist [dist/ .pdm-build/]]
-    [ds-store **/.DS_Store]
-    [lilypond **/*-matrices.ly]
-    [pdfs **/*.pdf]
-    [profiles profiles/]
-    [pycache **/__pycache__/]
-    [pytest .pytest_cache/]
-    [venv [.pdm-python .venv/]]
-]
-"""
-
-# Remove generated files
-clean *args:
-    #!/usr/bin/env nu
-
-    # Remove generated files
-    def clean [
-        --options, # Display possible values for ...(files)
-        --all (-a), # Clean all files
-        ...files: string # Which files to clean (see --options for available files)
-    ] {
-        if ($options) {
-            print ({{ generated_files }} | table --expand)
-            exit
-        }
-
-        let default_files_to_clean = [
-            coverage
-            ds-store
-            lilypond
-            pdfs
-            profiles
-            pycache
-            pytest
-        ]
-
-        let files_to_clean = if $all {
-            $default_files_to_clean | append [dist venv] | sort
-        } else if ($files | is-empty) {
-            $default_files_to_clean
-        } else {
-            $files
-        }
-
-        for file in $files_to_clean {
-            let files_list = (
-                {{ generated_files }}
-                | where Option == $file
-                | get "Files to clean"
-                | flatten
-            )
-
-            if ($files_list | is-empty) {
-                print $"Unknown option: \"($file)\""
-                continue
-            }
-
-            if $file == "venv" and (
-                not (command -v pdm | is-empty)) and (
-                not (pdm run command -v pre-commit | is-empty)
-            ) {
-                pdm run pre-commit uninstall
-            }
-
-            for glob in ($files_list) {
-                rm --recursive --force $glob
-            }
-        }
-    }
-
-    clean {{ args }}
-
-# Release a new version of the application
-@release *args:
-    ./scripts/release.nu {{ args }}
+# Update dependencies
+@update *prod:
+    ./scripts/upgrade {{ prod }}
