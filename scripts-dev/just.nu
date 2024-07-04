@@ -20,14 +20,17 @@ def get_command_name [recipe: record<recipe: string, type: string>] {
   )
 }
 
-export def main [] {
+export def main [type: string] {
+  let type_justfile = $"($type)/Justfile"
+
   let main_recipes = (get_recipes "Justfile" "main")
-  let python_recipes = (get_recipes "python/Justfile" "python")
+  let type_recipes = (get_recipes $"($type_justfile)-($type)" $type)
+
   mut recipes = []
   
   for recipe in $main_recipes {
     if not (
-      ($recipe | get command) in ($python_recipes | get command)
+      ($recipe | get command) in ($type_recipes | get command)
     ) {
       $recipes = ($recipes | append $recipe)
     }
@@ -35,9 +38,9 @@ export def main [] {
 
   echo (
     $recipes 
-    | append $python_recipes
+    | append $type_recipes
     | sort-by command
     | get recipe
     | str join "\n\n"
-  ) | save --force "Justfile-test"
+  ) | save --force $type_justfile
 }

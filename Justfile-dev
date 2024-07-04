@@ -1,5 +1,5 @@
 @_help:
     ./scripts/help.nu
 
-@just:
-    ./scripts-dev/just.nu
+@just *type:
+    ./scripts-dev/just.nu {{ type }}
