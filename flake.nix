@@ -31,6 +31,10 @@
   in {
     devShells = forEachSupportedSystem ({pkgs}: {
       default = pkgs.mkShell {
+        env = {
+          JUST_JUSTFILE = "Justfile-dev";
+        };
+
         packages = with pkgs; [
           alejandra
           ansible-language-server

@@ -1,12 +1,5 @@
 @_help:
     ./scripts/help.nu
 
-@test:
-	#!/usr/bin/env nu
-
-	for recipe in (
-		open Justfile 
-		| split row "\n\n"
-	) {
-		print ($recipe | lines)
-	}
+@just:
+    ./scripts-dev/just.nu
