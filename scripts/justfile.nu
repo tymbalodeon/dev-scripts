@@ -56,25 +56,31 @@ def merge_justfiles [type: string] {
   let shared_recipes = (get_recipes "main")
   let type_recipes = (get_recipes $type)
 
-  let recipes = if $type == "dev" {
+  mut recipes = [];
+
+  let base_recipes = if $type == "dev" {
+    $type_recipes
+  } else {
+    $shared_recipes
+  };
+
+  let priority_recipes = if $type == "dev" {
     $shared_recipes
   } else {
-    mut recipes = []
+    $type_recipes
+  };
 
-    for recipe in $shared_recipes {
-      if not (
-        ($recipe | get command) in ($type_recipes | get command)
-      ) {
-        $recipes = ($recipes | append $recipe)
-      }
+  for recipe in $base_recipes {
+    if not (
+      ($recipe | get command) in ($priority_recipes | get command)
+    ) {
+      $recipes = ($recipes | append $recipe)
     }
-
-    $recipes
   }
 
   let recipes = (
     $recipes
-    | append $type_recipes
+    | append $priority_recipes
   )
 
   let output_scripts_folder = (get_output_scripts_folder $type)
