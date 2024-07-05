@@ -118,7 +118,7 @@ def merge_justfiles [type: string] {
     $recipes
     | get recipe
     | str join "\n\n"
-    # | append "\n"
+    | append "\n"
     | save --force $justfile
   )
 }
