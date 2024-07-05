@@ -1,4 +1,4 @@
 .config
 .direnv
 .envrc
-out/*
+**/out/*
