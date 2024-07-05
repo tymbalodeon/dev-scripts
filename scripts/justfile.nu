@@ -44,7 +44,7 @@ def get_justfile_path [type: string] {
   }
 }
 
-def get_scripts_folder [type: string] {
+def get_output_scripts_folder [type: string] {
   if $type == "dev" {
     return "scripts"
   } else {
@@ -56,14 +56,20 @@ def merge_justfiles [type: string] {
   let shared_recipes = (get_recipes "main")
   let type_recipes = (get_recipes $type)
 
-  mut recipes = []
+  let recipes = if $type == "dev" {
+    $shared_recipes
+  } else {
+    mut recipes = []
 
-  for recipe in $shared_recipes {
-    if not (
-      ($recipe | get command) in ($type_recipes | get command)
-    ) {
-      $recipes = ($recipes | append $recipe)
+    for recipe in $shared_recipes {
+      if not (
+        ($recipe | get command) in ($type_recipes | get command)
+      ) {
+        $recipes = ($recipes | append $recipe)
+      }
     }
+
+    $recipes
   }
 
   let recipes = (
@@ -71,21 +77,21 @@ def merge_justfiles [type: string] {
     | append $type_recipes
   )
 
-  let scripts_folder = (get_scripts_folder $type)
+  let output_scripts_folder = (get_output_scripts_folder $type)
 
-  mkdir $scripts_folder
+  mkdir $output_scripts_folder
 
   for recipe in $recipes {
-    let type = ($recipe | get type)
+    let recipe_type = ($recipe | get type)
 
-    if $type == "dev" {
+    if $recipe_type == "dev" {
       continue
     }
 
-    let script_folder = $"($type)/scripts"
-    let script_file = $"($script_folder)/($recipe | get command).nu"
+    let source_scripts_folder = $"($recipe_type)/scripts"
+    let script_file = $"($source_scripts_folder)/($recipe | get command).nu"
 
-    cp $script_file $scripts_folder
+    cp $script_file $output_scripts_folder
   }
 
   let recipes = (

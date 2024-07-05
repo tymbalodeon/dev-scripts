@@ -26,10 +26,6 @@
 @issue *args:
     ./scripts/issue.nu {{ args }}
 
-# Create Justfiles
-@justfile *type:
-    ./scripts/justfile.nu {{ type }}
-
 # Reload environment
 @reload *help:
     ./scripts/reload.nu  {{ help }}
