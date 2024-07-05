@@ -5,6 +5,10 @@
 @check *args:
     ./scripts/check.nu {{ args }}
 
+# Remove generated files
+@clean *help:
+    ./scripts/clean.nu {{ help }}
+
 # List dependencies
 @deps *args:
     ./scripts/deps.nu {{ args }}
