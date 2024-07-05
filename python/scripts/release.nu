@@ -7,7 +7,7 @@ export def main [
   --preview # Preview new additions to the CHANGELOG without modifyiing anything
 ] {
   let current_version_numbers = (
-    just _get-application-version 
+    just _get-application-version
     | split row "."
   )
 

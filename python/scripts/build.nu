@@ -9,9 +9,9 @@ export def main [] {
         "-py3-none-any.whl"
         ".tar.gz"
     ] {
-        checkexec 
-            $"dist/(command)-(version)($extension)" 
-            $"(command)/**/*.py" 
+        checkexec
+            $"dist/(command)-(version)($extension)"
+            $"(command)/**/*.py"
             -- pdm build
     }
 }

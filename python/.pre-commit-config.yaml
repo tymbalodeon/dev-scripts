@@ -10,13 +10,10 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
-      - id: check-json
       - id: check-merge-conflict
+      - id: check-toml
       - id: check-yaml
       - id: end-of-file-fixer
-      - id: pretty-format-json
-        args:
-          - --autofix
       - id: sort-simple-yaml
       - id: trailing-whitespace
   - repo: https://github.com/DavidAnson/markdownlint-cli2
@@ -30,7 +27,6 @@ repos:
     hooks:
       - id: prettier
         types:
-          - json
           - markdown
           - yaml
   - repo: https://github.com/kamadorueda/alejandra
@@ -60,6 +56,10 @@ repos:
         entry: statix fix
         language: system
         pass_filenames: false
+      - id: taplo
+        name: taplo
+        entry: taplo format
+        language: system
       - id: yamlfmt
         name: yamlfmt
         entry: yamlfmt
