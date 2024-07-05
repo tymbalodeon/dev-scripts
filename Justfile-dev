@@ -1,5 +1,0 @@
-@_help:
-    ./scripts/help.nu
-
-@just *type:
-    ./scripts-dev/just.nu {{ type }}

@@ -1,3 +1,6 @@
+@_help:
+    ./scripts/help.nu
+
 # Add dependencies
 @add *args:
     ./scripts/add.nu {{ args }}
@@ -5,6 +8,10 @@
 # Build and install the application
 @build *help:
     ./scripts/build.nu {{ help }}
+
+# Check flake and run pre-commit hooks
+@check *args:
+    ./scripts/check.nu {{ args }}
 
 # Remove generated files
 @clean *args:
@@ -18,9 +25,26 @@
 @deps *args:
     ./scripts/deps.nu {{ args }}
 
+# Search available `just` recipes
+[no-exit-message]
+@find-recipe *search_term:
+    ./scripts/find-recipe.nu {{ search_term }}
+
+# Search project history
+@history *search_term:
+    ./scripts/history.nu {{ search_term }}
+
+# Initialize direnv environment
+@init *help:
+    ./scripts/init.nu {{ help }}
+
 # Install dependencies
 @install *args:
     ./scripts/install.nu {{ args }}
+
+# View issues
+@issue *args:
+    ./scripts/issue.nu {{ args }}
 
 # Profile a command and view results
 @profile *args:
@@ -29,6 +53,14 @@
 # Release a new version of the application
 @release *args:
     ./scripts/release.nu {{ args }}
+
+# Reload environment
+@reload *help:
+    ./scripts/reload.nu  {{ help }}
+
+# View remote repository
+@remote *web:
+    ./scripts/remote.nu  {{ web }}
 
 # Remove dependencies
 @remove *dependencies:
@@ -42,6 +74,10 @@
 @shell *help:
     ./scripts/shell.nu {{ help }}
 
+# View repository analytics
+@stats *help:
+    ./scripts/stats.nu {{ help }}
+
 # Run tests
 @test *help:
     ./scripts/test.nu {{ help }}
@@ -49,3 +85,7 @@
 # Update dependencies
 @update-deps *prod:
     ./scripts/update-deps.nu {{ prod }}
+
+# View the source code for a recipe
+@view-source *recipe:
+    ./scripts/view-source.nu {{ recipe }}
