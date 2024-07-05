@@ -46,7 +46,7 @@ def get_justfile_path [type: string] {
 
 def get_scripts_folder [type: string] {
   if $type == "dev" {
-    return "scripts" 
+    return "scripts"
   } else {
     return $"($type)/out/scripts"
   }
