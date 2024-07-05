@@ -1,0 +1,9 @@
+*.pyc
+.config
+.coverage
+.direnv
+.envrc
+.pdm-python
+__pycache__/
+build/
+dist/

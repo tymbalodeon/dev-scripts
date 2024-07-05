@@ -136,6 +136,36 @@ def merge_justfiles [type: string] {
   "\n" | save --append $justfile
 }
 
+def merge_gitignore [type: string] {
+  let main_gitignore = (
+    open "main/.gitignore"
+    | lines
+  )
+
+  let type_gitignore_path = if $type == "dev" {
+    ".gitignore"
+  } else {
+    $"($type)/.gitignore"
+  }
+
+  let type_gitignore = (
+    open $type_gitignore_path
+    | lines
+  )
+
+  $main_gitignore
+  | append $type_gitignore
+  | uniq
+  | sort
+  | to text
+  | save --force $type_gitignore_path
+}
+
+def copy_files [type: string] {
+  merge_justfiles $type
+  merge_gitignore $type
+}
+
 export def main [type?: string command?: string] {
   let type = if ($type | is-empty) {
     "main"
@@ -143,11 +173,11 @@ export def main [type?: string command?: string] {
     $type
   }
 
-  if $type != "main" {
-    merge_justfiles $type
+  if not ($type in ["dev" "main"]) {
+    copy_files $type
   }
 
-  merge_justfiles "dev"
+  copy_files "dev"
 
   let justfile = (get_justfile_path $type)
 
@@ -156,5 +186,4 @@ export def main [type?: string command?: string] {
   } else {
     just --justfile $justfile $command
   }
-
 }
