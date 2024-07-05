@@ -118,9 +118,10 @@ def merge_justfiles [type: string] {
     $recipes
     | get recipe
     | str join "\n\n"
-    | append "\n"
     | save --force $justfile
   )
+
+  "\n" | save --append $justfile
 }
 
 export def main [type?: string command?: string] {
