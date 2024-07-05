@@ -29,6 +29,10 @@ def get_command_name [recipe: record<recipe: string, type: string>] {
 }
 
 export def main [type: string] {
+  if $type == "main" {
+    return (just --justfile main/Justfile)
+  }
+
   let main_recipes = (get_recipes "main/Justfile" "main")
   let type_recipes = (get_recipes $"($type)/Justfile" $type)
 
