@@ -9,6 +9,10 @@
 @clean *help:
     ./scripts/clean.nu {{ help }}
 
+# Create dev environment
+@create *type:
+    ./scripts/create.nu {{ type }}
+
 # List dependencies
 @deps *args:
     ./scripts/deps.nu {{ args }}
@@ -29,10 +33,6 @@
 # View issues
 @issue *args:
     ./scripts/issue.nu {{ args }}
-
-# Create Justfiles
-@justfile *type:
-    ./scripts/justfile.nu {{ type }}
 
 # Reload environment
 @reload *help:
