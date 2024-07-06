@@ -2,5 +2,5 @@
 
 # View repository analytics
 export def main [] {
-  tokei --hidden --sort lines
+  tokei --hidden --no-ignore --sort lines
 }
