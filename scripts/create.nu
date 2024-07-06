@@ -1,11 +1,25 @@
 #!/usr/bin/env nu
 
-def get_recipes [type: string] {
-  let justfile = if $type == "dev" {
-    "Justfile"
+def get_base_directory [type: string --generated] {
+  if ($type | is-empty) or ($type == "dev") {
+    return ""
   } else {
-     $"($type)/Justfile"
+    if $generated and $type != "main" {
+      return $"($type)/out/"
+    } else {
+      return $"($type)/"
+    }
   }
+}
+
+def get_justfile [type: string] {
+  let base_directory = (get_base_directory $type)
+
+  return $"($base_directory)Justfile"
+}
+
+def get_recipes [type: string] {
+  let justfile = (get_justfile $type)
 
   return (
     open $justfile
@@ -33,22 +47,16 @@ def get_command_name [recipe: record<recipe: string, type: string>] {
   )
 }
 
-def get_justfile_path [type: string] {
-  if $type == "dev" {
-    "Justfile"
-  } else if $type == "main" {
-    return "main/Justfile"
-  } else {
-    return $"($type)/out/Justfile"
-  }
+export def get_generated_justfile [type: string] {
+  let base_directory = (get_base_directory $type --generated)
+
+  return $"($base_directory)Justfile"
 }
 
-def get_output_scripts_folder [type: string] {
-  if $type == "dev" {
-    return "scripts"
-  } else {
-    return $"($type)/out/scripts"
-  }
+def get_generatead_scripts_directory [type: string] {
+  let base_directory = (get_base_directory $type --generated)
+
+  return $"($base_directory)scripts"
 }
 
 def merge_justfiles [type: string] {
@@ -82,9 +90,9 @@ def merge_justfiles [type: string] {
     | append $priority_recipes
   )
 
-  let output_scripts_folder = (get_output_scripts_folder $type)
+  let output_scripts_directory = (get_generatead_scripts_directory $type)
 
-  mkdir $output_scripts_folder
+  mkdir $output_scripts_directory
 
   for recipe in $recipes {
     let recipe_type = ($recipe.type)
@@ -93,10 +101,10 @@ def merge_justfiles [type: string] {
       continue
     }
 
-    let source_scripts_folder = $"($recipe_type)/scripts"
-    let script_file = $"($source_scripts_folder)/($recipe.command).nu"
+    let source_scripts_directory = $"($recipe_type)/scripts"
+    let script_file = $"($source_scripts_directory)/($recipe.command).nu"
 
-    cp $script_file $output_scripts_folder
+    cp $script_file $output_scripts_directory
   }
 
   let recipes = (
@@ -123,7 +131,7 @@ def merge_justfiles [type: string] {
     | drop nth $help_command_index
   ) | prepend $help_command
 
-  let justfile = (get_justfile_path $type)
+  let justfile = (get_generated_justfile $type)
 
   (
     $recipes.recipe
@@ -264,7 +272,7 @@ def copy_files [type: string] {
   merge_pre_commit_config $type
 }
 
-export def main [type?: string command?: string] {
+export def main [type?: string] {
   let type = if ($type | is-empty) {
     "main"
   } else {
@@ -276,12 +284,4 @@ export def main [type?: string command?: string] {
   }
 
   copy_files "dev"
-
-  let justfile = (get_justfile_path $type)
-
-  if ($command | is-empty) {
-    just --justfile $justfile
-  } else {
-    just --justfile $justfile $command
-  }
 }

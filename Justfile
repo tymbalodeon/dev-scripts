@@ -42,6 +42,10 @@
 @remote *web:
     ./scripts/remote.nu  {{ web }}
 
+# Run a dev environment `just` command
+@run *command:
+    ./scripts/run.nu {{ command }}
+
 # View repository analytics
 @stats *help:
     ./scripts/stats.nu {{ help }}
