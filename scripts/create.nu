@@ -266,10 +266,15 @@ def merge_pre_commit_config [type: string] {
   yamlfmt $output_config_path
 }
 
+def merge_flake [type: string] {
+  print $"Implement Me! for ($type)"
+}
+
 def copy_files [type: string] {
   merge_justfiles $type
   merge_gitignore $type
   merge_pre_commit_config $type
+  merge_flake $type
 }
 
 export def main [type?: string] {
