@@ -193,13 +193,32 @@ def merge_pre_commit_config [type: string] {
       if ($type_repo | is-empty) {
         $repo
       } else {
-        $type_repo 
-        | update hooks (
-            $type_repo.hooks
-            | append ($repo.hooks)
-            | uniq
-            | sort
-          )
+        $repo.hooks
+        | each {|hook|
+            $hook
+            | each {|id|
+              if $id.id in ($type_repo.hooks.id) and "types" in ($hook | columns) {
+                  let types = (
+                    $type_repo.hooks.types
+                    | append $id.types
+                    | flatten
+                    | uniq
+                    | sort
+                  )
+
+                  $repo | update hooks ($repo.hooks | update types $types)
+               } else {
+                  $repo 
+                  | update hooks (
+                      $repo.hooks
+                      | append ($type_repo.hooks)
+                      | uniq
+                      | sort
+                    )
+              }
+            }
+        }
+        | uniq
       }
     }
   )
@@ -221,16 +240,18 @@ def merge_pre_commit_config [type: string] {
     $"($type)/out/.pre-commit-config.yaml"
   }
 
-  (
-    {
-      repos: (
-        $main_config
-        | append $type_config
-      )
-    }
-    | to yaml
-    | save --force $output_config_path
-  )
+  {
+    repos: (
+      $main_config
+      | flatten
+      | append $type_config
+      | uniq
+    )
+  }
+  | to yaml
+  | save --force $output_config_path
+
+  yamlfmt $output_config_path
 }
 
 def copy_files [type: string] {
