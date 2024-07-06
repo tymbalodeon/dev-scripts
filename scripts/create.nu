@@ -193,32 +193,37 @@ def merge_pre_commit_config [type: string] {
       if ($type_repo | is-empty) {
         $repo
       } else {
-        $repo.hooks
-        | each {|hook|
-            $hook
-            | each {|id|
-              if $id.id in ($type_repo.hooks.id) and "types" in ($hook | columns) {
-                  let types = (
-                    $type_repo.hooks.types
-                    | append $id.types
-                    | flatten
-                    | uniq
-                    | sort
-                  )
-
-                  $repo | update hooks ($repo.hooks | update types $types)
-               } else {
-                  $repo 
-                  | update hooks (
-                      $repo.hooks
-                      | append ($type_repo.hooks)
+        $repo
+        | update hooks (
+          $repo.hooks
+          | each {|hook|
+              $hook
+              | each {|id|
+                if $id.id in ($type_repo.hooks.id) and "types" in ($hook | columns) {
+                    let types = (
+                      $type_repo.hooks.types
+                      | append $id.types
+                      | flatten
                       | uniq
                       | sort
                     )
+
+                    $repo | update hooks ($repo.hooks | update types $types) | get hooks
+                 } else {
+                    $repo 
+                    | update hooks (
+                        $repo.hooks
+                        | append ($type_repo.hooks)
+                        | uniq
+                        | sort
+                      )
+                    | get hooks
+                }
               }
-            }
-        }
+          }
         | uniq
+        | flatten
+        )
       }
     }
   )
@@ -243,7 +248,6 @@ def merge_pre_commit_config [type: string] {
   {
     repos: (
       $main_config
-      | flatten
       | append $type_config
       | uniq
     )
