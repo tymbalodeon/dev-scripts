@@ -161,9 +161,59 @@ def merge_gitignore [type: string] {
   | save --force $type_gitignore_path
 }
 
+def merge_pre_commit_config [type: string] {
+  let main_config = (
+    open "main/.pre-commit-config.yaml"
+    | get repos
+  ) 
+
+  let type_config_path = if $type == "dev" {
+    ".pre-commit-config.yaml"
+  } else {
+    $"($type)/.pre-commit-config.yaml"
+  }
+
+  let type_config = (open $type_config_path | get repos)
+
+  let main_config = (
+    $main_config
+    | each {
+      |repo|
+
+      let type_repo = (
+        $type_config
+        | get repos
+        | filter {|type_repo| $type_repo.repo == $repo.repo}
+      )
+
+      let type_repo = if ($type_repo | is-empty) {
+        $type_repo
+      } else {
+        $type_repo
+        | first
+      }
+
+      if ($type_repo | is-empty) {
+        $repo | table --expand
+      } else {
+        $type_repo | update hooks ($type_repo | get hooks | append $repo.hooks | sort)
+      }
+    }
+  )
+
+  let main_repos = ($main_conifg | each {|repo| $repo.repo})
+
+  for repo in $type_config {
+    if not ($repo.repo in $main_repos) {
+      
+    }
+  }
+}
+
 def copy_files [type: string] {
   merge_justfiles $type
   merge_gitignore $type
+  merge_pre_commit_config $type
 }
 
 export def main [type?: string command?: string] {
