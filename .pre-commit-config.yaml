@@ -69,7 +69,9 @@ repos:
     rev: v0.15.1
     hooks:
       - id: lychee
-        args: ["--no-progress", "."]
+        args:
+          - --no-progress
+          - .
         pass_filenames: false
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v3.2.0

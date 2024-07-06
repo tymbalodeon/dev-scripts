@@ -17,8 +17,7 @@ def get_recipes [type: string] {
 
 def get_command_name [recipe: record<recipe: string, type: string>] {
   return (
-    $recipe
-    | get recipe
+    $recipe.recipe
     | lines
     | filter {|line| $line | str starts-with "@"}
     | each {
@@ -72,7 +71,7 @@ def merge_justfiles [type: string] {
 
   for recipe in $base_recipes {
     if not (
-      ($recipe | get command) in ($priority_recipes | get command)
+      $recipe.command in ($priority_recipes.command)
     ) {
       $recipes = ($recipes | append $recipe)
     }
@@ -88,14 +87,14 @@ def merge_justfiles [type: string] {
   mkdir $output_scripts_folder
 
   for recipe in $recipes {
-    let recipe_type = ($recipe | get type)
+    let recipe_type = ($recipe.type)
 
     if $recipe_type == "dev" {
       continue
     }
 
     let source_scripts_folder = $"($recipe_type)/scripts"
-    let script_file = $"($source_scripts_folder)/($recipe | get command).nu"
+    let script_file = $"($source_scripts_folder)/($recipe.command).nu"
 
     cp $script_file $output_scripts_folder
   }
@@ -108,14 +107,14 @@ def merge_justfiles [type: string] {
   mut help_command_index = 0;
 
   for recipe in ($recipes | enumerate) {
-    if ($recipe.item | get command) == "help" {
+    if ($recipe.item.command) == "help" {
       $help_command_index = $recipe.index
     }
   }
 
   let help_command = (
     $recipes
-    | filter {|recipe| ($recipe | get command) == "help"}
+    | filter {|recipe| ($recipe.command) == "help"}
     | first
   )
 
@@ -127,8 +126,7 @@ def merge_justfiles [type: string] {
   let justfile = (get_justfile_path $type)
 
   (
-    $recipes
-    | get recipe
+    $recipes.recipe
     | str join "\n\n"
     | save --force $justfile
   )
@@ -165,7 +163,7 @@ def merge_pre_commit_config [type: string] {
   let main_config = (
     open "main/.pre-commit-config.yaml"
     | get repos
-  ) 
+  )
 
   let type_config_path = if $type == "dev" {
     ".pre-commit-config.yaml"
@@ -182,7 +180,6 @@ def merge_pre_commit_config [type: string] {
 
       let type_repo = (
         $type_config
-        | get repos
         | filter {|type_repo| $type_repo.repo == $repo.repo}
       )
 
@@ -194,20 +191,46 @@ def merge_pre_commit_config [type: string] {
       }
 
       if ($type_repo | is-empty) {
-        $repo | table --expand
+        $repo
       } else {
-        $type_repo | update hooks ($type_repo | get hooks | append $repo.hooks | sort)
+        $type_repo 
+        | update hooks (
+            $type_repo.hooks
+            | append ($repo.hooks)
+            | uniq
+            | sort
+          )
       }
     }
   )
 
-  let main_repos = ($main_conifg | each {|repo| $repo.repo})
+  let main_repos = ($main_config | each {|repo| $repo.repo})
 
-  for repo in $type_config {
-    if not ($repo.repo in $main_repos) {
-      
+  let type_config = (
+    $type_config
+    | filter {
+        |repo|
+
+        not ($repo.repo in $main_repos)
     }
+  )
+
+  let output_config_path = if $type == "dev" {
+    ".pre-commit-config.yaml"
+  } else {
+    $"($type)/out/.pre-commit-config.yaml"
   }
+
+  (
+    {
+      repos: (
+        $main_config
+        | append $type_config
+      )
+    }
+    | to yaml
+    | save --force $output_config_path
+  )
 }
 
 def copy_files [type: string] {
