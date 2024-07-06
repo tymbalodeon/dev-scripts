@@ -210,7 +210,7 @@ def merge_pre_commit_config [type: string] {
 
                     $repo | update hooks ($repo.hooks | update types $types) | get hooks
                  } else {
-                    $repo 
+                    $repo
                     | update hooks (
                         $repo.hooks
                         | append ($type_repo.hooks)
