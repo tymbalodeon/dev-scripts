@@ -287,6 +287,8 @@ def merge_flake [type: string] {
     $merged_inputs = ($merged_inputs | merge $inputs)
   }
 
+  let merged_inputs = {inputs: $merged_inputs}
+
   (
   nix eval 
     --apply builtins.fromJSON
