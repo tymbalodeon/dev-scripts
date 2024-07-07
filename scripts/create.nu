@@ -266,8 +266,32 @@ def merge_pre_commit_config [type: string] {
   yamlfmt $output_config_path
 }
 
+def get_flake_attribute [type: string attribute: string] {
+  let flake = $"(get_base_directory $type)flake.nix"
+
+  (
+    nix eval 
+      --apply $'builtins.getAttr "($attribute)"'
+      --file $flake 
+      --json
+    | from json
+  )  
+}
+
 def merge_flake [type: string] {
-  print $"Implement Me! for ($type)"
+  mut merged_inputs = []
+
+  for environment in ["main" $type] {
+    let inputs = (get_flake_attribute $environment "inputs")
+    # let outputs = (get_flake_attribute $environment "outputs")
+
+    $merged_inputs = ($merged_inputs | append $inputs)
+  }
+
+  $merged_inputs 
+  | flatten 
+  | uniq 
+  | to json
 }
 
 def copy_files [type: string] {
@@ -288,5 +312,5 @@ export def main [type?: string] {
     copy_files $type
   }
 
-  copy_files "dev"
+  # copy_files "dev"
 }
