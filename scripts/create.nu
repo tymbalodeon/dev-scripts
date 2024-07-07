@@ -283,7 +283,6 @@ def merge_flake [type: string] {
 
   for environment in ["main" $type] {
     let inputs = (get_flake_attribute $environment "inputs")
-    # let outputs = (get_flake_attribute $environment "outputs")
 
     $merged_inputs = ($merged_inputs | append $inputs)
   }
@@ -312,5 +311,5 @@ export def main [type?: string] {
     copy_files $type
   }
 
-  # copy_files "dev"
+  copy_files "dev"
 }
