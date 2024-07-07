@@ -7,16 +7,5 @@
 export def main [
   recipe: string # The recipe command
 ] {
-  let script_file = (
-    ls scripts
-    | get name
-    | to text
-    | rg $recipe
-  )
-
-  if ($script_file | is-empty) {
-    exit 1
-  }
-
-  bat $script_file
+  bat $"scripts/($recipe).nu"
 }
