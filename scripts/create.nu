@@ -279,12 +279,12 @@ def get_flake_attribute [type: string attribute: string] {
 }
 
 def merge_flake [type: string] {
-  mut merged_inputs = []
+  mut merged_inputs = {}
 
   for environment in ["main" $type] {
     let inputs = (get_flake_attribute $environment "inputs")
 
-    $merged_inputs = ($merged_inputs | append $inputs)
+    $merged_inputs = ($merged_inputs | merge $inputs)
   }
 
   (
@@ -292,7 +292,6 @@ def merge_flake [type: string] {
     --apply builtins.fromJSON
     --expr (
       $merged_inputs 
-      | uniq 
       | to json
       | to json
     )
