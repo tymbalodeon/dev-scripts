@@ -288,7 +288,6 @@ def merge_flake [type: string] {
   }
 
   $merged_inputs 
-  | flatten 
   | uniq 
   | to json
 }
