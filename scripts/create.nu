@@ -287,9 +287,16 @@ def merge_flake [type: string] {
     $merged_inputs = ($merged_inputs | append $inputs)
   }
 
-  $merged_inputs 
-  | uniq 
-  | to json
+  (
+  nix eval 
+    --apply builtins.fromJSON
+    --expr (
+      $merged_inputs 
+      | uniq 
+      | to json
+      | to json
+    )
+  )
 }
 
 def copy_files [type: string] {
