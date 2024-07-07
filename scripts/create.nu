@@ -90,9 +90,9 @@ def merge_justfiles [type: string] {
     | append $priority_recipes
   )
 
-  let output_scripts_directory = (get_generatead_scripts_directory $type)
+  let generated_scripts_directory = (get_generatead_scripts_directory $type)
 
-  mkdir $output_scripts_directory
+  mkdir $generated_scripts_directory
 
   for recipe in $recipes {
     let recipe_type = ($recipe.type)
@@ -104,7 +104,7 @@ def merge_justfiles [type: string] {
     let source_scripts_directory = $"($recipe_type)/scripts"
     let script_file = $"($source_scripts_directory)/($recipe.command).nu"
 
-    cp $script_file $output_scripts_directory
+    cp $script_file $generated_scripts_directory
   }
 
   let recipes = (
@@ -247,7 +247,7 @@ def merge_pre_commit_config [type: string] {
     }
   )
 
-  let output_config_path = if $type == "dev" {
+  let generated_config_path = if $type == "dev" {
     ".pre-commit-config.yaml"
   } else {
     $"($type)/out/.pre-commit-config.yaml"
@@ -261,21 +261,27 @@ def merge_pre_commit_config [type: string] {
     )
   }
   | to yaml
-  | save --force $output_config_path
+  | save --force $generated_config_path
 
-  yamlfmt $output_config_path
+  yamlfmt $generated_config_path
 }
 
 def get_flake_attribute [type: string attribute: string] {
   let flake = $"(get_base_directory $type)flake.nix"
 
   (
-    nix eval 
+    nix eval
       --apply $'builtins.getAttr "($attribute)"'
-      --file $flake 
+      --file $flake
       --json
     | from json
-  )  
+  )
+}
+
+def get_generated_flake [type: string] {
+  let base_directory = (get_base_directory $type --generated)
+
+  return $"($base_directory)flake.nix"
 }
 
 def merge_flake [type: string] {
@@ -289,15 +295,20 @@ def merge_flake [type: string] {
 
   let merged_inputs = {inputs: $merged_inputs}
 
+  let generated_flake = (get_generated_flake $type)
+
   (
-  nix eval 
-    --apply builtins.fromJSON
-    --expr (
-      $merged_inputs 
-      | to json
-      | to json
-    )
+    nix eval
+      --apply builtins.fromJSON
+      --expr (
+        $merged_inputs
+        | to json
+        | to json
+      )
   )
+  | save --force $generated_flake
+
+  alejandra $generated_flake out+err> /dev/null
 }
 
 def copy_files [type: string] {
