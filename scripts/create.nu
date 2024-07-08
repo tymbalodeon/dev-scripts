@@ -467,14 +467,17 @@ def merge_flake [type: string] {
   merge_flake_inputs $type
 }
 
-def copy_files [type: string] {
+def copy_files [type: string skip_flake: bool] {
   merge_justfiles $type
   merge_gitignore $type
   merge_pre_commit_config $type
-  merge_flake $type
+
+  if not $skip_flake {
+    merge_flake $type
+  }
 }
 
-export def main [type?: string --skip-dev] {
+export def main [type?: string --skip-dev-flake] {
   let type = if ($type | is-empty) {
     "main"
   } else {
@@ -482,10 +485,8 @@ export def main [type?: string --skip-dev] {
   }
 
   if not ($type in ["dev" "main"]) {
-    copy_files $type
+    copy_files $type false
   }
 
-  if not $skip_dev {
-    copy_files "dev"
-  }
+  copy_files "dev" $skip_dev_flake
 }
