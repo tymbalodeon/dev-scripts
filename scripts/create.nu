@@ -270,12 +270,12 @@ def get_flake [type: string] {
   return $"(get_base_directory $type)flake.nix"
 }
 
-def get_flake_attribute [type: string attribute: string] {
+def get_flake_inputs [type: string] {
   let flake = (get_flake $type)
 
   (
     nix eval
-      --apply $'builtins.getAttr "($attribute)"'
+      --apply $'builtins.getAttr "inputs"'
       --file $flake
       --json
     | from json
@@ -292,27 +292,47 @@ def merge_flake_inputs [type: string] {
   mut merged_inputs = {}
 
   for environment in ["main" $type] {
-    let inputs = (get_flake_attribute $environment "inputs")
+    let inputs = (get_flake_inputs $environment)
 
     $merged_inputs = ($merged_inputs | merge $inputs)
   }
 
   let merged_inputs = {inputs: $merged_inputs}
-  let generated_flake = (get_generated_flake $type)
 
-  if $generated_flake != "flake.nix" {
-    (
-      nix eval
-        --apply builtins.fromJSON
-        --expr (
-          $merged_inputs
-          | to json
-          | to json
-        )
-    )
-    | save --force $generated_flake
+  let generated_flake = if $type in ["dev" "main"] {
+   ".flake.temp.nix"
+  } else {
+    get_generated_flake $type
+  }
 
-    alejandra $generated_flake --quiet --quiet
+  let inputs = (
+    nix eval
+      --apply builtins.fromJSON
+      --expr (
+        $merged_inputs
+        | to json
+        | to json
+      )
+    | alejandra --quiet --quiet
+    | lines
+    | drop nth 0
+    | drop
+  )
+
+  "\{\n"
+  | append $inputs
+  | append "\n"
+  | append (
+    open $generated_flake
+    | lines
+    | drop nth 0
+  ) | save --force $generated_flake
+
+  alejandra --quiet --quiet $generated_flake
+
+  if $type in ["dev" "main"] {
+    cp $generated_flake flake.nix
+    rm $generated_flake
   }
 }
 
@@ -332,6 +352,7 @@ def get_flake_shell_hook [type: string] {
     nix eval 
       --raw
       $"./(get_base_directory $type)#devShells.x86_64-darwin.default.shellHook"
+      err> /dev/null
   )
 }
 
@@ -347,53 +368,59 @@ def merge_flake_outputs [type: string] {
     | sort
   }
 
-  let shell_hook = if $type in ["dev" "main"] {
-    get_flake_shell_hook "main"
+  let shell_hook = (
+    if $type in ["dev" "main"] {
+      get_flake_shell_hook "main"
+    } else {
+      get_flake_shell_hook "main"
+      | append (get_flake_shell_hook $type)
+      | to text
+    } | str replace --all "\$" "''$"
+  )
+
+  let generated_flake = if $type in ["dev" "main"] {
+   ".flake.temp.nix"
   } else {
-    get_flake_shell_hook "main"
-    | append (get_flake_shell_hook $type)
-    | to text
+    get_generated_flake $type
   }
 
-  print (
-    $"
-      \{
-        outputs = \{
-          nixpkgs,
-          nushell-syntax,
-          ...
-        \}: let
-          supportedSystems = [
-            \"x86_64-darwin\"
-            \"x86_64-linux\"
-          ];
+  $"
+    \{
+      outputs = \{
+        nixpkgs,
+        nushell-syntax,
+        ...
+      \}: let
+        supportedSystems = [
+          \"x86_64-darwin\"
+          \"x86_64-linux\"
+        ];
 
-          forEachSupportedSystem = f:
-            nixpkgs.lib.genAttrs supportedSystems
-            \(system:
-              f \{
-                pkgs = import nixpkgs \{inherit system;\};
-              \}\);
-        in \{
-          devShells = forEachSupportedSystem \(\{pkgs\}: \{
-            default = pkgs.mkShell \{
-              packages = with pkgs; [
-                ($packages | to text)
-              ];
+        forEachSupportedSystem = f:
+          nixpkgs.lib.genAttrs supportedSystems
+          \(system:
+            f \{
+              pkgs = import nixpkgs \{inherit system;\};
+            \}\);
+      in \{
+        devShells = forEachSupportedSystem \(\{pkgs\}: \{
+          default = pkgs.mkShell \{
+            packages = with pkgs; [
+              ($packages | to text)
+            ];
 
-              shellHook = ''\n($shell_hook)\n'';
-            \};
-        \}\);
-        \};
-      \}
-    "
-    | alejandra --quiet --quiet
-  )
+            shellHook = ''\n($shell_hook)\n'';
+          \};
+      \}\);
+      \};
+    \}
+  " | alejandra --quiet --quiet
+  | save --force $generated_flake
 }
 
 def merge_flake [type: string] {
-  merge_flake_inputs $type
   merge_flake_outputs $type
+  merge_flake_inputs $type
 }
 
 def copy_files [type: string] {
@@ -414,5 +441,5 @@ export def main [type?: string] {
     copy_files $type
   }
 
-  copy_files "dev"
+ copy_files "dev"
 }
