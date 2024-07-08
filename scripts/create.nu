@@ -167,6 +167,104 @@ def merge_gitignore [type: string] {
   | save --force $type_gitignore_path
 }
 
+def get_target_value [source_value: record target: list column: string] {
+  let target_value = (
+    $target        
+    | filter {
+        |target_value| 
+        
+        ($target_value | get $column) == ($source_value | get $column)
+      }
+  )
+
+  return (
+    if ($target_value | is-empty) {
+      $target_value
+    } else {
+      $target_value
+      | first
+    }
+  )
+}
+
+def merge_yaml [source: list target: list] {
+  return (
+    $source 
+    | each {
+        |source_repo|
+
+        let target_repo = (get_target_value $source_repo $target "repo")
+
+        if ($target_repo | is-empty) {
+          $source_repo
+        } else {
+          let $repo_hook_ids = $source_repo.hooks.id
+
+          $source_repo
+          | update hooks (
+              $source_repo.hooks
+              | each {
+                  |source_hook|
+
+                  let target_hook = (
+                    get_target_value $source_hook $target_repo.hooks "id"
+                  )
+
+                  if ($target_hook | is-empty) {
+                    $source_hook
+                  } else {
+                    mut merged_hook = $source_hook
+
+                    for column in (
+                      $source_hook 
+                      | reject id 
+                      | columns
+                    ) {
+                      let value = ($source_hook | get $column)
+
+                      $merged_hook = (
+                        $source_hook 
+                        | merge (
+                          {
+                            $column: (
+                              if (
+                                $value 
+                                | describe --detailed 
+                                | get type
+                              ) == "list" {
+                                $value 
+                                | append (
+                                  $target_hook
+                                  | get $column
+                                )
+                                | uniq
+                              } else {
+                                $target_hook  
+                                | get $column
+                              }
+                            )
+                          }
+                        )
+                      )
+                    }
+
+                    $merged_hook
+                  }
+                }
+                | append (
+                  $target_repo.hooks
+                  | filter {
+                      |target_hook| 
+                      
+                      not ($target_hook.id in $repo_hook_ids)
+                    }
+                )
+            )
+        }
+      } 
+  ) 
+}
+
 def merge_pre_commit_config [type: string] {
   let main_config = (
     open "main/.pre-commit-config.yaml"
@@ -180,62 +278,7 @@ def merge_pre_commit_config [type: string] {
   }
 
   let type_config = (open $type_config_path | get repos)
-
-  let main_config = (
-    $main_config
-    | each {
-      |repo|
-
-      let type_repo = (
-        $type_config
-        | filter {|type_repo| $type_repo.repo == $repo.repo}
-      )
-
-      let type_repo = if ($type_repo | is-empty) {
-        $type_repo
-      } else {
-        $type_repo
-        | first
-      }
-
-      if ($type_repo | is-empty) {
-        $repo
-      } else {
-        $repo
-        | update hooks (
-          $repo.hooks
-          | each {|hook|
-              $hook
-              | each {|id|
-                if $id.id in ($type_repo.hooks.id) and "types" in ($hook | columns) {
-                    let types = (
-                      $type_repo.hooks.types
-                      | append $id.types
-                      | flatten
-                      | uniq
-                      | sort
-                    )
-
-                    $repo | update hooks ($repo.hooks | update types $types) | get hooks
-                 } else {
-                    $repo
-                    | update hooks (
-                        $repo.hooks
-                        | append ($type_repo.hooks)
-                        | uniq
-                        | sort
-                      )
-                    | get hooks
-                }
-              }
-          }
-        | uniq
-        | flatten
-        )
-      }
-    }
-  )
-
+  let main_config = (merge_yaml $main_config $type_config)
   let main_repos = ($main_config | each {|repo| $repo.repo})
 
   let type_config = (
