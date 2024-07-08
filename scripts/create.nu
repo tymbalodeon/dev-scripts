@@ -431,7 +431,7 @@ def copy_files [type: string] {
   merge_flake $type
 }
 
-export def main [type?: string] {
+export def main [type?: string --skip-dev] {
   let type = if ($type | is-empty) {
     "main"
   } else {
@@ -442,5 +442,7 @@ export def main [type?: string] {
     copy_files $type
   }
 
- copy_files "dev"
+  if not $skip_dev {
+    copy_files "dev"
+  }
 }

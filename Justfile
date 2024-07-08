@@ -10,8 +10,8 @@
     ./scripts/clean.nu {{ help }}
 
 # Create dev environment
-@create *type:
-    ./scripts/create.nu {{ type }}
+@create *args:
+    ./scripts/create.nu {{ args }}
 
 # List dependencies
 @deps *args:
