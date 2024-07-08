@@ -1,12 +1,11 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-
+    nixpkgs = {url = "github:nixos/nixpkgs/nixos-unstable";};
     nushell-syntax = {
-      type = "github";
+      flake = false;
       owner = "stevenxxiu";
       repo = "sublime_text_nushell";
-      flake = false;
+      type = "github";
     };
   };
 
@@ -57,12 +56,15 @@
         ];
 
         shellHook = ''
+          nushell_syntax="${nushell-syntax}/nushell.sublime-syntax"
           bat_config_dir=".config/bat"
           bat_syntax_dir="''${bat_config_dir}/syntaxes"
+          bat_nushell_syntax="''${bat_syntax_dir}/nushell.sublime-syntax"
+
           mkdir -p "''${bat_syntax_dir}"
-          cp ${nushell-syntax}/nushell.sublime-syntax \
-            "''${bat_syntax_dir}/nushell.sublime-syntax"
+          cp "''${nushell_syntax}" "''${bat_nushell_syntax}"
           bat cache --build --source "''${bat_config_dir}"
+
           pre-commit install --hook-type commit-msg
         '';
       };

@@ -339,7 +339,7 @@ def merge_flake_inputs [type: string] {
 def get_flake_packages [type: string] {
   return (
     open (get_flake $type)
-    | rg --multiline "packages =.+\\[(\n|.)+\\];"
+    | rg --multiline "packages = with pkgs; \\[(\n|.)+\\];"
     | lines
     | drop nth 0
     | drop
@@ -349,10 +349,12 @@ def get_flake_packages [type: string] {
 
 def get_flake_shell_hook [type: string] {
   return (
-    nix eval 
-      --raw
-      $"./(get_base_directory $type)#devShells.x86_64-darwin.default.shellHook"
-      err> /dev/null
+    open (get_flake $type)
+    | rg --multiline "shellHook = ''(\n|.)+'';"
+    | lines
+    | drop nth 0
+    | drop
+    | str trim
   )
 }
 
@@ -374,8 +376,7 @@ def merge_flake_outputs [type: string] {
     } else {
       get_flake_shell_hook "main"
       | append (get_flake_shell_hook $type)
-      | to text
-    } | str replace --all "\$" "''$"
+    } | to text
   )
 
   let generated_flake = if $type in ["dev" "main"] {
