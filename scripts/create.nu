@@ -266,8 +266,12 @@ def merge_pre_commit_config [type: string] {
   yamlfmt $generated_config_path
 }
 
+def get_flake [type: string] {
+  return $"(get_base_directory $type)flake.nix"
+}
+
 def get_flake_attribute [type: string attribute: string] {
-  let flake = $"(get_base_directory $type)flake.nix"
+  let flake = (get_flake $type)
 
   (
     nix eval
@@ -284,7 +288,7 @@ def get_generated_flake [type: string] {
   return $"($base_directory)flake.nix"
 }
 
-def merge_flake [type: string] {
+def merge_flake_inputs [type: string] {
   mut merged_inputs = {}
 
   for environment in ["main" $type] {
@@ -294,21 +298,90 @@ def merge_flake [type: string] {
   }
 
   let merged_inputs = {inputs: $merged_inputs}
-
   let generated_flake = (get_generated_flake $type)
 
-  (
-    nix eval
-      --apply builtins.fromJSON
-      --expr (
-        $merged_inputs
-        | to json
-        | to json
-      )
-  )
-  | save --force $generated_flake
+  if $generated_flake != "flake.nix" {
+    (
+      nix eval
+        --apply builtins.fromJSON
+        --expr (
+          $merged_inputs
+          | to json
+          | to json
+        )
+    )
+    | save --force $generated_flake
 
-  alejandra $generated_flake out+err> /dev/null
+    alejandra $generated_flake --quiet --quiet
+  }
+}
+
+def get_flake_packages [type: string] {
+  return (
+    open (get_flake $type)
+    | rg --multiline "packages =.+\\[(\n|.)+\\];"
+    | lines
+    | drop nth 0
+    | drop
+    | str trim
+  )
+}
+
+def merge_flake_outputs [type: string] {
+  let packages = if $type in ["dev" "main"] {
+     get_flake_packages "main"
+  } else {
+    get_flake_packages "main"
+    | append (
+        get_flake_packages $type    
+      )
+    | uniq
+    | sort
+  }
+
+  let shell_hook = ""
+
+  print (
+    $"
+      \{
+        outputs = \{
+          nixpkgs,
+          nushell-syntax,
+          ...
+        \}: let
+          supportedSystems = [
+            \"x86_64-darwin\"
+            \"x86_64-linux\"
+          ];
+
+          forEachSupportedSystem = f:
+            nixpkgs.lib.genAttrs supportedSystems
+            \(system:
+              f \{
+                pkgs = import nixpkgs \{inherit system;\};
+              \}\);
+        in \{
+          devShells = forEachSupportedSystem \(\{pkgs\}: \{
+            default = pkgs.mkShell \{
+              packages = with pkgs; [
+                ($packages | to text)
+              ];
+
+              shellHook = ''
+                ($shell_hook)
+              '';
+            \};
+        \}\);
+        \};
+      \}
+    "
+    | alejandra --quiet --quiet
+  )
+}
+
+def merge_flake [type: string] {
+  merge_flake_inputs $type
+  merge_flake_outputs $type
 }
 
 def copy_files [type: string] {
