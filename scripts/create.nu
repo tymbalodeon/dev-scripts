@@ -327,6 +327,14 @@ def get_flake_packages [type: string] {
   )
 }
 
+def get_flake_shell_hook [type: string] {
+  return (
+    nix eval 
+      --raw
+      $"./(get_base_directory $type)#devShells.x86_64-darwin.default.shellHook"
+  )
+}
+
 def merge_flake_outputs [type: string] {
   let packages = if $type in ["dev" "main"] {
      get_flake_packages "main"
@@ -339,7 +347,13 @@ def merge_flake_outputs [type: string] {
     | sort
   }
 
-  let shell_hook = ""
+  let shell_hook = if $type in ["dev" "main"] {
+    get_flake_shell_hook "main"
+  } else {
+    get_flake_shell_hook "main"
+    | append (get_flake_shell_hook $type)
+    | to text
+  }
 
   print (
     $"
@@ -367,9 +381,7 @@ def merge_flake_outputs [type: string] {
                 ($packages | to text)
               ];
 
-              shellHook = ''
-                ($shell_hook)
-              '';
+              shellHook = ''\n($shell_hook)\n'';
             \};
         \}\);
         \};
