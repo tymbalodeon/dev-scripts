@@ -30,7 +30,7 @@ def get_diff [type: string local_file: record file?: string accept = false] {
           $"delta \\
             --paging never \\
             ($local_file.name) \\
-            <\(echo '(echo $official_file)'\)"
+            <\(printf '(echo $official_file)'\)"
       )
 
       if $accept {
