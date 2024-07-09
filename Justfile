@@ -18,8 +18,8 @@
     ./scripts/deps.nu {{ args }}
 
 # View the diff between environments
-@diff *type:
-    ./scripts/diff.nu {{ type }}
+@diff-env *args:
+    ./scripts/diff-env.nu {{ args }}
 
 # Search available `just` recipes
 [no-exit-message]
