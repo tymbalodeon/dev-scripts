@@ -35,7 +35,14 @@ def get_diff [type: string local_file: record file?: string accept = false] {
             --paging never \\
             ($local_file.name) \\
             <\(printf '(echo $official_file)'\)"
+        | complete
       )
+
+      if $diff.exit_code != 1 {
+        return
+      }
+
+      let diff = $diff.stdout
 
       if $accept {
         $official_file 

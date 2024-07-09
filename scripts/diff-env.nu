@@ -19,11 +19,10 @@ def get_diff [type: string local_file: record file?: string accept = false] {
     ) {
       return
     }
+
     let base_url = "https://raw.githubusercontent.com/tymbalodeon/dev-scripts/trunk"
 
     try {
-      print $"($base_url)/($type)/($local_file.name)"
-
       let official_file = (
         http get
           --raw
@@ -35,19 +34,22 @@ def get_diff [type: string local_file: record file?: string accept = false] {
           $"delta \\
             --paging never \\
             ($local_file.name) \\
-            <\(echo '(echo $official_file)'\)"
+            <\(printf '(echo $official_file)'\)"
+        | complete
       )
 
-      print $accept
-
-      if $accept {
-        $official_file | save --force $local_file.name
+      if $diff.exit_code != 1 {
+        return
       }
 
-      print "WHAT??"
+      let diff = $diff.stdout
 
-      return "FOUND"
-      # return $diff
+      if $accept {
+        $official_file 
+        | save --force $local_file.name
+      }
+
+      return $diff
     } catch {
       return
     }
