@@ -38,7 +38,8 @@ def get_diff [type: string local_file: record file?: string accept = false] {
       )
 
       if $accept {
-        $official_file | save --force $local_file.name
+        $official_file 
+        | save --force $local_file.name
       }
 
       return $diff
@@ -48,7 +49,7 @@ def get_diff [type: string local_file: record file?: string accept = false] {
   }
 
   for nested_file in (ls --all $local_file.name) {
-    return (get_diff $type $nested_file $file)
+    get_diff $type $nested_file $file
   }
 }
 

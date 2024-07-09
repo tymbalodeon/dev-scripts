@@ -1,9 +1,6 @@
 #!/usr/bin/env nu
 
 def get_diff [type: string local_file: record file?: string accept = false] {
-    print $local_file.name
-    print "\n"
-
   if not (
     $local_file.name in (
       fd --exclude .git --hidden 
@@ -14,8 +11,6 @@ def get_diff [type: string local_file: record file?: string accept = false] {
     return
   }
 
-  print "HERE"
-
   if $local_file.type == "file" {
     if not (
       $file | is-empty
@@ -24,10 +19,11 @@ def get_diff [type: string local_file: record file?: string accept = false] {
     ) {
       return
     }
-
     let base_url = "https://raw.githubusercontent.com/tymbalodeon/dev-scripts/trunk"
 
     try {
+      print $"($base_url)/($type)/($local_file.name)"
+
       let official_file = (
         http get
           --raw
@@ -39,21 +35,26 @@ def get_diff [type: string local_file: record file?: string accept = false] {
           $"delta \\
             --paging never \\
             ($local_file.name) \\
-            <\(printf '(echo $official_file)'\)"
+            <\(echo '(echo $official_file)'\)"
       )
+
+      print $accept
 
       if $accept {
         $official_file | save --force $local_file.name
       }
 
-      return $diff
+      print "WHAT??"
+
+      return "FOUND"
+      # return $diff
     } catch {
       return
     }
   }
 
   for nested_file in (ls --all $local_file.name) {
-    return (get_diff $type $nested_file $file)
+    get_diff $type $nested_file $file
   }
 }
 
