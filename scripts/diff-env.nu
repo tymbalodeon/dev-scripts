@@ -1,11 +1,20 @@
 #!/usr/bin/env nu
 
 def get_diff [type: string local_file: record file?: string accept = false] {
+    print $local_file.name
+    print "\n"
+
   if not (
-    $local_file.name in (exa --git-ignore --all | lines | append ".git")
+    $local_file.name in (
+      fd --exclude .git --hidden 
+      | lines
+      | each {|file| $file | str replace --regex "/$" ""}
+    )
   ) {
     return
   }
+
+  print "HERE"
 
   if $local_file.type == "file" {
     if not (

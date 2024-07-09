@@ -2,7 +2,11 @@
 
 def get_diff [type: string local_file: record file?: string accept = false] {
   if not (
-    $local_file.name in (exa --git-ignore --all | lines | append ".git")
+    $local_file.name in (
+      fd --exclude .git --hidden 
+      | lines
+      | each {|file| $file | str replace --regex "/$" ""}
+    )
   ) {
     return
   }
