@@ -33,6 +33,7 @@
           ansible-language-server
           bat
           deadnix
+          eza
           flake-checker
           fzf
           gh
