@@ -1,0 +1,33 @@
+default_mode "locked"
+
+layout {
+    tab name="lilypond" {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+
+        pane {
+            command "watchexec"
+            args "--watch" "/home/benrosen/src/github.com/tymbalodeon/scores/scores/tomo-choco/mattress" "lilypond" "--include helpers" "--output ./pdfs//mattress" "/home/benrosen/src/github.com/tymbalodeon/scores/scores/tomo-choco/mattress/mattress.ly"
+        }
+
+        pane size=2 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+
+    tab name="mattress" {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+
+        pane {
+            command "$EDITOR"
+            args "/home/benrosen/src/github.com/tymbalodeon/scores/scores/tomo-choco/mattress/mattress.ly"
+        }
+
+        pane size=2 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+}
