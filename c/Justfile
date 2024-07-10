@@ -1,0 +1,11 @@
+# Remove compiled files
+@clean *help:
+    ./scripts/clean.nu {{ help }}
+
+# Compile
+@compile *help:
+    ./scripts/compile.nu {{ help }}
+
+# Run
+@run *args:
+    ./scripts/run.nu {{ args }}
