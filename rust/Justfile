@@ -35,6 +35,6 @@
     ./scripts/run.nu {{ args }}
 
 # Update dependencies
-update-deps *help:
+@update-deps *help:
     ./scripts/update-deps.nu {{ help }}
 

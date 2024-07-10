@@ -154,17 +154,19 @@ def merge_gitignore [type: string] {
     $"($type)/.gitignore"
   }
 
-  let type_gitignore = (
-    open $type_gitignore_path
-    | lines
-  )
+  if ($type_gitignore_path | path exists) {
+    let type_gitignore = (
+      open $type_gitignore_path
+      | lines
+    )
 
-  $main_gitignore
-  | append $type_gitignore
-  | uniq
-  | sort
-  | to text
-  | save --force $type_gitignore_path
+    $main_gitignore
+    | append $type_gitignore
+    | uniq
+    | sort
+    | to text
+    | save --force $type_gitignore_path
+  }
 }
 
 def get_target_value [source_value: record target: list column: string] {
