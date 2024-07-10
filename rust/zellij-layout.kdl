@@ -1,0 +1,18 @@
+layout {
+    pane {
+        command "hx"
+        args "src/main.rs"
+    }
+
+    pane {
+        pane {
+            command "just"
+            args "run"
+        }
+
+        pane {
+            command "cargo"
+            args "clippy"
+        }
+    }
+}

@@ -1,0 +1,40 @@
+# Add dependencies
+@add *dependencies:
+    ./scripts/add.nu {{ dependencies }}
+
+# Build the application
+@build *release:
+    ./scripts/build.nu {{ release }}
+
+# Remove generated files
+@clean *help:
+    ./scripts/clean.nu {{ help }}
+
+# Run clippy
+@clippy *help:
+    ./scripts/clippy.nu {{ help }}
+
+# Show application dependencies
+@deps *help:
+    ./scripts/deps.nu {{ help }}
+
+# Open a pre-configured development environment
+@dev *help:
+    ./scripts/dev.nu {{ help }}
+
+# Install the application
+@install *help:
+    ./scripts/install.nu {{ help }}
+
+# Remove dependencies
+@remove *dependencies:
+    ./scripts/remove.nu {{ dependencies }}
+
+# Run the application, with any provided <args>.
+@run *args:
+    ./scripts/run.nu {{ args }}
+
+# Update dependencies
+update-deps *help:
+    ./scripts/update-deps.nu {{ help }}
+
