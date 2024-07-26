@@ -1,0 +1,11 @@
+repos:
+  - repo: https://github.com/lycheeverse/lychee.git
+    rev: v0.15.1
+    hooks:
+      - id: lychee
+        args:
+          - --exclude-path
+          - "templates/"
+          - --no-progress
+          - .
+        pass_filenames: false

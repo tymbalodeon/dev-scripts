@@ -154,19 +154,21 @@ def merge_gitignore [type: string] {
     $"($type)/.gitignore"
   }
 
-  if ($type_gitignore_path | path exists) {
-    let type_gitignore = (
-      open $type_gitignore_path
-      | lines
-    )
-
+  let merged_gitignore = if ($type_gitignore_path | path exists) {
     $main_gitignore
-    | append $type_gitignore
+    | append (open $type_gitignore_path | lines)
     | uniq
     | sort
     | to text
-    | save --force $type_gitignore_path
+  } else {
+    $main_gitignore
   }
+
+  $merged_gitignore
+  | save --force (
+      get_base_directory $type --generated 
+      | path join ".gitignore"
+    )
 }
 
 def get_target_value [source_value: record target: list column: string] {
