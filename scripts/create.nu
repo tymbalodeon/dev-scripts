@@ -166,17 +166,17 @@ def merge_gitignore [type: string] {
 
   $merged_gitignore
   | save --force (
-      get_base_directory $type --generated 
+      get_base_directory $type --generated
       | path join ".gitignore"
     )
 }
 
 def get_target_value [source_value: record target: list column: string] {
   let target_value = (
-    $target        
+    $target
     | filter {
-        |target_value| 
-        
+        |target_value|
+
         ($target_value | get $column) == ($source_value | get $column)
       }
   )
@@ -193,7 +193,7 @@ def get_target_value [source_value: record target: list column: string] {
 
 def merge_yaml [source: list target: list] {
   return (
-    $source 
+    $source
     | each {
         |source_repo|
 
@@ -220,30 +220,30 @@ def merge_yaml [source: list target: list] {
                     mut merged_hook = $source_hook
 
                     for column in (
-                      $source_hook 
-                      | reject id 
+                      $source_hook
+                      | reject id
                       | columns
                     ) {
                       let value = ($source_hook | get $column)
 
                       $merged_hook = (
-                        $source_hook 
+                        $source_hook
                         | merge (
                           {
                             $column: (
                               if (
-                                $value 
-                                | describe --detailed 
+                                $value
+                                | describe --detailed
                                 | get type
                               ) == "list" {
-                                $value 
+                                $value
                                 | append (
                                   $target_hook
                                   | get $column
                                 )
                                 | uniq
                               } else {
-                                $target_hook  
+                                $target_hook
                                 | get $column
                               }
                             )
@@ -258,15 +258,15 @@ def merge_yaml [source: list target: list] {
                 | append (
                   $target_repo.hooks
                   | filter {
-                      |target_hook| 
-                      
+                      |target_hook|
+
                       not ($target_hook.id in $repo_hook_ids)
                     }
                 )
             )
         }
-      } 
-  ) 
+      }
+  )
 }
 
 def merge_pre_commit_config [type: string] {
@@ -285,7 +285,7 @@ def merge_pre_commit_config [type: string] {
     let type_config = (open $type_config_path | get repos)
     let main_config = (merge_yaml $main_config $type_config)
     let main_repos = ($main_config | each {|repo| $repo.repo})
-    
+
     (
       $type_config
       | filter {
@@ -415,7 +415,7 @@ def merge_flake_outputs [type: string] {
   } else {
     get_flake_packages "main"
     | append (
-        get_flake_packages $type    
+        get_flake_packages $type
       )
     | uniq
     | sort

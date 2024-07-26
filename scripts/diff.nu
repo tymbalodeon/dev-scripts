@@ -26,7 +26,7 @@ def get_diff [type: string local_file: record file?: string] {
       )
 
       return (
-        bash -c 
+        bash -c
           $"delta --paging never <\(echo '(echo $official_local_file)'\) ($local_file.name)"
       )
     } catch {

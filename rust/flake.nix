@@ -14,14 +14,13 @@
   };
 
   outputs = {
-    self,
     nixpkgs,
     rust-overlay,
     crane,
   }: let
     overlays = [
       rust-overlay.overlays.default
-      (final: prev: {
+      (final: _prev: {
         rustToolchain = final.rust-bin.nightly.latest.default;
       })
     ];
@@ -83,10 +82,7 @@
         };
       });
 
-    devShells = forEachSupportedSystem ({
-      pkgs,
-      system,
-    }:
+    devShells = forEachSupportedSystem ({pkgs}:
       with pkgs; let
         buildPackages = [
           libiconv

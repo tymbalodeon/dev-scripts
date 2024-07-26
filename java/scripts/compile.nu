@@ -2,8 +2,8 @@
 
 def get_class_file [file: string] {
   return (
-    $file 
-    | path parse 
+    $file
+    | path parse
     | update extension class
     | path join
   )
@@ -29,7 +29,7 @@ def is_outdated [source_file: string target_file?: string] {
       (get_modified $source_file) >
       (get_modified $target_file)
     )
-  ) 
+  )
 }
 
 def compile [file: string] {
@@ -47,7 +47,7 @@ def generate_ast [] {
 
   for file in ["Expr" "Stmt"] {
     if (
-      is_outdated 
+      is_outdated
         $generator_file
         $"com/craftinginterpreters/lox/($file).java"
     ) {

@@ -37,4 +37,3 @@
 # Update dependencies
 @update-deps *help:
     ./scripts/update-deps.nu {{ help }}
-

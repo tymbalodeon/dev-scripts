@@ -5,7 +5,7 @@ repos:
       - id: lychee
         args:
           - --exclude-path
-          - "templates/"
+          - templates/
           - --no-progress
           - .
         pass_filenames: false

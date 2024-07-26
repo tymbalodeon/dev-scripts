@@ -1,11 +1,7 @@
 {
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-  outputs = {
-    nixpkgs,
-    nushell-syntax,
-    ...
-  }: let
+  outputs = {nixpkgs, ...}: let
     supportedSystems = [
       "x86_64-darwin"
       "x86_64-linux"

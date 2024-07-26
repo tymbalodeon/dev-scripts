@@ -3,7 +3,7 @@
 def get_diff [type: string local_file: record file?: string accept = false] {
   if not (
     $local_file.name in (
-      fd --exclude .git --hidden 
+      fd --exclude .git --hidden
       | lines
       | each {|file| $file | str replace --regex "/$" ""}
     )
@@ -30,7 +30,7 @@ def get_diff [type: string local_file: record file?: string accept = false] {
       )
 
       let diff = (
-        bash -c 
+        bash -c
           $"delta \\
             --paging never \\
             ($local_file.name) \\
@@ -45,7 +45,7 @@ def get_diff [type: string local_file: record file?: string accept = false] {
       let diff = $diff.stdout
 
       if $accept {
-        $official_file 
+        $official_file
         | save --force $local_file.name
       }
 
