@@ -60,9 +60,6 @@ repos:
         entry: yamlfmt
         language: system
         pass_filenames: false
-        args:
-          - mapping
-          - "2"
   - repo: https://github.com/lycheeverse/lychee.git
     rev: v0.15.1
     hooks:
