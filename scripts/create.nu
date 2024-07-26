@@ -279,18 +279,22 @@ def merge_pre_commit_config [type: string] {
     $"($type)/.pre-commit-config.yaml"
   }
 
-  let type_config = (open $type_config_path | get repos)
-  let main_config = (merge_yaml $main_config $type_config)
-  let main_repos = ($main_config | each {|repo| $repo.repo})
+  let type_config = if ($type_config_path | path exists) {
+    let type_config = (open $type_config_path | get repos)
+    let main_config = (merge_yaml $main_config $type_config)
+    let main_repos = ($main_config | each {|repo| $repo.repo})
+    
+    (
+      $type_config
+      | filter {
+          |repo|
 
-  let type_config = (
-    $type_config
-    | filter {
-        |repo|
-
-        not ($repo.repo in $main_repos)
-    }
-  )
+          not ($repo.repo in $main_repos)
+      }
+    )
+  } else {
+    []
+  }
 
   let generated_config_path = if $type == "dev" {
     ".pre-commit-config.yaml"

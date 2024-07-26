@@ -1,0 +1,11 @@
+layout {
+    pane {
+        command "hx"
+        args "."
+    }
+
+    pane {
+        command "just"
+        args "start"
+    }
+}
