@@ -2,8 +2,8 @@
 
 export def main [--open] {
   if $open {
-    zola serve --open
+    print "Implement me..."
   } else {
-    zola serve
+    zellij --layout zellij-layout.kdl
   }
 }

@@ -1,11 +1,24 @@
-layout {
-    pane {
-        command "hx"
-        args "."
-    }
+default_mode "locked"
 
-    pane {
-        command "just"
-        args "start"
+layout {
+    tab {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+
+        pane {
+            command "hx"
+            args "."
+        }
+
+        pane {
+            command "zola"
+            args "serve"
+            args "--open"
+        }
+
+        pane size=2 borderless=true {
+            plugin location="zellij:status-bar"
+        }
     }
 }
