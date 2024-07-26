@@ -1,3 +1,3 @@
 # Serve the site
-start *args:
+@start *args:
     ./scripts/start.nu {{ args }}

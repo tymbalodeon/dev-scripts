@@ -1,4 +1,6 @@
-export def main [open: bool] {
+#!/usr/bin/env nu
+
+export def main [--open] {
   if $open {
     zola serve --open
   } else {
