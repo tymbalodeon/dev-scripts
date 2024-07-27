@@ -5,6 +5,7 @@ export def main [--open] {
     open config.toml 
     | get base_url
     | str replace --regex "http(s?)://" ""
+    | str replace --regex "/$" ""
   )
 
   for file in (ls $env.TMPDIR | where name =~ $project_url) {
