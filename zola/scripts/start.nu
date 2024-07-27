@@ -14,11 +14,6 @@ export def main [--open] {
 
   let layout_file = (mktemp --tmpdir $"($project_url).XXX")
 
-  let layout = (
-    open zellij-layout.kdl
-    | str replace "[name]" $project_url
-  )
-
   let layout = if $open {
     $layout
   } else {
