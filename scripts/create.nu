@@ -249,6 +249,7 @@ def merge_yaml [source: list target: list] {
                             )
                           }
                         )
+                        | merge $target_hook
                       )
                     }
 
@@ -283,17 +284,18 @@ def merge_pre_commit_config [type: string] {
 
   let type_config = if ($type_config_path | path exists) {
     let type_config = (open $type_config_path | get repos)
-    let main_config = (merge_yaml $main_config $type_config)
-    let main_repos = ($main_config | each {|repo| $repo.repo})
+    let merged_config = (merge_yaml $main_config $type_config)
+    let main_repos = ($merged_config | each {|repo| $repo.repo})
 
-    (
-      $type_config
-      | filter {
-          |repo|
+    $type_config
+    | filter {
+        |repo|
 
-          not ($repo.repo in $main_repos)
+        (
+          not ($repo.repo in $merged_config.repo)
+          or ((($main_config | where repo == $repo.repo).hooks | flatten) != $repo.hooks)
+        )
       }
-    )
   } else {
     []
   }
