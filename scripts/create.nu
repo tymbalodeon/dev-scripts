@@ -313,8 +313,6 @@ def merge_pre_commit_config [type: string] {
   }
   | to yaml
   | save --force $generated_config_path
-
-  yamlfmt $generated_config_path
 }
 
 def get_flake [type: string] {
