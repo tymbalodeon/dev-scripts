@@ -1,9 +1,37 @@
 #!/usr/bin/env nu
 
 export def main [--open] {
-  if $open {
-    print "Implement me..."
-  } else {
-    zellij --layout zellij-layout.kdl
+  let project_url = (
+    open config.toml 
+    | get base_url
+    | str replace --regex "http(s?)://" ""
+  )
+
+  for file in (ls $env.TMPDIR | where name =~ $project_url) {
+    rm -rf $file.name
   }
+
+  let layout_file = (mktemp --tmpdir $"($project_url).XXX")
+
+  let layout = (
+    open zellij-layout.kdl
+    | str replace "[name]" $project_url
+  )
+
+  let layout = if $open {
+    $layout
+  } else {
+    $layout
+    | lines
+    | filter {
+        |line|
+
+        not ("--open" in $line)
+      }
+    | to text
+  }
+
+  $layout | save --force $layout_file
+
+  zellij --layout $layout_file
 }
