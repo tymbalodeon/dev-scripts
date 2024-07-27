@@ -1,42 +1,18 @@
 repos:
--   repo: https://gitlab.com/vojko.pribudic.foss/pre-commit-update
-    rev: v0.3.3post1
+-   repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.3.0
     hooks:
-    -   id: pre-commit-update
--   repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.4
+    -   id: conventional-pre-commit
+        stages:
+        -   commit-msg
+-   repo: https://github.com/lycheeverse/lychee.git
+    rev: v0.15.1
     hooks:
-    -   id: gitleaks
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
-    hooks:
-    -   id: check-merge-conflict
-    -   id: check-yaml
-    -   id: end-of-file-fixer
-    -   id: sort-simple-yaml
-    -   id: trailing-whitespace
--   repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.13.0
-    hooks:
-    -   id: markdownlint-cli2
+    -   id: lychee
         args:
-        -   --fix
--   repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
-    hooks:
-    -   id: prettier
-        types:
-        -   markdown
--   repo: https://github.com/kamadorueda/alejandra
-    rev: 3.0.0
-    hooks:
-    -   id: alejandra-system
--   repo: https://github.com/astro/deadnix
-    rev: v1.2.1
-    hooks:
-    -   id: deadnix
-        args:
-        -   --edit
+        -   --no-progress
+        -   .
+        pass_filenames: false
 -   repo: local
     hooks:
     -   id: flake-checker
@@ -59,17 +35,41 @@ repos:
         entry: yamlfmt
         language: system
         pass_filenames: false
--   repo: https://github.com/lycheeverse/lychee.git
-    rev: v0.15.1
+-   repo: https://github.com/astro/deadnix
+    rev: v1.2.1
     hooks:
-    -   id: lychee
+    -   id: deadnix
         args:
-        -   --no-progress
-        -   .
-        pass_filenames: false
--   repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v3.3.0
+        -   --edit
+-   repo: https://github.com/kamadorueda/alejandra
+    rev: 3.0.0
     hooks:
-    -   id: conventional-pre-commit
-        stages:
-        -   commit-msg
+    -   id: alejandra-system
+-   repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+    -   id: prettier
+        types:
+        -   markdown
+-   repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.13.0
+    hooks:
+    -   id: markdownlint-cli2
+        args:
+        -   --fix
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+    -   id: check-merge-conflict
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: sort-simple-yaml
+    -   id: trailing-whitespace
+-   repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+    -   id: gitleaks
+-   repo: https://gitlab.com/vojko.pribudic.foss/pre-commit-update
+    rev: v0.3.3post1
+    hooks:
+    -   id: pre-commit-update

@@ -306,13 +306,27 @@ def merge_pre_commit_config [type: string] {
     $"($type)/out/.pre-commit-config.yaml"
   }
 
-  {
+  let repos = {
     repos: (
-      $main_config
-      | append $type_config
+      $type_config
+      | append $main_config
       | uniq
     )
   }
+
+  mut existing_repos = []
+  mut final_repos = { repos: [] }
+
+  for repo in $repos.repos {
+    if not ($repo.repo in $existing_repos) {
+      $existing_repos = ($existing_repos | append $repo.repo)
+      $final_repos.repos = ($final_repos.repos | append $repo)
+    }
+  }
+
+  $final_repos.repos = ($final_repos.repos | reverse)
+
+  $final_repos
   | to yaml
   | save --force $generated_config_path
 }
