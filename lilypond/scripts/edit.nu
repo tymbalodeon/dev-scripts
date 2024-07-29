@@ -43,22 +43,20 @@ export def main [
       return
     }
 
+    let layout_file = (mktemp --tmpdir $"($title).XXX")
+
     (
       cat zellij-layout-template.kdl
       | str replace --all "[score]" $input_file
       | str replace --all "[score_directory]" ($input_file | path dirname)
       | str replace --all "[score_name]" $title
       | str replace --all "[output]" (get_lilypond_output_path $input_file)
-    ) | save --force score-layout.kdl
+    ) | save --force $layout_file
 
     compile $input_file --is-file
     open-pdf $title
-
-    do --ignore-errors {
-      zellij delete-session $title
-    }
-
-    zellij --layout score-layout.kdl --session $title
-    rm score-layout.kdl
+    zellij --layout $layout_file --session $title
+    rm --force $layout_file
+    zellij delete-session $title
   }
 }

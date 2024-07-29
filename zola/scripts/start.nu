@@ -8,10 +8,6 @@ export def main [--open] {
     | str replace --regex "/$" ""
   )
 
-  for file in (ls $env.TMPDIR | where name =~ $project_url) {
-    rm -rf $file.name
-  }
-
   let layout_file = (mktemp --tmpdir $"($project_url).XXX")
 
   open zellij-layout.kdl
@@ -22,5 +18,7 @@ export def main [--open] {
     start http://127.0.0.1:1111
   }
 
-  zellij --layout $layout_file
+  zellij --layout $layout_file --session $project_url
+  rm --force $layout_file
+  zellij delete-session $project_url
 }
