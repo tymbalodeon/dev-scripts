@@ -14,20 +14,13 @@ export def main [--open] {
 
   let layout_file = (mktemp --tmpdir $"($project_url).XXX")
 
-  let layout = if $open {
-    $layout
-  } else {
-    $layout
-    | lines
-    | filter {
-        |line|
+  open zellij-layout.kdl
+  | str replace "[name]" $project_url
+  | save --force $layout_file
 
-        not ("--open" in $line)
-      }
-    | to text
+  if $open {
+    start http://127.0.0.1:1111
   }
-
-  $layout | save --force $layout_file
 
   zellij --layout $layout_file
 }
