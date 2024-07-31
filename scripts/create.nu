@@ -24,6 +24,7 @@ def get_recipes [type: string] {
   return (
     open $justfile
     | split row "\n\n"
+    | filter {|item| not ($item | str starts-with "set ")}
     | each {|recipe| {recipe: $recipe type: $type}}
     | each {|item| $item | insert command (get_command_name $item)}
   )
