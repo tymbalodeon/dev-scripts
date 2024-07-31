@@ -2,7 +2,7 @@
 
 export def main [--open] {
   let project_url = (
-    open config.toml 
+    open config.toml
     | get base_url
     | str replace --regex "http(s?)://" ""
     | str replace --regex "/$" ""
