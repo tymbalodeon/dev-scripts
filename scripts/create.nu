@@ -5,9 +5,9 @@ def get_base_directory [type: string --generated] {
     return ""
   } else {
     if $generated and $type != "main" {
-      return $"($type)/out/"
+      return $"build/($type)/"
     } else {
-      return $"($type)/"
+      return $"src/($type)/"
     }
   }
 }
@@ -101,7 +101,7 @@ def merge_justfiles [type: string] {
       continue
     }
 
-    let source_scripts_directory = $"($recipe_type)/scripts"
+    let source_scripts_directory = $"src/($recipe_type)/scripts"
     let script_file = $"($source_scripts_directory)/($recipe.command).nu"
 
     cp $script_file $generated_scripts_directory
@@ -144,7 +144,7 @@ def merge_justfiles [type: string] {
 
 def merge_gitignore [type: string] {
   let main_gitignore = (
-    open "main/.gitignore"
+    open "src/main/.gitignore"
     | lines
   )
 
@@ -272,7 +272,7 @@ def merge_yaml [source: list target: list] {
 
 def merge_pre_commit_config [type: string] {
   let main_config = (
-    open "main/.pre-commit-config.yaml"
+    open "src/main/.pre-commit-config.yaml"
     | get repos
   )
 
@@ -303,7 +303,7 @@ def merge_pre_commit_config [type: string] {
   let generated_config_path = if $type == "dev" {
     ".pre-commit-config.yaml"
   } else {
-    $"($type)/out/.pre-commit-config.yaml"
+    $"build/($type)/.pre-commit-config.yaml"
   }
 
   let repos = {
