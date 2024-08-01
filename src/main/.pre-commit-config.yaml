@@ -60,7 +60,7 @@ repos:
         language: system
         pass_filenames: false
   - repo: https://github.com/lycheeverse/lychee.git
-    rev: nightly
+    rev: v0.15.1
     hooks:
       - id: lychee
         args: ["--no-progress", "."]

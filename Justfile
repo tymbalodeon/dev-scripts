@@ -46,6 +46,10 @@
 @update-deps *help:
     ./scripts/update-deps.nu {{ help }}
 
+# Update environment pre-commit hook versions
+@update-pre-commit *help:
+    ./scripts/update-pre-commit.nu {{ help }}
+
 # View the source code for a recipe
 @view-source *recipe:
     ./scripts/view-source.nu {{ recipe }}
