@@ -1,21 +1,21 @@
 #!/usr/bin/env nu
 
 export def main [] {
-  let environments = (ls build | enumerate)
-
-  for item in $environments {
-    let environment = $item.item.name
-
-    print $"Updating ($environment)..."
+  for environment in (ls src) {
+    let environment = $environment.name
 
     cd $environment
 
-    do --ignore-errors {
-      just check pre-commit-update
-    }
+    if (".pre-commit-config.yaml" | path exists) {
+      (
+        print
+          --no-newline
+          $"Updating \"($environment | path basename)\" pre-commit hooks..."
+      )
 
-    if $item.index < (($environments | length) - 1) {
-      print ""
+      do --ignore-errors {
+        pdm run pre-commit-update
+      }
     }
 
     cd -
