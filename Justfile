@@ -1,17 +1,13 @@
 @_help:
     ./scripts/help.nu
 
+# Build dev environments
+@build *args:
+    ./scripts/build.nu {{ args }}
+
 # Check flake and run pre-commit hooks
 @check *args:
     ./scripts/check.nu {{ args }}
-
-# Remove generated files
-@clean *help:
-    ./scripts/clean.nu {{ help }}
-
-# Create dev environment
-@create *args:
-    ./scripts/create.nu {{ args }}
 
 # List dependencies
 @deps *args:

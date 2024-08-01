@@ -500,16 +500,22 @@ def copy_files [type: string skip_flake: bool] {
   }
 }
 
+# Build dev environments
 export def main [type?: string --skip-dev-flake] {
-  let type = if ($type | is-empty) {
-    "main"
+  let types = if ($type | is-empty) {
+    ls src
+    | get name
+    | path basename
   } else {
-    $type
+    [$type]
   }
 
-  if not ($type in ["dev" "main"]) {
-    copy_files $type false
-  }
+  for type in $types {
+    print $"Building ($type)..."
+    if not ($type in ["dev" "main"]) {
+      copy_files $type false
+    }
 
-  copy_files "dev" $skip_dev_flake
+    copy_files "dev" $skip_dev_flake
+  }
 }

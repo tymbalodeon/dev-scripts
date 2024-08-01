@@ -22,7 +22,7 @@ repos:
         args:
           - --fix
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
         types:
@@ -60,13 +60,13 @@ repos:
         language: system
         pass_filenames: false
   - repo: https://github.com/lycheeverse/lychee.git
-    rev: v0.15.1
+    rev: nightly
     hooks:
       - id: lychee
         args: ["--no-progress", "."]
         pass_filenames: false
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v3.2.0
+    rev: v3.3.0
     hooks:
       - id: conventional-pre-commit
         stages:
