@@ -34,17 +34,9 @@
 @issue *args:
     ./scripts/issue.nu {{ args }}
 
-# Reload environment
-@reload *help:
-    ./scripts/reload.nu  {{ help }}
-
 # View remote repository
 @remote *web:
     ./scripts/remote.nu  {{ web }}
-
-# Run a dev environment `just` command
-@run *command:
-    ./scripts/run.nu {{ command }}
 
 # View repository analytics
 @stats *help:
