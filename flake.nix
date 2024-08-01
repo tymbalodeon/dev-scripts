@@ -68,6 +68,8 @@
           bat cache --build --source "''${bat_config_dir}"
 
           pre-commit install --hook-type commit-msg
+
+          pdm install
         '';
       };
     });
