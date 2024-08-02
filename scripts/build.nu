@@ -273,15 +273,12 @@ def merge_yaml [source: list target: list] {
 
 def merge_pre_commit_config [environment: string] {
   if $environment != "dev" {
+    print $"ENV: ($environment)"
     cd $"src/($environment)"
 
     if (".pre-commit-config.yaml" | path exists) {
-      print
-        --no-newline
-        $"Updating \"($environment | path basename)\" pre-commit hooks..."
-
       do --ignore-errors {
-        pdm run pre-commit-update
+        pdm run pre-commit-update out+err> /dev/null
       }
     }
 
@@ -441,7 +438,7 @@ def get_flake_shell_hook [environment: string] {
 }
 
 def merge_flake_outputs [environment: string] {
-  let packages = if $environment in ["dev" "main"] {
+  let packages = if $environment == "main" {
      get_flake_packages "main"
   } else {
     get_flake_packages "main"
