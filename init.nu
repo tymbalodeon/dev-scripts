@@ -7,37 +7,37 @@ def get_files [
   let contents = (
     http get
       --headers [
-        "Accept" "application/vnd.github+json" 
+        "Accept" "application/vnd.github+json"
         "X-GitHub-Api-Version" "2022-11-28"
       ]
     	--raw $url
   ) | from json
 
   for directory in (
-    $contents 
-    | filter {|item| $item.type == "dir"}    
+    $contents
+    | filter {|item| $item.type == "dir"}
   ) {
     get_files $destination $directory.url
   }
 
-  $contents 
-  | filter {|item| $item.type == "file"}    
+  $contents
+  | filter {|item| $item.type == "file"}
   | par-each {
       |file|
       let filename = (
-        $file.download_url 
-        | split row --regex "build/[a-zA-z]+/" 
+        $file.download_url
+        | split row --regex "build/[a-zA-z]+/"
         | last
       )
 
       let file_path = (
-        $destination 
-        | path join $filename   
+        $destination
+        | path join $filename
       )
 
       mkdir ($file_path | path dirname)
 
-      http get --raw $file.download_url 
+      http get --raw $file.download_url
       | save --force $file_path
 
       print $"Downloaded ($filename)."
@@ -69,7 +69,7 @@ export def main [
   }
 
   let destination = (
-    $env.HOME 
+    $env.HOME
     | path join $"src/github.com/($username)/($destination)"
   )
 
