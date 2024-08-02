@@ -1,36 +1,36 @@
 #!/usr/bin/env nu
 
-def get_base_directory [type: string --generated] {
-  if ($type | is-empty) or ($type == "dev") {
+def get_base_directory [environment: string --generated] {
+  if ($environment | is-empty) or ($environment == "dev") {
     return ""
   } else {
-    if $generated and $type != "main" {
-      return $"build/($type)/"
+    if $generated and $environment != "main" {
+      return $"build/($environment)/"
     } else {
-      return $"src/($type)/"
+      return $"src/($environment)/"
     }
   }
 }
 
-def get_justfile [type: string] {
-  let base_directory = (get_base_directory $type)
+def get_justfile [environment: string] {
+  let base_directory = (get_base_directory $environment)
 
   return $"($base_directory)Justfile"
 }
 
-def get_recipes [type: string] {
-  let justfile = (get_justfile $type)
+def get_recipes [environment: string] {
+  let justfile = (get_justfile $environment)
 
   return (
     open $justfile
     | split row "\n\n"
     | filter {|item| not ($item | str starts-with "set ")}
-    | each {|recipe| {recipe: $recipe type: $type}}
+    | each {|recipe| {recipe: $recipe environment: $environment}}
     | each {|item| $item | insert command (get_command_name $item)}
   )
 }
 
-def get_command_name [recipe: record<recipe: string, type: string>] {
+def get_command_name [recipe: record<recipe: string, environment: string>] {
   return (
     $recipe.recipe
     | lines
@@ -48,34 +48,34 @@ def get_command_name [recipe: record<recipe: string, type: string>] {
   )
 }
 
-export def get_generated_justfile [type: string] {
-  let base_directory = (get_base_directory $type --generated)
+export def get_generated_justfile [environment: string] {
+  let base_directory = (get_base_directory $environment --generated)
 
   return $"($base_directory)Justfile"
 }
 
-def get_generatead_scripts_directory [type: string] {
-  let base_directory = (get_base_directory $type --generated)
+def get_generatead_scripts_directory [environment: string] {
+  let base_directory = (get_base_directory $environment --generated)
 
   return $"($base_directory)scripts"
 }
 
-def merge_justfiles [type: string] {
+def merge_justfiles [environment: string] {
   let shared_recipes = (get_recipes "main")
-  let type_recipes = (get_recipes $type)
+  let environment_recipes = (get_recipes $environment)
 
   mut recipes = [];
 
-  let base_recipes = if $type == "dev" {
-    $type_recipes
+  let base_recipes = if $environment == "dev" {
+    $environment_recipes
   } else {
     $shared_recipes
   };
 
-  let priority_recipes = if $type == "dev" {
+  let priority_recipes = if $environment == "dev" {
     $shared_recipes
   } else {
-    $type_recipes
+    $environment_recipes
   };
 
   for recipe in $base_recipes {
@@ -91,18 +91,18 @@ def merge_justfiles [type: string] {
     | append $priority_recipes
   )
 
-  let generated_scripts_directory = (get_generatead_scripts_directory $type)
+  let generated_scripts_directory = (get_generatead_scripts_directory $environment)
 
   mkdir $generated_scripts_directory
 
   for recipe in $recipes {
-    let recipe_type = ($recipe.type)
+    let recipe_environment = ($recipe.environment)
 
-    if $recipe_type == "dev" {
+    if $recipe_environment == "dev" {
       continue
     }
 
-    let source_scripts_directory = $"src/($recipe_type)/scripts"
+    let source_scripts_directory = $"src/($recipe_environment)/scripts"
     let script_file = $"($source_scripts_directory)/($recipe.command).nu"
 
     cp $script_file $generated_scripts_directory
@@ -132,7 +132,7 @@ def merge_justfiles [type: string] {
     | drop nth $help_command_index
   ) | prepend $help_command
 
-  let justfile = (get_generated_justfile $type)
+  let justfile = (get_generated_justfile $environment)
 
   (
     $recipes.recipe
@@ -143,21 +143,21 @@ def merge_justfiles [type: string] {
   "\n" | save --append $justfile
 }
 
-def merge_gitignore [type: string] {
+def merge_gitignore [environment: string] {
   let main_gitignore = (
     open "src/main/.gitignore"
     | lines
   )
 
-  let type_gitignore_path = if $type == "dev" {
+  let environment_gitignore_path = if $environment == "dev" {
     ".gitignore"
   } else {
-    $"($type)/.gitignore"
+    $"($environment)/.gitignore"
   }
 
-  let merged_gitignore = if ($type_gitignore_path | path exists) {
+  let merged_gitignore = if ($environment_gitignore_path | path exists) {
     $main_gitignore
-    | append (open $type_gitignore_path | lines)
+    | append (open $environment_gitignore_path | lines)
     | uniq
     | sort
     | to text
@@ -167,7 +167,7 @@ def merge_gitignore [type: string] {
 
   $merged_gitignore
   | save --force (
-      get_base_directory $type --generated
+      get_base_directory $environment --generated
       | path join ".gitignore"
     )
 }
@@ -235,7 +235,7 @@ def merge_yaml [source: list target: list] {
                               if (
                                 $value
                                 | describe --detailed
-                                | get type
+                                | get environment
                               ) == "list" {
                                 $value
                                 | append (
@@ -271,14 +271,14 @@ def merge_yaml [source: list target: list] {
   )
 }
 
-def merge_pre_commit_config [type: string] {
-  if $type != "dev" {
-    cd $"src/($type)"
+def merge_pre_commit_config [environment: string] {
+  if $environment != "dev" {
+    cd $"src/($environment)"
 
     if (".pre-commit-config.yaml" | path exists) {
       print
         --no-newline
-        $"Updating \"($type | path basename)\" pre-commit hooks..."
+        $"Updating \"($environment | path basename)\" pre-commit hooks..."
 
       do --ignore-errors {
         pdm run pre-commit-update
@@ -293,18 +293,18 @@ def merge_pre_commit_config [type: string] {
     | get repos
   )
 
-  let type_config_path = if $type == "dev" {
+  let environment_config_path = if $environment == "dev" {
     ".pre-commit-config.yaml"
   } else {
-    $"($type)/.pre-commit-config.yaml"
+    $"($environment)/.pre-commit-config.yaml"
   }
 
-  let type_config = if ($type_config_path | path exists) {
-    let type_config = (open $type_config_path | get repos)
-    let merged_config = (merge_yaml $main_config $type_config)
+  let environment_config = if ($environment_config_path | path exists) {
+    let environment_config = (open $environment_config_path | get repos)
+    let merged_config = (merge_yaml $main_config $environment_config)
     let main_repos = ($merged_config | each {|repo| $repo.repo})
 
-    $type_config
+    $environment_config
     | filter {
         |repo|
 
@@ -317,15 +317,15 @@ def merge_pre_commit_config [type: string] {
     []
   }
 
-  let generated_config_path = if $type == "dev" {
+  let generated_config_path = if $environment == "dev" {
     ".pre-commit-config.yaml"
   } else {
-    $"build/($type)/.pre-commit-config.yaml"
+    $"build/($environment)/.pre-commit-config.yaml"
   }
 
   let repos = {
     repos: (
-      $type_config
+      $environment_config
       | append $main_config
       | uniq
     )
@@ -348,12 +348,12 @@ def merge_pre_commit_config [type: string] {
   | save --force $generated_config_path
 }
 
-def get_flake [type: string] {
-  return $"(get_base_directory $type)flake.nix"
+def get_flake [environment: string] {
+  return $"(get_base_directory $environment)flake.nix"
 }
 
-def get_flake_inputs [type: string] {
-  let flake = (get_flake $type)
+def get_flake_inputs [environment: string] {
+  let flake = (get_flake $environment)
 
   (
     nix eval
@@ -364,27 +364,27 @@ def get_flake_inputs [type: string] {
   )
 }
 
-def get_generated_flake [type: string] {
-  let base_directory = (get_base_directory $type --generated)
+def get_generated_flake [environment: string] {
+  let base_directory = (get_base_directory $environment --generated)
 
   return $"($base_directory)flake.nix"
 }
 
-def merge_flake_inputs [type: string] {
+def merge_flake_inputs [environment: string] {
   mut merged_inputs = {}
 
-  for environment in ["main" $type] {
-    let inputs = (get_flake_inputs $environment)
+  for item in ["main" $environment] {
+    let inputs = (get_flake_inputs $item)
 
     $merged_inputs = ($merged_inputs | merge $inputs)
   }
 
   let merged_inputs = {inputs: $merged_inputs}
 
-  let generated_flake = if $type in ["dev" "main"] {
+  let generated_flake = if $environment in ["dev" "main"] {
    ".flake.temp.nix"
   } else {
-    get_generated_flake $type
+    get_generated_flake $environment
   }
 
   let inputs = (
@@ -412,15 +412,15 @@ def merge_flake_inputs [type: string] {
 
   alejandra --quiet --quiet $generated_flake
 
-  if $type in ["dev" "main"] {
+  if $environment in ["dev" "main"] {
     cp $generated_flake flake.nix
     rm $generated_flake
   }
 }
 
-def get_flake_packages [type: string] {
+def get_flake_packages [environment: string] {
   return (
-    open (get_flake $type)
+    open (get_flake $environment)
     | rg --multiline "packages = with pkgs; \\[(\n|.)+\\];"
     | lines
     | drop nth 0
@@ -429,9 +429,9 @@ def get_flake_packages [type: string] {
   )
 }
 
-def get_flake_shell_hook [type: string] {
+def get_flake_shell_hook [environment: string] {
   return (
-    open (get_flake $type)
+    open (get_flake $environment)
     | rg --multiline "shellHook = ''(\n|.)+'';"
     | lines
     | drop nth 0
@@ -440,31 +440,31 @@ def get_flake_shell_hook [type: string] {
   )
 }
 
-def merge_flake_outputs [type: string] {
-  let packages = if $type in ["dev" "main"] {
+def merge_flake_outputs [environment: string] {
+  let packages = if $environment in ["dev" "main"] {
      get_flake_packages "main"
   } else {
     get_flake_packages "main"
     | append (
-        get_flake_packages $type
+        get_flake_packages $environment
       )
     | uniq
     | sort
   }
 
   let shell_hook = (
-    if $type in ["dev" "main"] {
+    if $environment in ["dev" "main"] {
       get_flake_shell_hook "main"
     } else {
       get_flake_shell_hook "main"
-      | append (get_flake_shell_hook $type)
+      | append (get_flake_shell_hook $environment)
     } | to text
   )
 
-  let generated_flake = if $type in ["dev" "main"] {
+  let generated_flake = if $environment in ["dev" "main"] {
    ".flake.temp.nix"
   } else {
-    get_generated_flake $type
+    get_generated_flake $environment
   }
 
   $"
@@ -501,38 +501,38 @@ def merge_flake_outputs [type: string] {
   | save --force $generated_flake
 }
 
-def merge_flake [type: string] {
-  merge_flake_outputs $type
-  merge_flake_inputs $type
+def merge_flake [environment: string] {
+  merge_flake_outputs $environment
+  merge_flake_inputs $environment
 }
 
-def copy_files [type: string skip_flake: bool] {
-  merge_justfiles $type
-  merge_gitignore $type
-  merge_pre_commit_config $type
+def copy_files [environment: string skip_flake: bool] {
+  merge_justfiles $environment
+  merge_gitignore $environment
+  merge_pre_commit_config $environment
 
   if not $skip_flake {
-    merge_flake $type
+    merge_flake $environment
   }
 }
 
 # Build dev environments
-export def main [type?: string --skip-dev-flake] {
-  let types = if ($type | is-empty) {
+export def main [environment?: string --skip-dev-flake] {
+  let environments = if ($environment | is-empty) {
     ls src
     | get name
     | path basename
   } else {
-    [$type]
+    [$environment]
   }
 
-  $types
+  $environments 
   | par-each {
-      |type|
-      print $"Building ($type)..."
+      |environment|
+      print $"Building ($environment)..."
 
-      if not ($type in ["dev" "main"]) {
-        copy_files $type false
+      if $environment != "main" {
+        copy_files $environment false
       }
   }
 
