@@ -5,12 +5,12 @@ def get_files [
   url: string
 ] {
   let contents = (
-    curl
-      --request GET 
-    	--header "Accept: application/vnd.github+json" 
-    	--header "X-GitHub-Api-Version: 2022-11-28" 
-    	--url $url
-      err> /dev/null
+    http get
+      --headers [
+        "Accept" "application/vnd.github+json" 
+        "X-GitHub-Api-Version" "2022-11-28"
+      ]
+    	--raw $url
   ) | from json
 
   for directory in (
@@ -20,26 +20,28 @@ def get_files [
     get_files $destination $directory.url
   }
 
-  for file in (
-    $contents 
-    | filter {|item| $item.type == "file"}    
-  ) {
-    let filename = (
-      $file.download_url 
-      | split row --regex "build/[a-zA-z]+/" 
-      | last
-    )
+  $contents 
+  | filter {|item| $item.type == "file"}    
+  | par-each {
+      |file|
+      let filename = (
+        $file.download_url 
+        | split row --regex "build/[a-zA-z]+/" 
+        | last
+      )
 
-    let file_path = (
-      $destination 
-      | path join $filename   
-    )
+      let file_path = (
+        $destination 
+        | path join $filename   
+      )
 
-    mkdir ($file_path | path dirname)
+      mkdir ($file_path | path dirname)
 
-    http get --raw $file.download_url 
-    | save --force $file_path
-  }
+      http get --raw $file.download_url 
+      | save --force $file_path
+
+      print $"Downloaded ($filename)."
+    }
 }
 
 export def main [
@@ -51,7 +53,7 @@ export def main [
 
   if $list {
     return (
-      curl $base_url err> /dev/null
+      http get --raw $base_url
       | from json
       | get name
       | to text
@@ -71,5 +73,5 @@ export def main [
     | path join $"src/github.com/($username)/($destination)"
   )
 
-  get_files $destination $"($base_url)/($environment)"
+  get_files $destination $"($base_url)/($environment)" out> /dev/null
 }
