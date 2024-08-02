@@ -73,8 +73,8 @@ repos:
     entry: yamlfmt
     language: system
     pass_filenames: false
-  - id: environment-pre-commit-update
-    name: environment-pre-commit-update
-    entry: pdm run pre-commit-update
+  - id: build
+    name: build
+    entry: just build
     language: system
     pass_filenames: false

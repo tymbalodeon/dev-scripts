@@ -272,6 +272,22 @@ def merge_yaml [source: list target: list] {
 }
 
 def merge_pre_commit_config [type: string] {
+  if $type != "dev" {
+    cd $"src/($type)"
+
+    if (".pre-commit-config.yaml" | path exists) {
+      print
+        --no-newline
+        $"Updating \"($type | path basename)\" pre-commit hooks..."
+
+      do --ignore-errors {
+        pdm run pre-commit-update
+      }
+    }
+
+    cd -
+  }
+
   let main_config = (
     open "src/main/.pre-commit-config.yaml"
     | get repos
@@ -510,12 +526,15 @@ export def main [type?: string --skip-dev-flake] {
     [$type]
   }
 
-  for type in $types {
-    print $"Building ($type)..."
-    if not ($type in ["dev" "main"]) {
-      copy_files $type false
-    }
+  $types
+  | par-each {
+      |type|
+      print $"Building ($type)..."
 
-    copy_files "dev" $skip_dev_flake
+      if not ($type in ["dev" "main"]) {
+        copy_files $type false
+      }
   }
+
+  copy_files "dev" $skip_dev_flake
 }

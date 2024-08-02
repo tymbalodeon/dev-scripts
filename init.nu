@@ -75,9 +75,9 @@ export def main [
   )
 
   (
-    get_files 
-      $destination 
-      $"($base_url)/($environment)" 
+    get_files
+      $destination
+      $"($base_url)/($environment)"
       err> /dev/null
   )
 
