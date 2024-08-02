@@ -48,6 +48,7 @@ export def main [
   environment?: string # The environment to download
   destination?: string # The name of the destination directory (relative to "~/src/github.com/<username>/")
   --list # List available environments
+  --return-destination # Return the destination after downloading
 ] {
   let base_url = "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/build"
 
@@ -74,4 +75,6 @@ export def main [
   )
 
   get_files $destination $"($base_url)/($environment)" out> /dev/null
+
+  return $destination
 }
