@@ -3,6 +3,7 @@
 def get_files [
   destination: string
   url: string
+  return_destination: bool
 ] {
   let contents = (
     http get
@@ -17,7 +18,7 @@ def get_files [
     $contents
     | filter {|item| $item.type == "dir"}
   ) {
-    get_files $destination $directory.url
+    get_files $destination $directory.url $return_destination
   }
 
   $contents
@@ -40,7 +41,13 @@ def get_files [
       http get --raw $file.download_url
       | save --force $file_path
 
-      print $"Downloaded ($filename)."
+      let message = $"Downloaded ($filename)."
+
+      if $return_destination {
+        print --stderr $message
+      } else {
+        print $message
+      }
     }
 }
 
@@ -74,7 +81,15 @@ export def main [
     | path join $"src/github.com/($username)/($destination)"
   )
 
-  get_files $destination $"($base_url)/($environment)" out> /dev/null
+  (
+    get_files 
+      $destination 
+      $"($base_url)/($environment)" 
+      $return_destination 
+      err> /dev/null
+  )
 
-  return $destination
+  if $return_destination {
+    return $destination
+  }
 }
