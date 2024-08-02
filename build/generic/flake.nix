@@ -44,9 +44,7 @@
           nil
           nodePackages.prettier
           nushell
-          pdm
           pre-commit
-          python3
           python312Packages.pre-commit-hooks
           ripgrep
           statix
@@ -69,6 +67,17 @@
           bat cache --build --source "''${bat_config_dir}"
 
           pre-commit install --hook-type commit-msg
+          nushell_syntax="${nushell-syntax}/nushell.sublime-syntax"
+          bat_config_dir=".config/bat"
+          bat_syntax_dir="''${bat_config_dir}/syntaxes"
+          bat_nushell_syntax="''${bat_syntax_dir}/nushell.sublime-syntax"
+
+          mkdir -p "''${bat_syntax_dir}"
+          cp "''${nushell_syntax}" "''${bat_nushell_syntax}"
+          bat cache --build --source "''${bat_config_dir}"
+
+          pre-commit install --hook-type commit-msg
+
         '';
       };
     });

@@ -4,7 +4,7 @@ def get_base_directory [environment: string --generated] {
   if ($environment | is-empty) or ($environment == "dev") {
     return ""
   } else {
-    if $generated and $environment != "main" {
+    if $generated {
       return $"build/($environment)/"
     } else {
       return $"src/($environment)/"
@@ -61,7 +61,7 @@ def get_generatead_scripts_directory [environment: string] {
 }
 
 def merge_justfiles [environment: string] {
-  let shared_recipes = (get_recipes "main")
+  let shared_recipes = (get_recipes "generic")
   let environment_recipes = (get_recipes $environment)
 
   mut recipes = [];
@@ -144,8 +144,8 @@ def merge_justfiles [environment: string] {
 }
 
 def merge_gitignore [environment: string] {
-  let main_gitignore = (
-    open "src/main/.gitignore"
+  let generic = (
+    open "src/generic/.gitignore"
     | lines
   )
 
@@ -156,13 +156,13 @@ def merge_gitignore [environment: string] {
   }
 
   let merged_gitignore = if ($environment_gitignore_path | path exists) {
-    $main_gitignore
+    $generic
     | append (open $environment_gitignore_path | lines)
     | uniq
     | sort
     | to text
   } else {
-    $main_gitignore
+    $generic
   }
 
   $merged_gitignore
@@ -273,7 +273,6 @@ def merge_yaml [source: list target: list] {
 
 def merge_pre_commit_config [environment: string] {
   if $environment != "dev" {
-    print $"ENV: ($environment)"
     cd $"src/($environment)"
 
     if (".pre-commit-config.yaml" | path exists) {
@@ -285,8 +284,8 @@ def merge_pre_commit_config [environment: string] {
     cd -
   }
 
-  let main_config = (
-    open "src/main/.pre-commit-config.yaml"
+  let generic_config = (
+    open "src/generic/.pre-commit-config.yaml"
     | get repos
   )
 
@@ -298,8 +297,7 @@ def merge_pre_commit_config [environment: string] {
 
   let environment_config = if ($environment_config_path | path exists) {
     let environment_config = (open $environment_config_path | get repos)
-    let merged_config = (merge_yaml $main_config $environment_config)
-    let main_repos = ($merged_config | each {|repo| $repo.repo})
+    let merged_config = (merge_yaml $generic_config $environment_config)
 
     $environment_config
     | filter {
@@ -307,7 +305,14 @@ def merge_pre_commit_config [environment: string] {
 
         (
           not ($repo.repo in $merged_config.repo)
-          or ((($main_config | where repo == $repo.repo).hooks | flatten) != $repo.hooks)
+          or (
+            (
+              (
+                $generic_config 
+                | where repo == $repo.repo
+              ).hooks | flatten
+            ) != $repo.hooks
+          )
         )
       }
   } else {
@@ -323,7 +328,7 @@ def merge_pre_commit_config [environment: string] {
   let repos = {
     repos: (
       $environment_config
-      | append $main_config
+      | append $generic_config
       | uniq
     )
   }
@@ -370,7 +375,7 @@ def get_generated_flake [environment: string] {
 def merge_flake_inputs [environment: string] {
   mut merged_inputs = {}
 
-  for item in ["main" $environment] {
+  for item in ["generic" $environment] {
     let inputs = (get_flake_inputs $item)
 
     $merged_inputs = ($merged_inputs | merge $inputs)
@@ -378,7 +383,7 @@ def merge_flake_inputs [environment: string] {
 
   let merged_inputs = {inputs: $merged_inputs}
 
-  let generated_flake = if $environment in ["dev" "main"] {
+  let generated_flake = if $environment == "dev" {
    ".flake.temp.nix"
   } else {
     get_generated_flake $environment
@@ -409,7 +414,7 @@ def merge_flake_inputs [environment: string] {
 
   alejandra --quiet --quiet $generated_flake
 
-  if $environment in ["dev" "main"] {
+  if $environment == "dev" {
     cp $generated_flake flake.nix
     rm $generated_flake
   }
@@ -438,10 +443,10 @@ def get_flake_shell_hook [environment: string] {
 }
 
 def merge_flake_outputs [environment: string] {
-  let packages = if $environment == "main" {
-     get_flake_packages "main"
+  let packages = if $environment == "generic" {
+     get_flake_packages "generic"
   } else {
-    get_flake_packages "main"
+    get_flake_packages "generic"
     | append (
         get_flake_packages $environment
       )
@@ -450,15 +455,15 @@ def merge_flake_outputs [environment: string] {
   }
 
   let shell_hook = (
-    if $environment in ["dev" "main"] {
-      get_flake_shell_hook "main"
+    if $environment == "dev" {
+      get_flake_shell_hook "generic"
     } else {
-      get_flake_shell_hook "main"
+      get_flake_shell_hook "generic"
       | append (get_flake_shell_hook $environment)
     } | to text
   )
 
-  let generated_flake = if $environment in ["dev" "main"] {
+  let generated_flake = if $environment == "dev" {
    ".flake.temp.nix"
   } else {
     get_generated_flake $environment
@@ -528,9 +533,7 @@ export def main [environment?: string --skip-dev-flake] {
       |environment|
       print $"Building ($environment)..."
 
-      if $environment != "main" {
-        copy_files $environment false
-      }
+      copy_files $environment false
   }
 
   copy_files "dev" $skip_dev_flake
