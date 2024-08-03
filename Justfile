@@ -38,9 +38,9 @@
 @justfile *args:
     ./scripts/justfile.nu {{ args }}
 
-# List available environments
-@list-environments *help:
-    ./scripts/list-environments.nu {{ help }}
+# List available environments and files
+@list *help:
+    ./scripts/list.nu {{ help }}
 
 # View remote repository
 @remote *web:
