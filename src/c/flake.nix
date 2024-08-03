@@ -15,10 +15,6 @@
   in {
     devShells = forEachSupportedSystem ({pkgs}: {
       default = pkgs.mkShell {
-        FONTCONFIG_FILE = pkgs.makeFontsConf {
-          fontDirectories = [pkgs.freefont_ttf];
-        };
-
         packages = with pkgs; [
           clang-tools
           lldb

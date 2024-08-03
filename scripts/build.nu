@@ -531,5 +531,5 @@ export def main [environment?: string --skip-dev-flake] {
       print $"Building ($environment)..."
 
       copy_files $environment false
-  }
+    } out+err> /dev/null
 }
