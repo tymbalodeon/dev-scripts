@@ -34,6 +34,10 @@
 @issue *args:
     ./scripts/issue.nu {{ args }}
 
+# Run an environment Justfile
+@justfile *args:
+    ./scripts/justfile.nu {{ args }}
+
 # View remote repository
 @remote *web:
     ./scripts/remote.nu  {{ web }}
