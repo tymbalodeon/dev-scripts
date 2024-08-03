@@ -1,7 +1,5 @@
 #!/usr/bin/env nu
 
-const base_path_regex = "build/[a-zA-z]+/"
-
 def get_files [
   url: string
   download_url: bool
@@ -20,12 +18,21 @@ def get_files [
     | filter {|item| $item.type == "file"}
     | get (
         if $download_url {
-          "path"
-        } else {
           "download_url"
+        } else {
+          "path"
         }
       )
-    | str replace --regex $base_path_regex ""
+    | each {
+        |file|
+        
+        if $download_url {
+          $file
+        } else {
+          $file 
+          | str replace --regex "build/[a-zA-z]+/" ""
+        }
+      }
     | append (
       $contents
       | filter {|item| $item.type == "dir"}
@@ -76,6 +83,8 @@ export def main [
 
   let download_urls = (
     get_files $"($base_url)/($environment)" true err> /dev/null
+    | lines
+    | filter {|line| not ($line | is-empty)}
   )
 
   $download_urls
@@ -84,7 +93,7 @@ export def main [
 
       let filename = (
         $url
-        | split row --regex $base_path_regex
+        | split row --regex "trunk/"
         | last
       )
 
