@@ -1,0 +1,11 @@
+# Build dev environments
+@build *args:
+    ./scripts/build.nu {{ args }}
+
+# Run an environment Justfile
+@justfile *args:
+    ./scripts/justfile.nu {{ args }}
+
+# List available environments
+@list-environments *help:
+    ./scripts/list-environments.nu {{ help }}

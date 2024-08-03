@@ -72,8 +72,8 @@
           bat cache --build --source "''${bat_config_dir}"
 
           pre-commit install --hook-type commit-msg
-          export PATH="''${PNPM_HOME}:''${PATH}"
 
+          export PATH="''${PNPM_HOME}:''${PATH}"
         '';
       };
     });

@@ -34,13 +34,10 @@
           bat
           deadnix
           eza
-          fd
           flake-checker
           fzf
           gh
-          gyre-fonts
           just
-          lilypond-unstable-with-fonts
           lychee
           markdown-oxide
           marksman
@@ -54,12 +51,12 @@
           stylelint
           taplo
           tokei
+          typst
+          typst-lsp
+          typstyle
           vscode-langservers-extracted
-          watchexec
           yaml-language-server
           yamlfmt
-          zathura
-          zellij
         ];
 
         shellHook = ''

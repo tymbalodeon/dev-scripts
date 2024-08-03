@@ -1,10 +1,6 @@
 @_help:
     ./scripts/help.nu
 
-# Build dev environments
-@build *args:
-    ./scripts/build.nu {{ args }}
-
 # Check flake and run pre-commit hooks
 @check *args:
     ./scripts/check.nu {{ args }}
@@ -33,14 +29,6 @@
 # View issues
 @issue *args:
     ./scripts/issue.nu {{ args }}
-
-# Run an environment Justfile
-@justfile *args:
-    ./scripts/justfile.nu {{ args }}
-
-# List available environments
-@list-environments *help:
-    ./scripts/list-environments.nu {{ help }}
 
 # View remote repository
 @remote *web:

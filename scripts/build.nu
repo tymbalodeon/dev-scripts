@@ -1,14 +1,14 @@
 #!/usr/bin/env nu
 
 def get_base_directory [environment: string --generated] {
-  if ($environment | is-empty) or ($environment == "dev") {
-    return ""
-  } else {
-    if $generated {
-      return $"build/($environment)/"
-    } else {
-      return $"src/($environment)/"
+  if $generated {
+    if $environment == "dev" {
+      return ""
     }
+
+    return $"build/($environment)/"
+  } else {
+    return $"src/($environment)/"
   }
 }
 
@@ -21,13 +21,17 @@ def get_justfile [environment: string] {
 def get_recipes [environment: string] {
   let justfile = (get_justfile $environment)
 
-  return (
-    open $justfile
-    | split row "\n\n"
-    | filter {|item| not ($item | str starts-with "set ")}
-    | each {|recipe| {recipe: $recipe environment: $environment}}
-    | each {|item| $item | insert command (get_command_name $item)}
-  )
+  if ($justfile | path exists) {
+    return (
+      open $justfile
+      | split row "\n\n"
+      | filter {|item| not ($item | str starts-with "set ")}
+      | each {|recipe| {recipe: $recipe environment: $environment}}
+      | each {|item| $item | insert command (get_command_name $item)}
+    )
+  } else {
+    return []    
+  }
 }
 
 def get_command_name [recipe: record<recipe: string, environment: string>] {
@@ -367,12 +371,16 @@ def get_flake_inputs [environment: string] {
 }
 
 def get_generated_flake [environment: string] {
+  if $environment == "dev" {
+    return (mktemp --tmpdir flake-XXX.nix)    
+  }
+
   let base_directory = (get_base_directory $environment --generated)
 
   return $"($base_directory)flake.nix"
 }
 
-def merge_flake_inputs [environment: string] {
+def merge_flake_inputs [environment: string generated_flake: string] {
   mut merged_inputs = {}
 
   for item in ["generic" $environment] {
@@ -382,12 +390,6 @@ def merge_flake_inputs [environment: string] {
   }
 
   let merged_inputs = {inputs: $merged_inputs}
-
-  let generated_flake = if $environment == "dev" {
-   ".flake.temp.nix"
-  } else {
-    get_generated_flake $environment
-  }
 
   let inputs = (
     nix eval
@@ -442,7 +444,7 @@ def get_flake_shell_hook [environment: string] {
   )
 }
 
-def merge_flake_outputs [environment: string] {
+def merge_flake_outputs [environment: string generated_flake: string] {
   let packages = if $environment == "generic" {
      get_flake_packages "generic"
   } else {
@@ -455,19 +457,14 @@ def merge_flake_outputs [environment: string] {
   }
 
   let shell_hook = (
-    if $environment == "dev" {
+    if $environment == "generic" {
       get_flake_shell_hook "generic"
     } else {
       get_flake_shell_hook "generic"
+      | append ""
       | append (get_flake_shell_hook $environment)
     } | to text
   )
-
-  let generated_flake = if $environment == "dev" {
-   ".flake.temp.nix"
-  } else {
-    get_generated_flake $environment
-  }
 
   $"
     \{
@@ -494,7 +491,7 @@ def merge_flake_outputs [environment: string] {
               ($packages | to text)
             ];
 
-            shellHook = ''\n($shell_hook)\n'';
+            shellHook = ''\n($shell_hook)'';
           \};
       \}\);
       \};
@@ -503,27 +500,27 @@ def merge_flake_outputs [environment: string] {
   | save --force $generated_flake
 }
 
-def merge_flake [environment: string] {
-  merge_flake_outputs $environment
-  merge_flake_inputs $environment
-}
-
 def copy_files [environment: string skip_flake: bool] {
   merge_justfiles $environment
   merge_gitignore $environment
   merge_pre_commit_config $environment
 
   if not $skip_flake {
-    merge_flake $environment
+    let generated_flake = (get_generated_flake $environment)
+
+    merge_flake_outputs $environment $generated_flake
+    merge_flake_inputs $environment $generated_flake
   }
 }
 
 # Build dev environments
 export def main [environment?: string --skip-dev-flake] {
   let environments = if ($environment | is-empty) {
-    ls src
+    ls --short-names src
     | get name
-    | path basename
+    | append "dev"
+  } else if $environment == "dev" {
+    []
   } else {
     [$environment]
   }
@@ -535,6 +532,4 @@ export def main [environment?: string --skip-dev-flake] {
 
       copy_files $environment false
   }
-
-  copy_files "dev" $skip_dev_flake
 }

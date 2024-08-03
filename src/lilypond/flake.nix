@@ -56,15 +56,7 @@
           zellij
         ];
 
-        shellHook = ''
-          bat_config_dir=".config/bat"
-          bat_syntax_dir="''${bat_config_dir}/syntaxes"
-          mkdir -p "''${bat_syntax_dir}"
-          cp ${nushell-syntax}/nushell.sublime-syntax \
-            "''${bat_syntax_dir}/nushell.sublime-syntax"
-          bat cache --build --source "''${bat_config_dir}"
-          pre-commit install --hook-type commit-msg
-        '';
+        shellHook = '''';
       };
     });
   };
