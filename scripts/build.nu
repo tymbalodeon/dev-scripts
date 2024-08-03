@@ -30,7 +30,7 @@ def get_recipes [environment: string] {
       | each {|item| $item | insert command (get_command_name $item)}
     )
   } else {
-    return []    
+    return []
   }
 }
 
@@ -312,7 +312,7 @@ def merge_pre_commit_config [environment: string] {
           or (
             (
               (
-                $generic_config 
+                $generic_config
                 | where repo == $repo.repo
               ).hooks | flatten
             ) != $repo.hooks
@@ -372,7 +372,7 @@ def get_flake_inputs [environment: string] {
 
 def get_generated_flake [environment: string] {
   if $environment == "dev" {
-    return (mktemp --tmpdir flake-XXX.nix)    
+    return (mktemp --tmpdir flake-XXX.nix)
   }
 
   let base_directory = (get_base_directory $environment --generated)
@@ -523,7 +523,7 @@ export def main [environment?: string --skip-dev-flake] {
     [$environment]
   }
 
-  $environments 
+  $environments
   | par-each {
       |environment|
       print $"Building ($environment)..."

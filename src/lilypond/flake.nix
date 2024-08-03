@@ -12,11 +12,7 @@
     };
   };
 
-  outputs = {
-    nixpkgs,
-    nushell-syntax,
-    ...
-  }: let
+  outputs = {nixpkgs, ...}: let
     supportedSystems = [
       "aarch64-darwin"
       "aarch64-linux"

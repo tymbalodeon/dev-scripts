@@ -25,11 +25,11 @@ def get_files [
       )
     | each {
         |file|
-        
+
         if $download_url {
           $file
         } else {
-          $file 
+          $file
           | str replace --regex "build/[a-zA-z]+/" ""
         }
       }
