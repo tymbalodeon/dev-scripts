@@ -363,7 +363,7 @@ def get_flake_inputs [environment: string] {
 
   (
     nix eval
-      --apply $'builtins.getAttr "inputs"'
+      --apply 'builtins.getAttr "inputs"'
       --file $flake
       --json
     | from json
