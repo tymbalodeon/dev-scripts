@@ -1,8 +1,10 @@
 #!/usr/bin/env nu
 
+const base_path_regex = "build/[a-zA-z]+/"
+
 def get_files [
-  destination: string
   url: string
+  download_url: bool
 ] {
   let contents = (
     http get
@@ -13,35 +15,29 @@ def get_files [
     	--raw $url
   ) | from json
 
-  for directory in (
+  return (
     $contents
-    | filter {|item| $item.type == "dir"}
-  ) {
-    get_files $destination $directory.url
-  }
-
-  $contents
-  | filter {|item| $item.type == "file"}
-  | par-each {
-      |file|
-      let filename = (
-        $file.download_url
-        | split row --regex "build/[a-zA-z]+/"
-        | last
+    | filter {|item| $item.type == "file"}
+    | get (
+        if $download_url {
+          "path"
+        } else {
+          "download_url"
+        }
       )
+    | str replace --regex $base_path_regex ""
+    | append (
+      $contents
+      | filter {|item| $item.type == "dir"}
+      | each {
+          |item|
 
-      let file_path = (
-        $destination
-        | path join $filename
+          get_files $item.url $download_url
+        }
       )
-
-      mkdir ($file_path | path dirname)
-
-      http get --raw $file.download_url
-      | save --force $file_path
-
-      print $"Downloaded ($filename)."
-    }
+    | flatten
+    | to text
+  )
 }
 
 export def main [
@@ -53,12 +49,16 @@ export def main [
   let base_url = "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/build"
 
   if $list {
-    return (
-      http get --raw $base_url
-      | from json
-      | get name
-      | to text
-    )
+    if ($environment | is-empty) {
+      return (
+        http get --raw $base_url
+        | from json
+        | get name
+        | to text
+      )
+    } else {
+      return (get_files $"($base_url)/($environment)" false)
+    }
   }
 
   let username = (git config github.user)
@@ -74,12 +74,32 @@ export def main [
     | path join $"src/github.com/($username)/($destination)"
   )
 
-  (
-    get_files
-      $destination
-      $"($base_url)/($environment)"
-      err> /dev/null
+  let download_urls = (
+    get_files $"($base_url)/($environment)" true err> /dev/null
   )
+
+  $download_urls
+  | par-each {
+      |url|
+
+      let filename = (
+        $url
+        | split row --regex $base_path_regex
+        | last
+      )
+
+      let file_path = (
+        $destination
+        | path join $filename
+      )
+
+      mkdir ($file_path | path dirname)
+
+      http get --raw $url
+      | save --force $file_path
+
+      print $"Downloaded ($filename)."
+    }
 
   if $return_destination {
     return $destination
