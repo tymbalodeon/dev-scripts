@@ -8,7 +8,7 @@ export def main [--open] {
     | str replace --regex "/$" ""
   )
 
-  let layout_file = (mktemp --tmpdir $"($project_url).XXX")
+  let layout_file = (mktemp --tmpdir $"($project_url)-XXX.kdl")
 
   open zellij-layout.kdl
   | str replace "[name]" $project_url

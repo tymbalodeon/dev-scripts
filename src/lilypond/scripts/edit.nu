@@ -43,7 +43,7 @@ export def main [
       return
     }
 
-    let layout_file = (mktemp --tmpdir $"($title).XXX")
+    let layout_file = (mktemp --tmpdir $"($title)-XXX.kdl")
 
     (
       cat zellij-layout-template.kdl
