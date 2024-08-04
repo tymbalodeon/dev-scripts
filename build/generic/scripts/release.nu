@@ -14,7 +14,7 @@ export def main [
     if not (git status --short | is-empty) {
       return "Please commit all changes before releasing."
     }
-    
+
     check
   }
 

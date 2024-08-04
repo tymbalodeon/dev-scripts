@@ -24,7 +24,7 @@ def copy_files [environment: string] {
 
   for item in $src_files {
     if (
-      $item 
+      $item
       | path basename
     ) in [
       "flake.nix"
