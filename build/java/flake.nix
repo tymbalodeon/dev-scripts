@@ -37,6 +37,7 @@
           flake-checker
           fzf
           gh
+          git-cliff
           google-java-format
           jdt-language-server
           just

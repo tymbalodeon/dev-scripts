@@ -528,6 +528,12 @@ export def main [environment?: string --skip-dev-flake] {
       |environment|
       print $"Building ($environment)..."
 
-      copy_files $environment false
+      let skip_flake = if $environment == "dev" and $skip_dev_flake {
+        true
+      } else {
+        false
+      }
+
+      copy_files $environment $skip_flake
     } out+err> /dev/null
 }

@@ -42,6 +42,10 @@
 @list *help:
     ./scripts/list.nu {{ help }}
 
+# Create a new release
+@release *args:
+    ./scripts/release.nu  {{ args }}
+
 # View remote repository
 @remote *web:
     ./scripts/remote.nu  {{ web }}

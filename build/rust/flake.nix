@@ -45,6 +45,7 @@
           flake-checker
           fzf
           gh
+          git-cliff
           just
           lychee
           markdown-oxide

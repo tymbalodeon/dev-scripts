@@ -38,6 +38,7 @@
           flake-checker
           fzf
           gh
+          git-cliff
           gyre-fonts
           just
           lilypond-unstable-with-fonts
