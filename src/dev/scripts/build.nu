@@ -12,6 +12,44 @@ def get_base_directory [environment: string --generated] {
   }
 }
 
+def copy_files [environment: string] {
+  let src_files = (
+    ls --all (
+      $"(get_base_directory $environment)*"
+      | into glob
+    ) | append (
+      ls --all "src/generic"
+    ) | get name
+  )
+
+  for item in $src_files {
+    if (
+      $item 
+      | path basename
+    ) in [
+      "flake.nix"
+      ".gitignore"
+      "Justfile"
+      ".pre-commit-config.yaml"
+      "scripts"
+    ] {
+      continue
+    }
+
+    let generated_directory = (get_base_directory $environment --generated)
+
+    if ($item | path type) == "dir" {
+      let generated_directory = $"($generated_directory)/($item)"
+
+      mkdir $generated_directory
+
+      cp $item --recursive $generated_directory
+    } else {
+      cp $item $generated_directory
+    }
+  }
+}
+
 def get_justfile [environment: string] {
   let base_directory = (get_base_directory $environment)
 
@@ -101,11 +139,6 @@ def merge_justfiles [environment: string] {
 
   for recipe in $recipes {
     let recipe_environment = ($recipe.environment)
-
-    if $recipe_environment == "dev" {
-      continue
-    }
-
     let source_scripts_directory = $"src/($recipe_environment)/scripts"
     let script_file = $"($source_scripts_directory)/($recipe.command).nu"
 
@@ -500,7 +533,8 @@ def merge_flake_outputs [environment: string generated_flake: string] {
   | save --force $generated_flake
 }
 
-def copy_files [environment: string skip_flake: bool] {
+def generate_files [environment: string skip_flake: bool] {
+  copy_files $environment
   merge_justfiles $environment
   merge_gitignore $environment
   merge_pre_commit_config $environment
@@ -534,6 +568,6 @@ export def main [environment?: string --skip-dev-flake] {
         false
       }
 
-      copy_files $environment $skip_flake
+      generate_files $environment $skip_flake
     } out+err> /dev/null
 }
