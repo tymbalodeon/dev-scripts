@@ -32,6 +32,7 @@
           alejandra
           ansible-language-server
           bat
+          cocogitto
           deadnix
           eza
           flake-checker

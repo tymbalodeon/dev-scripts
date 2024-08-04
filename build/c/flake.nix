@@ -33,6 +33,7 @@
           ansible-language-server
           bat
           clang-tools
+          cocogitto
           deadnix
           eza
           flake-checker
