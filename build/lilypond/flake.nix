@@ -32,13 +32,13 @@
           alejandra
           ansible-language-server
           bat
+          cocogitto
           deadnix
           eza
           fd
           flake-checker
           fzf
           gh
-          git-cliff
           gyre-fonts
           just
           lilypond-unstable-with-fonts

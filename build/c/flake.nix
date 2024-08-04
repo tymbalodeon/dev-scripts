@@ -33,12 +33,12 @@
           ansible-language-server
           bat
           clang-tools
+          cocogitto
           deadnix
           eza
           flake-checker
           fzf
           gh
-          git-cliff
           just
           lldb
           lychee

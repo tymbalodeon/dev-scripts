@@ -32,12 +32,12 @@
           alejandra
           ansible-language-server
           bat
+          cocogitto
           deadnix
           eza
           flake-checker
           fzf
           gh
-          git-cliff
           just
           lychee
           markdown-oxide
