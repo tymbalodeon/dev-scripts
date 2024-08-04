@@ -18,13 +18,5 @@ export def main [
     check
   }
 
-  if $preview {
-      return (git-cliff --bump --unreleased)
-  }
-
-  # git-cliff --unreleased --tag $new_version --prepend CHANGELOG.md
-  # git add CHANGELOG.md
-  # git commit --message $"chore\(release\): bump version to ($new_version)"
-  # git tag $"v($new_version)"
-  # git push --follow-tags
+  return (cog changelog)
 }
