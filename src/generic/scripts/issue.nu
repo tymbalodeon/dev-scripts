@@ -14,6 +14,7 @@ def get_issue_branch [issue_number: number] {
 def "main close" [
   issue_number: number # Issue number
 ] {
+  # Merge trunk first? in case there are new changes?
   # let issue_branch = (get_issue_branch $issue_number)
 
   # if (git branch --show-current) != $issue_branch {
