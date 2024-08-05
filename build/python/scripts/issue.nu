@@ -1,16 +1,20 @@
 #!/usr/bin/env nu
 
+def get_issue_branch [issue_number: number] {
+  let issue_title = (
+    gh issue view $issue_number --json title
+    | from json
+    | get title
+  )
+
+  return $"($issue_number)-($issue_title)"
+}
+
 # Close issue
 def "main close" [
   issue_number: number # Issue number
 ] {
-  # let issue_title = (
-  #   gh issue view $issue_number --json title
-  #   | from json
-  #   | get title
-  # )
-
-  # let issue_branch = $"($issue_number)-($issue_title)"
+  # let issue_branch = (get_issue_branch $issue_number)
 
   # if (git branch --show-current) != $issue_branch {
   #   git checkout $issue_branch
@@ -43,7 +47,18 @@ def "main create" [] {
 def "main develop" [
     issue_number: number # Issue number
 ] {
-  gh issue develop --checkout $issue_number
+  let issue_branch = (get_issue_branch $issue_number)
+
+  let branches = (
+    git for-each-ref --format='%(refname:short)' refs/heads/
+    | lines
+  )
+
+  if $issue_branch in $branches {
+    git checkout $issue_branch
+  } else {
+    gh issue develop --checkout $issue_number
+  }
 }
 
 # List issues
