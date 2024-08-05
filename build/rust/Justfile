@@ -21,6 +21,10 @@
 @clippy *help:
     ./scripts/clippy.nu {{ help }}
 
+# Commit using Conventional Commit style
+@commit *args:
+    ./scripts/commit.nu {{ args }}
+
 # Show application dependencies
 @deps *help:
     ./scripts/deps.nu {{ help }}

@@ -17,6 +17,10 @@
 @clean *args:
     ./scripts/clean.nu {{ args }}
 
+# Commit using Conventional Commit style
+@commit *args:
+    ./scripts/commit.nu {{ args }}
+
 # Run coverage report
 @coverage *fail_under:
     ./scripts/coverage.nu {{ fail_under }}

@@ -9,6 +9,10 @@
 @clean *help:
     ./scripts/clean.nu {{ help }}
 
+# Commit using Conventional Commit style
+@commit *args:
+    ./scripts/commit.nu {{ args }}
+
 # Compile
 @compile *help:
     ./scripts/compile.nu {{ help }}

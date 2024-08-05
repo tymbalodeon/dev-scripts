@@ -9,6 +9,10 @@
 @clean *search_term:
     ./scripts/clean.nu {{ search_term }}
 
+# Commit using Conventional Commit style
+@commit *args:
+    ./scripts/commit.nu {{ args }}
+
 # Compile pdfs
 @compile *search_term:
     ./scripts/compile.nu {{ search_term }}

@@ -5,6 +5,10 @@
 @check *args:
     ./scripts/check.nu {{ args }}
 
+# Commit using Conventional Commit style
+@commit *args:
+    ./scripts/commit.nu {{ args }}
+
 # List dependencies
 @deps *args:
     ./scripts/deps.nu {{ args }}
