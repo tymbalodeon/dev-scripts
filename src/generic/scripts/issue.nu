@@ -36,8 +36,14 @@ def "main create" [] {
     gh issue list --json number    
     | from json
     | get number
-    | math max
   )
+
+  let last_issue_number = if ($last_issue_number | is-empty) {
+    0
+  } else {
+    $last_issue_number | math max
+  }
+ 
 
   gh issue create --editor
 
