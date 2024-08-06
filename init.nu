@@ -67,7 +67,6 @@ export def main [
   environment?: string # The environment to download
   name?: string # The name of the download directory
   --list # List available environments
-  --return-name # Return the destination directory after downloading
   --view-source: string # View contents of file
 ] {
   let base_url = "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/build"
@@ -118,15 +117,29 @@ export def main [
 
   let username = (git config github.user)
 
+  let username = if ($username | is-empty) {
+    whoami
+  } else {
+    $username
+  }
+
   let name = if ($name | is-empty) {
     $environment
   } else {
     $name
   }
 
-  let name = (
+  let user_directory = (
     $env.HOME
-    | path join $"src/github.com/($username)/($name)"
+    | path join $"src/github.com/($username)"  
+  )
+
+  cd $user_directory
+  gh repo create --add-readme --clone --private $name
+
+  let name = (
+    $user_directory
+    | path join $name
   )
 
   let download_urls = (
@@ -160,7 +173,11 @@ export def main [
       print $"Downloaded \"($filename)\""
     }
 
-  if $return_name {
-    return $name
-  }
+  cd $name
+
+  git add .
+  git commit --message "chore: initial commit"
+  git push
+
+  return $name
 }
