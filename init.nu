@@ -1,17 +1,27 @@
 #!/usr/bin/env nu
 
-def get_files [
-  url: string
-  download_url: bool
-] {
-  let contents = (
+def get_url [url: string --json] {
+  let response = (
     http get
       --headers [
         "Accept" "application/vnd.github+json"
         "X-GitHub-Api-Version" "2022-11-28"
       ]
     	--raw $url
-  ) | from json
+  )
+
+  if $json {
+    return ($response | from json)
+  } else {
+    return $response
+  }
+}
+
+def get_files [
+  url: string
+  download_url: bool
+] {
+  let contents = (get_url $url --json)
 
   return (
     $contents
@@ -52,8 +62,18 @@ export def main [
   name?: string # The name of the download directory
   --list # List available environments
   --return-name # Return the destination directory after downloading
+  --view-source: string # View contents of file
 ] {
   let base_url = "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/build"
+
+  if not ($view_source | is-empty) {
+    let download_url = (
+      get_url $"($base_url)/($environment)/($view_source)" --json 
+      | get download_url
+    )
+
+    return (get_url $download_url)
+  }
 
    if $list {
     if ($environment | is-empty) {
