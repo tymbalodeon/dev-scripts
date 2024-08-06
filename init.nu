@@ -49,13 +49,20 @@ def get_files [
 
 export def main [
   environment?: string # The environment to download
-  destination?: string # The name of the destination directory (relative to "~/src/github.com/<username>/")
+  name?: string # The name of the directory (relative to "~/src/github.com/<username>/")
   --list # List available environments
-  --return-destination # Return the destination after downloading
+  --return-name # Return the destination directory after downloading
 ] {
   let base_url = "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/build"
 
-  if $list {
+  if not (
+    [$environment $name] 
+    | any {|item| not ($item | is-empty)}
+  ) {
+    return (help main)
+  }
+
+   if $list {
     if ($environment | is-empty) {
       return (
         http get --raw $base_url
@@ -70,15 +77,15 @@ export def main [
 
   let username = (git config github.user)
 
-  let destination = if ($destination | is-empty) {
+  let name = if ($name | is-empty) {
     $environment
   } else {
-    $destination
+    $name
   }
 
-  let destination = (
+  let name = (
     $env.HOME
-    | path join $"src/github.com/($username)/($destination)"
+    | path join $"src/github.com/($username)/($name)"
   )
 
   let download_urls = (
@@ -98,7 +105,7 @@ export def main [
       )
 
       let file_path = (
-        $destination
+        $name
         | path join $filename
       )
 
@@ -110,7 +117,7 @@ export def main [
       print $"Downloaded ($filename)."
     }
 
-  if $return_destination {
-    return $destination
+  if $return_name {
+    return $name
   }
 }
