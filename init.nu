@@ -55,13 +55,6 @@ export def main [
 ] {
   let base_url = "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/build"
 
-  if not (
-    [$environment $name] 
-    | any {|item| not ($item | is-empty)}
-  ) {
-    return (help main)
-  }
-
    if $list {
     if ($environment | is-empty) {
       return (
@@ -73,6 +66,13 @@ export def main [
     } else {
       return (get_files $"($base_url)/($environment)" false)
     }
+  }
+
+  if (
+    [$environment $name] 
+    | all {|item| ($item | is-empty)}
+  ) {
+    return (help main)
   }
 
   let username = (git config github.user)
