@@ -17,6 +17,13 @@ def get_url [url: string --json] {
   }
 }
 
+def get_build_filename [path: string] {
+  return (
+    $path 
+    | str replace --regex "build/[a-zA-z]+/" ""
+  )
+}
+
 def get_files [
   url: string
   download_url: bool
@@ -39,8 +46,7 @@ def get_files [
         if $download_url {
           $file
         } else {
-          $file
-          | str replace --regex "build/[a-zA-z]+/" ""
+          get_build_filename $file
         }
       }
     | append (
@@ -72,7 +78,22 @@ export def main [
       | get download_url
     )
 
-    return (get_url $download_url)
+    let path = (
+      $view_source      
+      | path parse
+    )
+
+    let language = if ($path | get stem) == ".gitignore" {
+      "gitignore"
+    } else {
+      $path
+      | get extension
+    }
+
+    return (
+      get_url $download_url 
+      | bat --force-colorization --language $language
+    )
   }
 
    if $list {
@@ -119,9 +140,11 @@ export def main [
       |url|
 
       let filename = (
-        $url
-        | split row --regex "trunk/"
-        | last
+        get_build_filename (
+          $url
+          | split row --regex "trunk/"
+          | last
+        )
       )
 
       let file_path = (
@@ -134,7 +157,7 @@ export def main [
       http get --raw $url
       | save --force $file_path
 
-      print $"Downloaded ($filename)."
+      print $"Downloaded \"($filename)\""
     }
 
   if $return_name {
