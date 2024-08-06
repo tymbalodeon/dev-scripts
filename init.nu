@@ -49,7 +49,7 @@ def get_files [
 
 export def main [
   environment?: string # The environment to download
-  name?: string # The name of the directory (relative to "~/src/github.com/<username>/")
+  name?: string # The name of the download directory
   --list # List available environments
   --return-name # Return the destination directory after downloading
 ] {
