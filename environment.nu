@@ -160,7 +160,7 @@ export def main [
   mkdir $project_path
   cd $project_path
 
-  if not $no_remote or $domain == "gitlab" {
+  if $no_remote or $domain == "gitlab" {
     git init
   }
 
