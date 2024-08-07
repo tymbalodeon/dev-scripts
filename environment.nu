@@ -76,7 +76,7 @@ def get_domain [domain: string] {
 export def main [
   environment?: string # The environment to download
   name?: string # The name of the download directory
-  --domain: string = "github" # The domain to use for creating new repositories
+  --domain: string = "github" # The domain to use for creating new repos
   --list # List available environments
   --no-remote # Skip creating a remote project at `--domain`
   --view-source: string # View contents of file
