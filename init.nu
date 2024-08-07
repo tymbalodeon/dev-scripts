@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-def get_url [url: string --json] {
+def get_github_url [url: string --json] {
   let response = (
     http get
       --headers [
@@ -28,7 +28,7 @@ def get_files [
   url: string
   download_url: bool
 ] {
-  let contents = (get_url $url --json)
+  let contents = (get_github_url $url --json)
 
   return (
     $contents
@@ -63,9 +63,20 @@ def get_files [
   )
 }
 
+def get_domain [domain: string] {
+  if "github" in $domain {
+    return "github.com"
+  } else if "gitlab" in $domain {
+    return "gitlab.com"
+  } else {
+    exit 1
+  }
+}
+
 export def main [
   environment?: string # The environment to download
   name?: string # The name of the download directory
+  --domain: string = "github" # The domain to use for initializing new repositories
   --list # List available environments
   --view-source: string # View contents of file
 ] {
@@ -73,7 +84,7 @@ export def main [
 
   if not ($view_source | is-empty) {
     let download_url = (
-      get_url $"($base_url)/($environment)/($view_source)" --json 
+      get_github_url $"($base_url)/($environment)/($view_source)" --json 
       | get download_url
     )
 
@@ -90,7 +101,7 @@ export def main [
     }
 
     return (
-      get_url $download_url 
+      get_github_url $download_url 
       | bat --force-colorization --language $language
     )
   }
@@ -115,7 +126,7 @@ export def main [
     return (help main)
   }
 
-  let username = (git config github.user)
+  let username = (git config $"($domain).user")
 
   let username = if ($username | is-empty) {
     whoami
@@ -131,16 +142,34 @@ export def main [
 
   let user_directory = (
     $env.HOME
-    | path join $"src/github.com/($username)"  
+    | path join $"src/(get_domain $domain)/($username)"  
   )
 
   cd $user_directory
-  gh repo create --add-readme --clone --private $name
 
-  let name = (
+  if $domain == "github" {
+    gh repo create --add-readme --clone --private $name
+  } 
+
+  let project_path = (
     $user_directory
     | path join $name
   )
+
+  mkdir $project_path
+  cd $project_path
+
+  if $domain == "gitlab" {
+    git init
+
+    (
+      glab repo create 
+        --defaultBranch trunk 
+        --name $name 
+        --private 
+        --readme 
+    )
+  }
 
   let download_urls = (
     get_files $"($base_url)/($environment)" true err> /dev/null
@@ -161,7 +190,7 @@ export def main [
       )
 
       let file_path = (
-        $name
+        $project_path
         | path join $filename
       )
 
@@ -170,14 +199,16 @@ export def main [
       http get --raw $url
       | save --force $file_path
 
+      if ($file_path | path parse | get extension) == "nu" {
+        chmod +x $file_path
+      }
+
       print $"Downloaded \"($filename)\""
     }
-
-  cd $name
 
   git add .
   git commit --message "chore: initial commit"
   git push
 
-  return $name
+  return $project_path
 }
