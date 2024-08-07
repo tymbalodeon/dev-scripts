@@ -78,6 +78,7 @@ export def main [
   name?: string # The name of the download directory
   --domain: string = "github" # The domain to use for creating new repositories
   --list # List available environments
+  --no-remote # Skip creating a remote project at `--domain`
   --view-source: string # View contents of file
 ] {
   let base_url = "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/build"
@@ -147,7 +148,7 @@ export def main [
 
   cd $user_directory
 
-  if $domain == "github" {
+  if not $no_remote and $domain == "github" {
     gh repo create --add-readme --clone --private $name
   } 
 
@@ -159,9 +160,11 @@ export def main [
   mkdir $project_path
   cd $project_path
 
-  if $domain == "gitlab" {
+  if not $no_remote or $domain == "gitlab" {
     git init
+  }
 
+  if not $no_remote and $domain == "gitlab" {
     (
       glab repo create 
         --defaultBranch trunk 
@@ -208,7 +211,10 @@ export def main [
 
   git add .
   git commit --message "chore: initial commit"
-  git push
+
+  if not $no_remote {
+    git push
+  }
 
   return $project_path
 }
