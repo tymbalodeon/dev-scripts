@@ -80,6 +80,7 @@ export def main [
   --list # List available environments
   --no-remote # Skip creating a remote project at `--domain`
   --view-source: string # View contents of file
+  --visibility: string = "private" # Visibility of remote project
 ] {
   let base_url = "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/build"
 
@@ -149,7 +150,11 @@ export def main [
   cd $user_directory
 
   if not $no_remote and $domain == "github" {
-    gh repo create --add-readme --clone --private $name
+    if $visibility == "private" {
+      gh repo create --add-readme --clone --private $name
+    } else {
+      gh repo create --add-readme --clone $name
+    }
   } 
 
   let project_path = (
@@ -165,13 +170,22 @@ export def main [
   }
 
   if not $no_remote and $domain == "gitlab" {
-    (
-      glab repo create 
-        --defaultBranch trunk 
-        --name $name 
-        --private 
-        --readme 
-    )
+    if $visibility == "private" {
+      (
+        glab repo create 
+          --defaultBranch trunk 
+          --name $name 
+          --private 
+          --readme 
+      )
+    } else {
+      (
+        glab repo create 
+          --defaultBranch trunk 
+          --name $name 
+          --readme 
+      )
+    }
   }
 
   let download_urls = (
