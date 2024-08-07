@@ -73,51 +73,65 @@ def get_domain [domain: string] {
   }
 }
 
-export def main [
-  environment?: string # The environment to download
+def get_base_url [] {
+ return "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/build"
+}
+
+# List available environments
+def "environment list" [
+  environment?: string # The base environment
+] {
+  let base_url = (get_base_url)
+
+  return (
+    if ($environment | is-empty) {
+      http get --raw $base_url
+      | from json
+      | get name
+      | to text
+    } else {
+      get_files $"($base_url)/($environment)" false
+    }
+  )
+}
+
+# View contents of file
+def "environment view-source" [
+  environment: string # The base environment
+  file: string # Filename (relative to environment base)  
+] {
+  let base_url = (get_base_url)
+
+  let download_url = (
+    get_github_url $"($base_url)/($environment)/($file)" --json 
+    | get download_url
+  )
+
+  let path = (
+    $file      
+    | path parse
+  )
+
+  let language = if ($path | get stem) == ".gitignore" {
+    "gitignore"
+  } else {
+    $path
+    | get extension
+  }
+
+  return (
+    get_github_url $download_url 
+    | bat --force-colorization --language $language
+  )
+}
+
+# Create new repositories from starter development environments
+def "environment create" [
+  environment?: string # The base environment
   name?: string # The name of the download directory
   --domain: string = "github" # The domain to use for initializing new repositories
-  --list # List available environments
-  --view-source: string # View contents of file
 ] {
-  let base_url = "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/build"
-
-  if not ($view_source | is-empty) {
-    let download_url = (
-      get_github_url $"($base_url)/($environment)/($view_source)" --json 
-      | get download_url
-    )
-
-    let path = (
-      $view_source      
-      | path parse
-    )
-
-    let language = if ($path | get stem) == ".gitignore" {
-      "gitignore"
-    } else {
-      $path
-      | get extension
-    }
-
-    return (
-      get_github_url $download_url 
-      | bat --force-colorization --language $language
-    )
-  }
-
-   if $list {
-    if ($environment | is-empty) {
-      return (
-        http get --raw $base_url
-        | from json
-        | get name
-        | to text
-      )
-    } else {
-      return (get_files $"($base_url)/($environment)" false)
-    }
-  }
+  let base_url = (get_base_url)
 
   if (
     [$environment $name] 
@@ -211,4 +225,8 @@ export def main [
   git push
 
   return $project_path
+}
+
+def environment [] {
+  help environment
 }
