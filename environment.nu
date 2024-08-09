@@ -128,6 +128,15 @@ export def main [
     return (help main)
   }
 
+  let available_environments = (main --list)
+
+  if not ($environment in ($available_environments | lines)) {
+    print $"No environment named \"($environment)\". Available environments:"
+    print $available_environments
+
+    return
+  }
+
   let username = (git config $"($domain).user")
 
   let username = if ($username | is-empty) {
