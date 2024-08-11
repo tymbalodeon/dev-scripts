@@ -133,16 +133,45 @@ def merge_justfiles [environment: string] {
     | append $priority_recipes
   )
 
-  let generated_scripts_directory = (get_generatead_scripts_directory $environment)
+  let generated_scripts_directory = (
+    get_generatead_scripts_directory $environment
+  )
 
   mkdir $generated_scripts_directory
 
   for recipe in $recipes {
-    let recipe_environment = ($recipe.environment)
-    let source_scripts_directory = $"src/($recipe_environment)/scripts"
+    let source_scripts_directory = $"src/($recipe.environment)/scripts"
     let script_file = $"($source_scripts_directory)/($recipe.command).nu"
 
     cp $script_file $generated_scripts_directory
+
+    let imports = (
+      open $script_file
+      | rg '^use .+\.nu'
+      | lines
+      | each {
+          |line|
+
+          $line
+          | split row " "
+          | get 1
+          | path basename
+        }
+    )
+
+    let import_files = (
+      $imports
+      | each {
+          |import|
+
+          $source_scripts_directory
+          | path join $import
+      }
+    )
+
+    for file in $import_files {
+      cp $file $generated_scripts_directory
+    }
   }
 
   let recipes = (
