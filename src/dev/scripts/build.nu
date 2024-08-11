@@ -569,5 +569,6 @@ export def main [environment?: string --skip-dev-flake] {
       }
 
       generate_files $environment $skip_flake
-    } out+err> /dev/null
+    } 
+  | null
 }
