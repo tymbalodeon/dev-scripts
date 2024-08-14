@@ -90,7 +90,7 @@ def get_command_name [recipe: record<recipe: string, environment: string>] {
   )
 }
 
-export def get_generated_justfile [environment: string] {
+def get_generated_justfile [environment: string] {
   let base_directory = (get_base_directory $environment --generated)
 
   return $"($base_directory)Justfile"
@@ -577,7 +577,7 @@ def generate_files [environment: string skip_flake: bool] {
 }
 
 # Build dev environments
-export def main [environment?: string --skip-dev-flake] {
+def main [environment?: string --skip-dev-flake] {
   let environments = if ($environment | is-empty) {
     ls --short-names src
     | get name

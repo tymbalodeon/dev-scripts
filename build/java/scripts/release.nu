@@ -3,7 +3,7 @@
 use ./check.nu
 
 # Create a new release
-export def main [
+def main [
     --preview # Preview new additions to the CHANGELOG without modifyiing anything
 ] {
   if not $preview {

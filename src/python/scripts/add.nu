@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def main [
+def main [
     ...dependencies: string, # Dependencies to add
     --dev # Add dependencies to the development group
 ] {

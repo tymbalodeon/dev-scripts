@@ -3,7 +3,7 @@
 use ./check.nu
 
 # Update dependencies
-export def main [
+def main [
     --prod # Update production dependencies
 ] {
     if not $prod {

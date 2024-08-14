@@ -2,6 +2,6 @@
 
 use ./compile.nu get_binary_file_name
 
-export def main [] {
+def main [] {
   rm -f out/*
 }

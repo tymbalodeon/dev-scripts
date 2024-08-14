@@ -3,7 +3,7 @@
 use ./test.nu
 
 # Run coverage report
-export def main [
+def main [
   --fail-under: string # Fail if coverage is less than this percentage
 ] {
   test out+err> /dev/null

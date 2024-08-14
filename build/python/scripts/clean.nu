@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
 # Remove generated files
-export def main [
+def main [
     --options, # Display possible values for ...(files)
     --all (-a), # Clean all files
     ...files: string # Which files to clean (see --options for available files)

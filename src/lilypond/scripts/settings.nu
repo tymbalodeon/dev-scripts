@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
 # Manage scores settings
-export def main [
+def main [
   --edit # Open settings file in $EDITOR
   key?: string # The key to view or set
   value?: string # The new value for <key>
@@ -47,7 +47,7 @@ export def main [
   }
 }
 
-export def get_pdfs_directory [] {
+def get_pdfs_directory [] {
   let pdfs_directory = (main | get pdfs_directory)
 
   mkdir $pdfs_directory

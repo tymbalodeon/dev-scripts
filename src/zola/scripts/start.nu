@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def main [--open] {
+def main [--open] {
   let project_url = (
     open config.toml
     | get base_url

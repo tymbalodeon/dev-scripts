@@ -2,7 +2,7 @@
 
 use ./command.nu
 
-export def main [
+def main [
   target: string # Type of release to target (major, minor, or patch)
   --preview # Preview new additions to the CHANGELOG without modifyiing anything
 ] {

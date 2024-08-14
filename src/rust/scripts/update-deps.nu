@@ -1,5 +1,5 @@
 #!/usr/bin/env nu
 
-export def main [] {
+def main [] {
   cargo update
 }

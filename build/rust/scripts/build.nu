@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def main [
+def main [
   --release # Build in release mode, with optimizations
 ] {
   if $release {

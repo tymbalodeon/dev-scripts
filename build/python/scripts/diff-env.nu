@@ -60,7 +60,7 @@ def get_diff [type: string local_file: record file?: string accept = false] {
   }
 }
 
-export def main [type?: string --file: string --accept] {
+def main [type?: string --file: string --accept] {
   let type = if ($type | is-empty) {
     "main"
   } else {

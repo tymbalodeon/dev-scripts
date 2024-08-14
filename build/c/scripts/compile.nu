@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def get_binary_file_name [file: string] {
+def get_binary_file_name [file: string] {
   return (
     $file
     | str replace ".c" ""
@@ -38,7 +38,7 @@ def compile [file: string force: bool] {
   }
 }
 
-export def main [
+def main [
   file?: string # The file to compile
   --force # Re-compile even if up-to-date
 ] {

@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def main [] {
+def main [] {
   (
     just --list
       --color always

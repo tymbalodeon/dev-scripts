@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def main [] {
+def main [] {
   let origin = (git remote get-url origin)
 
   let values = (

@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def main [] {
+def main [] {
   (
     cargo clippy
       --allow-dirty

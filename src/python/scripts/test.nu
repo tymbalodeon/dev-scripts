@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
 # Run tests
-export def main [] {
+def main [] {
     pdm run coverage run -m pytest tests
 }

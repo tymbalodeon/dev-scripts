@@ -10,7 +10,7 @@ def lox [file?: string] {
   }
 }
 
-export def main [
+def main [
   file?: string # The file to interpret
   --example # Run the example file
 ] {

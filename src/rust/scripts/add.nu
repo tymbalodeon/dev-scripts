@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def main [
+def main [
   ...dependencies # Dependencies to add
 ] {
   cargo add ...$dependencies

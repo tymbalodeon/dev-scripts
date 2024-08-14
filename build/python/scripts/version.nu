@@ -2,7 +2,7 @@
 
 use ./command.nu
 
-export def main [] {
+def main [] {
   return (
     open $"(command)/__init__.py"
     | split row " "

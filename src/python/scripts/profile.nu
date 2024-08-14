@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
 # Profile a command and view results
-export def main [
+def main [
   ...args: string # Arguments to the command being profiled
 ] {
   let output_directory = "profiles"

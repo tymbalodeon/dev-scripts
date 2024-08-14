@@ -8,7 +8,7 @@ use ./info.nu
 use ./open-pdf.nu
 
 # Open <score> in $EDITOR and pdf viewer, recompiling on file changes
-export def main [
+def main [
   search_term = "" # Search term for finding scores
   --info # Edit info toml for score
 ] {

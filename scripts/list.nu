@@ -3,7 +3,7 @@
 use ./build.nu
 
 # List available environments and files
-export def main [
+def main [
   environment?: string # List files for environment
 ] {
   if ($environment | is-empty) {

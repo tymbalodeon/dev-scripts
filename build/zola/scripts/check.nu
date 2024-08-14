@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
 # Check flake and run pre-commit hooks
-export def main [
+def main [
     ...hooks: string # The hooks to run
     --all # Run `nix flake check` and all pre-commit hooks
     --flake # Run `nix flake check`

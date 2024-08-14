@@ -3,7 +3,7 @@
 use ./domain.nu
 
 # View issues
-export def main [
+def main [
   issue_number?: number # The number of the issue to view
   --close # Close issue
   --create # Create issue

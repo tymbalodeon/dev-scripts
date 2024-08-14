@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def list-dependencies [
+def list-dependencies [
     --dev
     --prod
     --include-version

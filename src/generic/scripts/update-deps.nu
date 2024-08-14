@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
 # Update dependencies
-export def main [] {
+def main [] {
     nix flake update
 }

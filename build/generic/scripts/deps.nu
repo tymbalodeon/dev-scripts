@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
 # List dependencies
-export def main [
+def main [
   dependency?: string #
 ] {
   let dependencies = (

@@ -16,7 +16,7 @@ def is-a-dependency [
 }
 
 # Remove dependencies
-export def main [
+def main [
     ...dependencies: string # Dependencies to remove
 ] {
     for $dependency in $dependencies {

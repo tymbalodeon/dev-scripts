@@ -60,7 +60,7 @@ def generate_ast [] {
   }
 }
 
-export def main [
+def main [
   file?: string # The file to compile
 ] {
   if ($file | is-empty) {

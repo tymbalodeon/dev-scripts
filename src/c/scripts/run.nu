@@ -2,7 +2,7 @@
 
 use ./compile.nu
 
-export def main [
+def main [
   file: string # The file to interpret
 ] {
   let source_file = $"src/($file).c"
