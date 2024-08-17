@@ -3,36 +3,44 @@
 # Check flake and run pre-commit hooks
 def main [
     ...hooks: string # The hooks to run
-    --all # Run `nix flake check` and all pre-commit hooks
     --flake # Run `nix flake check`
     --list # List hook ids
+    --pre-commit # Run pre-commit hooks
     --update # Update all pre-commit hooks
 ] {
     if $list {
-        print (
-            rg '\- id:' .pre-commit-config.yaml
-            | str replace --all "- id:" ""
+        return (
+            rg '\-\s+id:' .pre-commit-config.yaml
             | lines
+            | str replace --all --regex '-\s+id:' ""
             | str trim
             | sort
             | to text
         )
-
-        return
     }
+
+    let all = (
+        [
+            $flake
+            $pre_commit
+            $update
+        ] | all {|option| not $option}
+    )
 
     if $all or $flake {
         nix flake check
 
-        if $flake {
+        if $flake and not $pre_commit {
             return
         }
     }
 
-    if $update {
-        pre-commit autoupdate
+    if $update and not $pre_commit {
+        pre-commit run pre-commit-update --all-files
 
-        return
+        if ([$flake $pre_commit] | all {|option| not $option}) {
+            return
+        }
     }
 
     if $all or ($hooks | is-empty) {

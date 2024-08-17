@@ -2,7 +2,7 @@
 
 # List dependencies
 def main [
-  dependency?: string #
+  dependency?: string
 ] {
   let dependencies = (
     open flake.nix
