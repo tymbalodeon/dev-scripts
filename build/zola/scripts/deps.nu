@@ -6,7 +6,7 @@ def main [
 ] {
   let dependencies = (
     open flake.nix
-    | rg --multiline "packages = .+\\[(\n|.)+\\];"
+    | rg --multiline "packages = .+\\[(\n|[^;])+\\];"
     | lines
     | drop
     | drop nth 0
