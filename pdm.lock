@@ -3,9 +3,12 @@
 
 [metadata]
 groups = ["default", "dev"]
-strategy = ["cross_platform", "inherit_metadata"]
-lock_version = "4.4.1"
-content_hash = "sha256:c67205cb02f31f38cddcf9205815f763c8757f90ab11cd2a36cdf6866f4d4389"
+strategy = ["inherit_metadata"]
+lock_version = "4.5.0"
+content_hash = "sha256:128c435514ed3c9e9a4eeef41fb2cc2b826d9125e5a06598dfd1f35a212acb9d"
+
+[[metadata.targets]]
+requires_python = "==3.12.*"
 
 [[package]]
 name = "click"
@@ -15,6 +18,7 @@ summary = "Composable command line interface toolkit"
 groups = ["dev"]
 dependencies = [
     "colorama; platform_system == \"Windows\"",
+    "importlib-metadata; python_version < \"3.8\"",
 ]
 files = [
     {file = "click-8.1.7-py3-none-any.whl", hash = "sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28"},
@@ -55,6 +59,7 @@ summary = "GitPython is a Python library used to interact with Git repositories"
 groups = ["dev"]
 dependencies = [
     "gitdb<5,>=4.0.1",
+    "typing-extensions>=3.7.4.3; python_version < \"3.8\"",
 ]
 files = [
     {file = "GitPython-3.1.43-py3-none-any.whl", hash = "sha256:eec7ec56b92aad751f9912a73404bc02ba212a23adb2c7098ee668417051a1ff"},
@@ -74,7 +79,7 @@ files = [
 
 [[package]]
 name = "pre-commit-update"
-version = "0.3.3.post1"
+version = "0.4.0.post1"
 requires_python = ">=3.8"
 summary = "Simple CLI tool to check and update pre-commit hooks."
 groups = ["dev"]
@@ -86,8 +91,8 @@ dependencies = [
     "tomli>=2.0.1",
 ]
 files = [
-    {file = "pre_commit_update-0.3.3.post1-py3-none-any.whl", hash = "sha256:06df37e67d509c988c0a2a85ab49186ca7235d59ec5e996fe46b036e6b7c6106"},
-    {file = "pre_commit_update-0.3.3.post1.tar.gz", hash = "sha256:1303bd7c1dcb80638bb04af5b9842a82b2d6d75cc4d864686084359a600b3b35"},
+    {file = "pre_commit_update-0.4.0.post1-py3-none-any.whl", hash = "sha256:76fafb08f7ed3d0bb9a7eccf3728926cacf722f350ad9d5d9814da0aee8c3c80"},
+    {file = "pre_commit_update-0.4.0.post1.tar.gz", hash = "sha256:2d7a2174d5d980885df47a09f3738c9281ef23217977b191840ba871c6da8083"},
 ]
 
 [[package]]
@@ -110,7 +115,7 @@ version = "0.2.8"
 requires_python = ">=3.6"
 summary = "C version of reader, parser and emitter for ruamel.yaml derived from libyaml"
 groups = ["dev"]
-marker = "platform_python_implementation == \"CPython\" and python_version < \"3.13\""
+marker = "platform_python_implementation == \"CPython\""
 files = [
     {file = "ruamel.yaml.clib-0.2.8-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:ebc06178e8821efc9692ea7544aa5644217358490145629914d8020042c24aa1"},
     {file = "ruamel.yaml.clib-0.2.8-cp312-cp312-macosx_13_0_arm64.whl", hash = "sha256:edaef1c1200c4b4cb914583150dcaa3bc30e592e907c01117c08b13a07255ec2"},
