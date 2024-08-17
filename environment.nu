@@ -19,7 +19,7 @@ def get_github_url [url: string --json] {
 
 def get_build_filename [path: string] {
   return (
-    $path 
+    $path
     | str replace --regex "build/[a-zA-z]+/" ""
   )
 }
@@ -86,12 +86,12 @@ export def main [
 
   if not ($view_source | is-empty) {
     let download_url = (
-      get_github_url $"($base_url)/($environment)/($view_source)" --json 
+      get_github_url $"($base_url)/($environment)/($view_source)" --json
       | get download_url
     )
 
     let path = (
-      $view_source      
+      $view_source
       | path parse
     )
 
@@ -103,7 +103,7 @@ export def main [
     }
 
     return (
-      get_github_url $download_url 
+      get_github_url $download_url
       | bat --force-colorization --language $language
     )
   }
@@ -122,7 +122,7 @@ export def main [
   }
 
   if (
-    [$environment $name] 
+    [$environment $name]
     | all {|item| ($item | is-empty)}
   ) {
     return (help main)
@@ -153,7 +153,7 @@ export def main [
 
   let user_directory = (
     $env.HOME
-    | path join $"src/(get_domain $domain)/($username)"  
+    | path join $"src/(get_domain $domain)/($username)"
   )
 
   cd $user_directory
@@ -164,7 +164,7 @@ export def main [
     } else {
       gh repo create --add-readme --clone $name
     }
-  } 
+  }
 
   let project_path = (
     $user_directory
@@ -181,18 +181,18 @@ export def main [
   if not $no_remote and $domain == "gitlab" {
     if $visibility == "private" {
       (
-        glab repo create 
-          --defaultBranch trunk 
-          --name $name 
-          --private 
-          --readme 
+        glab repo create
+          --defaultBranch trunk
+          --name $name
+          --private
+          --readme
       )
     } else {
       (
-        glab repo create 
-          --defaultBranch trunk 
-          --name $name 
-          --readme 
+        glab repo create
+          --defaultBranch trunk
+          --name $name
+          --readme
       )
     }
   }

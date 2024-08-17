@@ -598,6 +598,6 @@ def main [environment?: string --skip-dev-flake] {
       }
 
       generate_files $environment $skip_flake
-    } 
+    }
   | null
 }

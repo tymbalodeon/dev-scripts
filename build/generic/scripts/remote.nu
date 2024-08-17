@@ -12,13 +12,13 @@ def main [
         if $web {
             gh repo view --web
         } else {
-            gh repo view 
+            gh repo view
         }
     } else if $domain == "gitlab" {
         if $web {
             glab repo view --web
         } else {
-            glab repo view 
+            glab repo view
         }
     }
 }
