@@ -66,13 +66,17 @@
 @remove *dependencies:
     ./scripts/remove.nu {{ dependencies }}
 
-# Run the application, with any provided <args>. [`--help` is for the application, not the Justfile recipe]
+# Run the application, with any provided <args>. 
 @run *args:
     ./scripts/run.nu {{ args }}
 
 # View repository analytics
 @stats *help:
     ./scripts/stats.nu {{ help }}
+
+# Run the tests
+@test *package:
+    ./scripts/test.nu {{ package }}
 
 # Update dependencies
 @update-deps *help:
