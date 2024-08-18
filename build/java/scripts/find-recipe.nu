@@ -5,7 +5,13 @@ def main [
   search_term?: string # Regex pattern to match
 ] {
   if ($search_term | is-empty) {
-    let command = (just --list | fzf | str trim | split row " " | first)
+    let command = (
+      just --list 
+      | lines
+      | drop nth 0
+      | to text
+      | fzf 
+      | str trim | split row " " | first)
 
     let out = (
       just $command 
@@ -22,6 +28,7 @@ def main [
       }
     )
   } else {
-    just | rg $search_term
+    just
+    | rg $search_term
   }
 }
