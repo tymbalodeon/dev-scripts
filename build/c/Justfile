@@ -24,11 +24,11 @@
 # Search available `just` recipes
 [no-exit-message]
 @find-recipe *search_term:
-    ./scripts/find-recipe.nu {{ search_term }}
+    ./scripts/find-recipe.nu {{ invocation_directory() }} {{ search_term }}
 
 # Search project history
-@history *search_term:
-    ./scripts/history.nu {{ search_term }}
+@history *filename:
+    ./scripts/history.nu {{ invocation_directory() }} {{ filename }}
 
 # Initialize direnv environment
 @init *help:

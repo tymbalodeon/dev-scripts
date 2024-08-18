@@ -1,8 +1,15 @@
 #!/usr/bin/env nu
 
+def --wrapped "main commits" [
+  ...args: string
+] {
+  cog log ...$args
+}
+
 # Search git history
 def main [
-  search_term: string # The text to search for
+  invocation_directory: string  
+  filename: string # Show file history
 ] {
-  git log -S $search_term --all
+  git log --patch ($invocation_directory | path join $filename)
 }

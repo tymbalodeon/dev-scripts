@@ -1,17 +1,24 @@
 #!/usr/bin/env nu
 
-# Search available `just` commands interactively, or by <regex>
+# Search for `just` recipes
 def main [
+  _invocation_directory: string
   search_term?: string # Regex pattern to match
 ] {
   if ($search_term | is-empty) {
     let command = (
-      just --list 
-      | lines
-      | drop nth 0
+      just --summary 
+      | split row " "
       | to text
-      | fzf 
-      | str trim | split row " " | first)
+      | (
+          fzf 
+            --preview 
+            $"bat --force-colorization ($_invocation_directory)/{}.nu"
+        )
+      | str trim 
+      | split row " " 
+      | first
+    )
 
     let out = (
       just $command 
