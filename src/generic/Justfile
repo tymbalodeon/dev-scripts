@@ -19,8 +19,16 @@
     ./scripts/find-recipe.nu {{ invocation_directory() }} {{ search_term }}
 
 # Search project history
-@history *filename:
-    ./scripts/history.nu {{ invocation_directory() }} {{ filename }}
+history *args:
+    #!/usr/bin/env nu
+
+    let script = "./scripts/history.nu"
+
+    if "commits" in "{{ args }}" {
+        nu $script {{ args }}
+    } else {
+        nu $script {{ invocation_directory() }} {{ args }}
+    }
 
 # Initialize direnv environment
 @init *help:
