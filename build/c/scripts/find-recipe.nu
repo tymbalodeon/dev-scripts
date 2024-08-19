@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-# Search for `just` recipes
+# Search available `just` recipes
 def main [
   _invocation_directory: string
   search_term?: string # Regex pattern to match

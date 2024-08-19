@@ -5,6 +5,10 @@
 @add *dependencies:
     ./scripts/add.nu {{ dependencies }}
 
+# View `git blame` for a file
+@blame *filename:
+    ./scripts/blame.nu {{ invocation_directory() }} {{ filename }}
+
 # Build the application
 @build *release:
     ./scripts/build.nu {{ release }}
@@ -20,6 +24,10 @@
 # Run clippy
 @clippy *help:
     ./scripts/clippy.nu {{ help }}
+
+# View commit history
+@commits *args:
+    ./scripts/commits.nu {{ args }}
 
 # Show application dependencies
 @deps *help:
@@ -39,8 +47,8 @@
     ./scripts/find-recipe.nu {{ invocation_directory() }} {{ search_term }}
 
 # Search project history
-@history *filename:
-    ./scripts/history.nu {{ invocation_directory() }} {{ filename }}
+@history *args:
+    ./scripts/history.nu {{ invocation_directory() }} {{ args }}
 
 # Initialize direnv environment
 @init *help:

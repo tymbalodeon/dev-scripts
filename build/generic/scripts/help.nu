@@ -2,8 +2,9 @@
 
 def main [] {
   (
-    just --list
+    just 
       --color always
+      --list
       --list-heading (
         [
           "Available recipes:"

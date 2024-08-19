@@ -19,7 +19,7 @@ def main [
   } else {
     return (
       $dependencies
-      | rg $dependency
+      | rg --color always $dependency
     )
   }
 }
