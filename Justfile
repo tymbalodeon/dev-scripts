@@ -1,6 +1,10 @@
 @_help:
     ./scripts/help.nu
 
+# View `git blame` for a file
+@blame *filename:
+    ./scripts/blame.nu {{ invocation_directory() }} {{ filename }}
+
 # Build dev environments
 @build *args:
     ./scripts/build.nu {{ args }}
@@ -8,6 +12,10 @@
 # Check flake and run pre-commit hooks
 @check *args:
     ./scripts/check.nu {{ args }}
+
+# View commit history
+@commits *args:
+    ./scripts/commits.nu {{ args }}
 
 # List dependencies
 @deps *args:
@@ -23,8 +31,8 @@
     ./scripts/find-recipe.nu {{ invocation_directory() }} {{ search_term }}
 
 # Search project history
-@history *filename:
-    ./scripts/history.nu {{ invocation_directory() }} {{ filename }}
+@history *args:
+    ./scripts/history.nu {{ invocation_directory() }} {{ args }}
 
 # Initialize direnv environment
 @init *help:
