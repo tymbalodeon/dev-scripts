@@ -92,4 +92,4 @@
 
 # View the source code for a recipe
 @view-source *recipe:
-    ./scripts/view-source.nu {{ recipe }}
+    ./scripts/view-source.nu {{ invocation_directory() }} {{ recipe }}
