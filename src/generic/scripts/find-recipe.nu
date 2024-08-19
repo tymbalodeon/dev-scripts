@@ -7,21 +7,21 @@ def main [
 ] {
   if ($search_term | is-empty) {
     let command = (
-      just --summary 
+      just --summary
       | split row " "
       | to text
       | (
-          fzf 
-            --preview 
+          fzf
+            --preview
             $"bat --force-colorization ($_invocation_directory)/{}.nu"
         )
-      | str trim 
-      | split row " " 
+      | str trim
+      | split row " "
       | first
     )
 
     let out = (
-      just $command 
+      just $command
       | complete
     )
 

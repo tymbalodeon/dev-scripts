@@ -30,7 +30,7 @@
 @remove *dependencies:
     ./scripts/remove.nu {{ dependencies }}
 
-# Run the application, with any provided <args>. 
+# Run the application, with any provided <args>.
 @run *args:
     ./scripts/run.nu {{ args }}
 

@@ -2,7 +2,7 @@
 
 def main [] {
   (
-    just 
+    just
       --color always
       --list
       --list-heading (
