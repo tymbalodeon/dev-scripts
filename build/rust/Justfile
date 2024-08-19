@@ -5,9 +5,9 @@
 @add *dependencies:
     ./scripts/add.nu {{ dependencies }}
 
-# View `git blame` for a file
-@blame *filename:
-    ./scripts/blame.nu {{ invocation_directory() }} {{ filename }}
+# View file annotated with version control information
+@annotate *filename:
+    ./scripts/annotate.nu {{ invocation_directory() }} {{ filename }}
 
 # Build the application
 @build *release:

@@ -1,9 +1,9 @@
 @_help:
     ./scripts/help.nu
 
-# View `git blame` for a file
-@blame *filename:
-    ./scripts/blame.nu {{ invocation_directory() }} {{ filename }}
+# View file annotated with version control information
+@annotate *filename:
+    ./scripts/annotate.nu {{ invocation_directory() }} {{ filename }}
 
 # Check flake and run pre-commit hooks
 @check *args:
