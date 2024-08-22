@@ -5,17 +5,25 @@
 @annotate *filename:
     ./scripts/annotate.nu {{ invocation_directory() }} {{ filename }}
 
-# Build dev environments
-@build *args:
-    ./scripts/build.nu {{ args }}
-
 # Check flake and run pre-commit hooks
 @check *args:
     ./scripts/check.nu {{ args }}
 
+# Remove pdfs
+@clean *search_term:
+    ./scripts/clean.nu {{ search_term }}
+
 # View commit history
 @commits *args:
     ./scripts/commits.nu {{ args }}
+
+# Compile pdfs
+@compile *search_term:
+    ./scripts/compile.nu {{ search_term }}
+
+# Create new score
+@create *args:
+    ./scripts/create.nu {{ args }}
 
 # List dependencies
 @deps *args:
@@ -24,6 +32,10 @@
 # View the diff between environments
 @diff-env *args:
     ./scripts/diff-env.nu {{ args }}
+
+# Open <score> in $EDITOR and pdf viewer, recompiling on file changes
+@edit *args:
+    ./scripts/edit.nu {{ args }}
 
 # Search available `just` recipes
 [no-exit-message]
@@ -34,6 +46,10 @@
 @history *args:
     ./scripts/history.nu {{ invocation_directory() }} {{ args }}
 
+# Get info about scores
+@info *search_term:
+    ./scripts/info.nu {{ search_term }}
+
 # Initialize direnv environment
 @init *help:
     ./scripts/init.nu {{ help }}
@@ -42,13 +58,9 @@
 @issue *args:
     ./scripts/issue.nu {{ args }}
 
-# Run an environment Justfile
-@justfile *args:
-    ./scripts/justfile.nu {{ args }}
-
-# List available environments and files
-@list *help:
-    ./scripts/list.nu {{ help }}
+# Open pdfs
+@open-pdf *search_term:
+    ./scripts/open-pdf.nu {{ search_term }}
 
 # Create a new release
 @release *args:
@@ -58,9 +70,21 @@
 @remote *web:
     ./scripts/remote.nu  {{ web }}
 
+# View project settings
+@settings *args:
+    ./scripts/settings.nu {{ args }}
+
 # View repository analytics
 @stats *help:
     ./scripts/stats.nu {{ help }}
+
+# View available templates
+@templates *args:
+    ./scripts/templates.nu {{ args }}
+
+# Update dependencies and score LilyPond version
+@update *help:
+    ./scripts/update-deps.nu {{ help }}
 
 # Update dependencies
 @update-deps *help:

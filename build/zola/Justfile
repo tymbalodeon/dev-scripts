@@ -5,10 +5,6 @@
 @annotate *filename:
     ./scripts/annotate.nu {{ invocation_directory() }} {{ filename }}
 
-# Build dev environments
-@build *args:
-    ./scripts/build.nu {{ args }}
-
 # Check flake and run pre-commit hooks
 @check *args:
     ./scripts/check.nu {{ args }}
@@ -42,14 +38,6 @@
 @issue *args:
     ./scripts/issue.nu {{ args }}
 
-# Run an environment Justfile
-@justfile *args:
-    ./scripts/justfile.nu {{ args }}
-
-# List available environments and files
-@list *help:
-    ./scripts/list.nu {{ help }}
-
 # Create a new release
 @release *args:
     ./scripts/release.nu  {{ args }}
@@ -57,6 +45,10 @@
 # View remote repository
 @remote *web:
     ./scripts/remote.nu  {{ web }}
+
+# Serve the site
+@start *args:
+    ./scripts/start.nu {{ args }}
 
 # View repository analytics
 @stats *help:

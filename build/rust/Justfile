@@ -1,25 +1,41 @@
 @_help:
     ./scripts/_help.nu
 
+# Add dependencies
+@add *dependencies:
+    ./scripts/add.nu {{ dependencies }}
+
 # View file annotated with version control information
 @annotate *filename:
     ./scripts/annotate.nu {{ invocation_directory() }} {{ filename }}
 
-# Build dev environments
-@build *args:
-    ./scripts/build.nu {{ args }}
+# Build the application
+@build *release:
+    ./scripts/build.nu {{ release }}
 
 # Check flake and run pre-commit hooks
 @check *args:
     ./scripts/check.nu {{ args }}
 
+# Remove generated files
+@clean *help:
+    ./scripts/clean.nu {{ help }}
+
+# Run clippy
+@clippy *help:
+    ./scripts/clippy.nu {{ help }}
+
 # View commit history
 @commits *args:
     ./scripts/commits.nu {{ args }}
 
-# List dependencies
-@deps *args:
-    ./scripts/deps.nu {{ args }}
+# Show application dependencies
+@deps *help:
+    ./scripts/deps.nu {{ help }}
+
+# Open a pre-configured development environment
+@dev *help:
+    ./scripts/dev.nu {{ help }}
 
 # View the diff between environments
 @diff-env *args:
@@ -38,17 +54,13 @@
 @init *help:
     ./scripts/init.nu {{ help }}
 
+# Install the application
+@install *help:
+    ./scripts/install.nu {{ help }}
+
 # View issues
 @issue *args:
     ./scripts/issue.nu {{ args }}
-
-# Run an environment Justfile
-@justfile *args:
-    ./scripts/justfile.nu {{ args }}
-
-# List available environments and files
-@list *help:
-    ./scripts/list.nu {{ help }}
 
 # Create a new release
 @release *args:
@@ -58,9 +70,21 @@
 @remote *web:
     ./scripts/remote.nu  {{ web }}
 
+# Remove dependencies
+@remove *dependencies:
+    ./scripts/remove.nu {{ dependencies }}
+
+# Run the application, with any provided <args>.
+@run *args:
+    ./scripts/run.nu {{ args }}
+
 # View repository analytics
 @stats *help:
     ./scripts/stats.nu {{ help }}
+
+# Run the tests
+@test *package:
+    ./scripts/test.nu {{ package }}
 
 # Update dependencies
 @update-deps *help:

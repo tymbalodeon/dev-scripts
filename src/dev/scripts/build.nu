@@ -87,37 +87,7 @@ def copy_files [environment: string] {
     get_base_directory --generated $environment
   )
 
-  if $environment == "dev" {
-    let managed_directories = (
-      $src_files
-      | par-each {
-          |item|
-
-          $item
-          | path parse
-          | get parent
-        }
-      | str replace $"src/($environment)" ""
-      | str replace $"src/generic" ""
-      | uniq
-      | str replace --regex "^/" ""
-      | filter {
-          |item|
-
-          not ($item | is-empty)
-      }
-    )
-
-    for directory in $managed_directories {
-      let directory = (
-        $generated_directory
-        | path join $directory
-      )
-
-      rm --force --recursive $directory
-      mkdir $directory
-    }
-  } else {
+  if $environment != "dev" {
     rm --force --recursive $generated_directory
   }
 
@@ -136,7 +106,6 @@ def copy_files [environment: string] {
       mkdir ($generated_file | path parse | get parent)
       cp --recursive $file $generated_file
     }
-  | null
 }
 
 def get_justfile [environment: string] {
@@ -240,34 +209,30 @@ def merge_justfiles [environment: string] {
       let script_file = $"($source_scripts_directory)/($recipe.command).nu"
 
       cp $script_file $generated_scripts_directory
+      
+      open $script_file
+      | rg '^use .+\.nu'
+      | lines
+      | par-each {
+          |line|
 
-      let imports = (
-        open $script_file
-        | rg '^use .+\.nu'
-        | lines
-        | par-each {
-            |line|
-
+          let import = (
             $line
             | split row " "
             | get 1
             | path basename
-          }
-      )
+          )
 
-      let import_files = (
-        $imports
-        | par-each {
-            |import|
-
+          cp --update (
             $source_scripts_directory
-            | path join $import
+            | path join (
+                $line
+                | split row " "
+                | get 1
+                | path basename
+              )
+          ) $generated_scripts_directory        
         }
-      )
-
-      for file in $import_files {
-        cp $file $generated_scripts_directory
-      }
     }
 
   let recipes = (
