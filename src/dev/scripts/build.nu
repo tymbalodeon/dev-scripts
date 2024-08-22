@@ -87,40 +87,43 @@ def copy_files [environment: string] {
     get_base_directory --generated $environment
   )
 
-  let managed_directories = (
-    $src_files
-    | par-each {
-        |item|
+  if $environment == "dev" {
+    let managed_directories = (
+      $src_files
+      | par-each {
+          |item|
 
-        $item
-        | path parse
-        | get parent
+          $item
+          | path parse
+          | get parent
+        }
+      | str replace $"src/($environment)" ""
+      | str replace $"src/generic" ""
+      | uniq
+      | str replace --regex "^/" ""
+      | filter {
+          |item|
+
+          not ($item | is-empty)
       }
-    | str replace $"src/($environment)" ""
-    | str replace $"src/generic" ""
-    | uniq
-    | str replace --regex "^/" ""
-    | filter {
-        |item|
-
-        not ($item | is-empty)
-    }
-  )
-
-  for directory in $managed_directories {
-    let directory = (
-      $generated_directory
-      | path join $directory
     )
 
-    rm --force --recursive $directory
-    mkdir $directory
+    for directory in $managed_directories {
+      let directory = (
+        $generated_directory
+        | path join $directory
+      )
+
+      rm --force --recursive $directory
+      mkdir $directory
+    }
+  } else {
+    rm --force --recursive $generated_directory
   }
 
   $src_files
-  | par-each {
+  | each {
       |file|
-
 
       let filename = (
         $file
@@ -128,7 +131,10 @@ def copy_files [environment: string] {
         | str replace $"src/generic/" ""
       )
 
-      cp $file ($generated_directory | path join $filename)
+      let generated_file = ($generated_directory | path join $filename)
+
+      mkdir ($generated_file | path parse | get parent)
+      cp --recursive $file $generated_file
     }
   | null
 }
@@ -666,20 +672,6 @@ def merge_flake_outputs [environment: string generated_flake: string] {
   | save --force $generated_flake
 }
 
-def generate_files [environment: string skip_flake: bool] {
-  copy_files $environment
-  merge_justfiles $environment
-  merge_gitignore $environment
-  merge_pre_commit_config $environment
-
-  if not $skip_flake {
-    let generated_flake = (get_generated_flake $environment)
-
-    merge_flake_outputs $environment $generated_flake
-    merge_flake_inputs $environment $generated_flake
-  }
-}
-
 # Build dev environments
 def main [environment?: string --skip-dev-flake] {
   let environments = if ($environment | is-empty) {
@@ -700,7 +692,17 @@ def main [environment?: string --skip-dev-flake] {
         false
       }
 
-      generate_files $environment $skip_flake
+      copy_files $environment
+      merge_justfiles $environment
+      merge_gitignore $environment
+      merge_pre_commit_config $environment
+
+      if not $skip_flake {
+        let generated_flake = (get_generated_flake $environment)
+
+        merge_flake_outputs $environment $generated_flake
+        merge_flake_inputs $environment $generated_flake
+      }
     }
   | null
 }
