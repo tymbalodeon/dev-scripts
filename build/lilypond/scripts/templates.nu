@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
 # View available templates
-export def main [
+def main [
   --files: string # View files for specified template name
   --src: string # View source code for specified template file stem
 ] {

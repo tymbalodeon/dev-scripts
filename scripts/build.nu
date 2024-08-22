@@ -12,42 +12,125 @@ def get_base_directory [environment: string --generated] {
   }
 }
 
-def copy_files [environment: string] {
-  let src_files = (
-    ls --all (
-      $"(get_base_directory $environment)*"
-      | into glob
-    ) | append (
-      ls --all "src/generic"
-    ) | get name
+def get_environment_files [environment: string] {
+  let src_directory = (
+    get_base_directory $environment    
   )
 
-  for item in $src_files {
-    if (
-      $item
-      | path basename
-    ) in [
-      "flake.nix"
-      ".gitignore"
-      "Justfile"
-      ".pre-commit-config.yaml"
-      "scripts"
-    ] {
-      continue
+  (
+    eza 
+      --all 
+      --git-ignore
+      --oneline
+      --recurse
+      $src_directory
+  ) | split row "\n\n"
+  | par-each {
+      |row|
+
+      let row = (
+        $row
+        | lines
+      )
+
+      let base_directory = ($row | first)
+
+      if ($base_directory | str ends-with ":") {
+        let base_directory = (
+          $base_directory
+          | str replace --regex ":$" ""
+        )
+
+        $row 
+        | drop nth 0
+        | par-each {
+            |item|
+
+            $base_directory
+            | path join $item
+        }
+      } else {
+        $row
+        | filter {
+            |item|
+
+            (
+              $item
+              | path type
+            ) != "dir" and not (
+              $item in [
+                "flake.nix"
+                "Justfile"
+              ]
+            )
+
+        }
+      | par-each {
+          |file|
+
+          $src_directory
+          | path join $file 
+        }
+      }
     }
+  | flatten
+}
 
-    let generated_directory = (get_base_directory $environment --generated)
+def copy_files [environment: string] {
+  let src_files = (
+    get_environment_files $environment
+  ) | append (
+    get_environment_files generic
+  )
 
-    if ($item | path type) == "dir" {
-      let generated_directory = $"($generated_directory)/($item)"
+  let generated_directory = (
+    get_base_directory --generated $environment
+  )
 
-      mkdir $generated_directory
+  let managed_directories = (
+    $src_files
+    | par-each {
+        |item|
 
-      cp $item --recursive $generated_directory
-    } else {
-      cp $item $generated_directory
+        $item 
+        | path parse
+        | get parent
+      }
+    | str replace $"src/($environment)" ""
+    | str replace $"src/generic" ""
+    | uniq
+    | str replace --regex "^/" ""
+    | filter {
+        |item|
+
+        not ($item | is-empty)
     }
+  )
+
+  for directory in $managed_directories {
+    let directory = (
+      $generated_directory
+      | path join $directory
+    )
+
+    rm --force --recursive $directory
+    mkdir $directory
   }
+
+  $src_files 
+  | par-each {
+      |file|
+
+
+      let filename = (
+        $file 
+        | str replace $"src/($environment)/" ""
+        | str replace $"src/generic/" ""
+      )
+
+      cp $file ($generated_directory | path join $filename)
+    }
+  | null
 }
 
 def get_justfile [environment: string] {
@@ -56,17 +139,40 @@ def get_justfile [environment: string] {
   return $"($base_directory)Justfile"
 }
 
+def get_recipe [
+  environment: string 
+  justfile: string
+  recipe: string
+] {
+  return {
+    recipe: (just --justfile $justfile --show $recipe) 
+    environment: $environment 
+    command: $recipe
+  }
+}
+
 def get_recipes [environment: string] {
   let justfile = (get_justfile $environment)
 
   if ($justfile | path exists) {
-    return (
-      open $justfile
-      | split row "\n\n"
-      | filter {|item| not ($item | str starts-with "set ")}
-      | each {|recipe| {recipe: $recipe environment: $environment}}
-      | each {|item| $item | insert command (get_command_name $item)}
+    let recipes = (
+      just --justfile $justfile --summary
+      | split row " "
+      | par-each {
+          |recipe|
+
+          get_recipe $environment $justfile $recipe
+      }
     )
+
+    if $environment == "generic" {
+      let help_command = "_help"
+
+      $recipes
+      | append (get_recipe $environment $justfile $help_command)
+    } else {
+      $recipes
+    }
   } else {
     return []
   }
@@ -77,7 +183,7 @@ def get_command_name [recipe: record<recipe: string, environment: string>] {
     $recipe.recipe
     | lines
     | filter {|line| $line | str starts-with "@"}
-    | each {
+    | par-each {
         |line|
 
         $line
@@ -106,31 +212,13 @@ def merge_justfiles [environment: string] {
   let shared_recipes = (get_recipes "generic")
   let environment_recipes = (get_recipes $environment)
 
-  mut recipes = [];
-
-  let base_recipes = if $environment == "dev" {
-    $environment_recipes
-  } else {
-    $shared_recipes
-  };
-
-  let priority_recipes = if $environment == "dev" {
-    $shared_recipes
-  } else {
-    $environment_recipes
-  };
-
-  for recipe in $base_recipes {
-    if not (
-      $recipe.command in ($priority_recipes.command)
-    ) {
-      $recipes = ($recipes | append $recipe)
-    }
-  }
-
   let recipes = (
-    $recipes
-    | append $priority_recipes
+    $shared_recipes 
+    | filter {
+        |recipe|
+
+        not ($recipe.command in ($environment_recipes.command))
+    } | append $environment_recipes
   )
 
   let generated_scripts_directory = (
@@ -139,57 +227,63 @@ def merge_justfiles [environment: string] {
 
   mkdir $generated_scripts_directory
 
-  for recipe in $recipes {
-    let source_scripts_directory = $"src/($recipe.environment)/scripts"
-    let script_file = $"($source_scripts_directory)/($recipe.command).nu"
+  $recipes
+  | par-each {
+      |recipe|
+      let source_scripts_directory = $"src/($recipe.environment)/scripts"
+      let script_file = $"($source_scripts_directory)/($recipe.command).nu"
 
-    cp $script_file $generated_scripts_directory
+      cp $script_file $generated_scripts_directory
 
-    let imports = (
-      open $script_file
-      | rg '^use .+\.nu'
-      | lines
-      | each {
-          |line|
+      let imports = (
+        open $script_file
+        | rg '^use .+\.nu'
+        | lines
+        | par-each {
+            |line|
 
-          $line
-          | split row " "
-          | get 1
-          | path basename
+            $line
+            | split row " "
+            | get 1
+            | path basename
+          }
+      )
+
+      let import_files = (
+        $imports
+        | par-each {
+            |import|
+
+            $source_scripts_directory
+            | path join $import
         }
-    )
+      )
 
-    let import_files = (
-      $imports
-      | each {
-          |import|
-
-          $source_scripts_directory
-          | path join $import
+      for file in $import_files {
+        cp $file $generated_scripts_directory
       }
-    )
-
-    for file in $import_files {
-      cp $file $generated_scripts_directory
     }
-  }
 
   let recipes = (
     $recipes
     | sort-by command
   )
 
+  let help_command = "_help"
+
   mut help_command_index = 0;
 
   for recipe in ($recipes | enumerate) {
-    if ($recipe.item.command) == "help" {
+    if ($recipe.item.command) == $help_command {
       $help_command_index = $recipe.index
+
+      break
     }
   }
 
   let help_command = (
     $recipes
-    | filter {|recipe| ($recipe.command) == "help"}
+    | filter {|recipe| ($recipe.command) == $help_command}
     | first
   )
 
@@ -261,7 +355,7 @@ def get_target_value [source_value: record target: list column: string] {
 def merge_yaml [source: list target: list] {
   return (
     $source
-    | each {
+    | par-each {
         |source_repo|
 
         let target_repo = (get_target_value $source_repo $target "repo")
@@ -274,7 +368,7 @@ def merge_yaml [source: list target: list] {
           $source_repo
           | update hooks (
               $source_repo.hooks
-              | each {
+              | par-each {
                   |source_hook|
 
                   let target_hook = (
@@ -337,31 +431,47 @@ def merge_yaml [source: list target: list] {
   )
 }
 
-def merge_pre_commit_config [environment: string] {
-  if $environment != "dev" {
-    cd $"src/($environment)"
+def update_pre_commit_update [environment: string] {
+  let directory = (get_base_directory $environment)
 
-    if (".pre-commit-config.yaml" | path exists) {
-      do --ignore-errors {
-        pdm run pre-commit-update out+err> /dev/null
-      }
-    }
-
-    cd -
+  try {
+    cd $directory
+    pdm run pre-commit-update out+err> /dev/null
   }
+}
+
+def merge_pre_commit_config [environment: string] {
+  [$environment generic]
+  | par-each {
+      |environment|
+
+      update_pre_commit_update $environment
+    }
+  | null
+
+  let pre_commit_config_filename = ".pre-commit-config.yaml"
 
   let generic_config = (
-    open "src/generic/.pre-commit-config.yaml"
-    | get repos
+    open (
+      get_base_directory generic 
+      | path join $pre_commit_config_filename
+    ) | get repos
   )
 
-  let environment_config_path = if $environment == "dev" {
-    ".pre-commit-config.yaml"
-  } else {
-    $"($environment)/.pre-commit-config.yaml"
-  }
+  let environment_config_path = (
+    (get_base_directory $environment)
+    | path join $pre_commit_config_filename
+  )
 
-  let environment_config = if ($environment_config_path | path exists) {
+  let generated_config_path = (
+    get_base_directory $environment --generated
+    | path join ".pre-commit-config.yaml"
+  )
+
+  let repos = if (
+    $environment_config_path
+    | path exists
+  ) {
     let environment_config = (open $environment_config_path | get repos)
     let merged_config = (merge_yaml $generic_config $environment_config)
 
@@ -382,38 +492,32 @@ def merge_pre_commit_config [environment: string] {
         )
       }
   } else {
-    []
+    $generic_config
   }
 
-  let generated_config_path = if $environment == "dev" {
-    ".pre-commit-config.yaml"
-  } else {
-    $"build/($environment)/.pre-commit-config.yaml"
-  }
+  # let repos = {
+  #   repos: (
+  #     $environment_config
+  #     | append $generic_config
+  #     | uniq
+  #   )
+  # }
+  
+  # mut existing_repos = []
+  # mut final_repos = { repos: [] }
 
-  let repos = {
-    repos: (
-      $environment_config
-      | append $generic_config
-      | uniq
-    )
-  }
+  # for repo in $repos.repos {
+  #   if not ($repo.repo in $existing_repos) {
+  #     $existing_repos = ($existing_repos | append $repo.repo)
+  #     $final_repos.repos = ($final_repos.repos | append $repo)
+  #   }
+  # }
 
-  mut existing_repos = []
-  mut final_repos = { repos: [] }
+  # $final_repos.repos = ($final_repos.repos | reverse)
 
-  for repo in $repos.repos {
-    if not ($repo.repo in $existing_repos) {
-      $existing_repos = ($existing_repos | append $repo.repo)
-      $final_repos.repos = ($final_repos.repos | append $repo)
-    }
-  }
-
-  $final_repos.repos = ($final_repos.repos | reverse)
-
-  $final_repos
-  | to yaml
-  | save --force $generated_config_path
+  # $final_repos
+  # | to yaml
+  # | save --force $generated_config_path
 }
 
 def get_flake [environment: string] {
@@ -579,9 +683,8 @@ def generate_files [environment: string skip_flake: bool] {
 # Build dev environments
 def main [environment?: string --skip-dev-flake] {
   let environments = if ($environment | is-empty) {
-    ls --short-names src
-    | get name
-    | append "dev"
+    eza src
+    | lines
   } else {
     [$environment]
   }

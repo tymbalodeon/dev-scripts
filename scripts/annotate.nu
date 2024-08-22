@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-# View `git blame` for a file
+# View file annotated with version control information
 def main [
   invocation_directory: string
   filename: string
