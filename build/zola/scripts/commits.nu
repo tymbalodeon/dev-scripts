@@ -2,7 +2,7 @@
 
 def --wrapped cog-log [...args: string] {
   let args = (
-    $args 
+    $args
     | window 2 --stride 2
     | filter {
         |arg|
@@ -40,10 +40,10 @@ def main [
   } else {
     (
       cog-log
-        --author $author 
+        --author $author
         --breaking-change $breaking_change
-        --no-error $no_error 
-        --scope $scope 
+        --no-error $no_error
+        --scope $scope
         --type $type
     )
   }

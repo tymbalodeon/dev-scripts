@@ -14,12 +14,12 @@ def get_base_directory [environment: string --generated] {
 
 def get_environment_files [environment: string] {
   let src_directory = (
-    get_base_directory $environment    
+    get_base_directory $environment
   )
 
   (
-    eza 
-      --all 
+    eza
+      --all
       --git-ignore
       --oneline
       --recurse
@@ -41,7 +41,7 @@ def get_environment_files [environment: string] {
           | str replace --regex ":$" ""
         )
 
-        $row 
+        $row
         | drop nth 0
         | par-each {
             |item|
@@ -69,7 +69,7 @@ def get_environment_files [environment: string] {
           |file|
 
           $src_directory
-          | path join $file 
+          | path join $file
         }
       }
     }
@@ -92,7 +92,7 @@ def copy_files [environment: string] {
     | par-each {
         |item|
 
-        $item 
+        $item
         | path parse
         | get parent
       }
@@ -117,13 +117,13 @@ def copy_files [environment: string] {
     mkdir $directory
   }
 
-  $src_files 
+  $src_files
   | par-each {
       |file|
 
 
       let filename = (
-        $file 
+        $file
         | str replace $"src/($environment)/" ""
         | str replace $"src/generic/" ""
       )
@@ -140,13 +140,13 @@ def get_justfile [environment: string] {
 }
 
 def get_recipe [
-  environment: string 
+  environment: string
   justfile: string
   recipe: string
 ] {
   return {
-    recipe: (just --justfile $justfile --show $recipe) 
-    environment: $environment 
+    recipe: (just --justfile $justfile --show $recipe)
+    environment: $environment
     command: $recipe
   }
 }
@@ -213,7 +213,7 @@ def merge_justfiles [environment: string] {
   let environment_recipes = (get_recipes $environment)
 
   let recipes = (
-    $shared_recipes 
+    $shared_recipes
     | filter {
         |recipe|
 
@@ -453,7 +453,7 @@ def merge_pre_commit_config [environment: string] {
 
   let generic_config = (
     open (
-      get_base_directory generic 
+      get_base_directory generic
       | path join $pre_commit_config_filename
     ) | get repos
   )
@@ -502,7 +502,7 @@ def merge_pre_commit_config [environment: string] {
   #     | uniq
   #   )
   # }
-  
+
   # mut existing_repos = []
   # mut final_repos = { repos: [] }
 
