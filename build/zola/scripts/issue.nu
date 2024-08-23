@@ -1,54 +1,112 @@
 #!/usr/bin/env nu
 
-use ./domain.nu
+def get_issue_branch [issue_number: number] {
+  let issue_title = (
+    gh issue view $issue_number --json title
+    | from json
+    | get title
+  )
+
+  return $"($issue_number)-($issue_title)"
+}
+
+# Close issue
+def "main close" [
+  issue_number: number # Issue number
+] {
+  # Merge trunk first? in case there are new changes?
+  # let issue_branch = (get_issue_branch $issue_number)
+
+  # if (git branch --show-current) != $issue_branch {
+  #   git checkout $issue_branch
+
+  #   if not (git status --short | is-empty) {
+  #     return "Please"
+  #   }
+  # }
+
+  gh issue close $issue_number
+
+  # git branch --delete $issue_branch
+}
+
+# Create issue
+def "main create" [] {
+  let last_issue_number = (
+    gh issue list --json number
+    | from json
+    | get number
+  )
+
+  let last_issue_number = if ($last_issue_number | is-empty) {
+    0
+  } else {
+    $last_issue_number | math max
+  }
+
+
+  gh issue create --editor
+
+  main develop ($last_issue_number + 1)
+}
+
+# Create development branch for issue
+def "main develop" [
+    issue_number: number # Issue number
+] {
+  let issue_branch = (get_issue_branch $issue_number)
+
+  let branches = (
+    git for-each-ref --format='%(refname:short)' refs/heads/
+    | lines
+  )
+
+  if $issue_branch in $branches {
+    git checkout $issue_branch
+  } else {
+    gh issue develop --checkout $issue_number
+  }
+}
+
+# List issues
+def "main list" [
+  --web # List issues in the browser
+] {
+  if $web {
+    gh issue list --web
+  } else {
+    gh issue list
+  }
+}
+
+# View issues
+def "main view" [
+  issue_number: number # Issue number
+  --web # View issues in the browser
+] {
+  if $web {
+    gh issue view $issue_number --web
+  } else {
+    gh issue view $issue_number
+  }
+}
 
 # View issues
 def main [
   issue_number?: number # The number of the issue to view
-  --close # Close issue
-  --create # Create issue
-  --develop # Create development branch for issue
   --web # Open the remote repository website in the browser
 ] {
-  let domain = (domain)
-
-  if $domain == "github" {
-    if $close {
-      gh issue close $issue_number
-    } else if $create {
-      gh issue create --editor
-    } else if $develop {
-      gh issue develop --checkout $issue_number
-    } else if ($issue_number | is-empty) {
-      if $web {
-        gh issue list --web
-      } else {
-        gh issue list
-      }
-    } else if $web {
-      gh issue view $issue_number --web
+  if ($issue_number | is-empty) {
+    if $web {
+      main list --web
     } else {
-      gh issue view $issue_number
+      main list
     }
-  } else if $domain == "gitlab" {
-    if $close {
-      glab issue close $issue_number
-    } else if $create {
-      glab issue create
-    } else if $develop {
-      print "Feature not implemented for GitLab."
-
-      exit 1
-    } else if ($issue_number | is-empty) {
-      if $web {
-        print "`--web` not implemented for GitLab's `issue list`."
-      }
-
-      glab issue list
-    } else if $web {
-      glab issue view $issue_number --web
+  } else {
+    if $web {
+      main view $issue_number --web
     } else {
-      glab issue view $issue_number
+      main view $issue_number
     }
   }
 }
