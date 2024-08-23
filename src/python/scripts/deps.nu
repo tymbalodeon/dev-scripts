@@ -46,27 +46,15 @@ def indent [text: string] {
 }
 
 # Show application dependencies
-def show-dependencies [
+def main [
     --dev # Show only development dependencies
     --prod # Show only production dependencies
-    --installed # Show installed dependencies (python dependencies only)
     --tree # Show installed dependencies as a tree (python dependencies only)
     --licenses # Show dependency licenses
     --sort-by-license # [If --licenses] Sort by license
 ] {
     if $tree {
-        pdm list --tree
-        exit
-    }
-
-    if $installed {
-        (
-            pdm list
-                --fields name,version
-                --sort name
-        )
-
-        exit
+        return (uv pip tree)
     }
 
     if $licenses {
@@ -128,4 +116,6 @@ def show-dependencies [
         "bat --language pip --plain --theme gruvbox-dark"
     )
     zsh -c $"print \"($dependencies)\" | ($bat_command)"
+
+    return (uv pip list)
 }
