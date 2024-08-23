@@ -209,7 +209,7 @@ def merge_justfiles [environment: string] {
       let script_file = $"($source_scripts_directory)/($recipe.command).nu"
 
       cp $script_file $generated_scripts_directory
-      
+
       open $script_file
       | rg '^use .+\.nu'
       | lines
@@ -231,7 +231,7 @@ def merge_justfiles [environment: string] {
                 | get 1
                 | path basename
               )
-          ) $generated_scripts_directory        
+          ) $generated_scripts_directory
         }
     }
 
@@ -241,7 +241,6 @@ def merge_justfiles [environment: string] {
   )
 
   let help_command = "_help"
-
   mut help_command_index = 0;
 
   for recipe in ($recipes | enumerate) {

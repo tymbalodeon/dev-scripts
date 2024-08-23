@@ -209,7 +209,7 @@ def merge_justfiles [environment: string] {
       let script_file = $"($source_scripts_directory)/($recipe.command).nu"
 
       cp $script_file $generated_scripts_directory
-      
+
       open $script_file
       | rg '^use .+\.nu'
       | lines
@@ -231,7 +231,7 @@ def merge_justfiles [environment: string] {
                 | get 1
                 | path basename
               )
-          ) $generated_scripts_directory        
+          ) $generated_scripts_directory
         }
     }
 
@@ -241,7 +241,6 @@ def merge_justfiles [environment: string] {
   )
 
   let help_command = "_help"
-
   mut help_command_index = 0;
 
   for recipe in ($recipes | enumerate) {
@@ -322,6 +321,38 @@ def get_target_value [source_value: record target: list column: string] {
     }
   )
 }
+
+# def merge_records_by_key [a: list<record> b: list<record> key: string] {
+#   mut records = []
+
+#   for b_record in $b {
+#     if ($b_record | get $key) in ($a | get $key) {
+#       $records = (
+#         $records
+#         | append (
+#             $a
+#             | filter {
+#                 |a_record|
+
+#                 ($a_record | get $key) == ($b_record | get $key)
+#               }
+#             | first
+#             | merge $b_record
+#           )
+#       )
+#     } else {
+#       $b_record
+#     }
+#   }
+
+#   for a_record in $a {
+#     if not (($a_record | get $key) in ($records | get $key)) {
+#       $records = ($records | append $a_record)
+#     }
+#   }
+
+#   return $records
+# }
 
 def merge_yaml [source: list target: list] {
   return (
