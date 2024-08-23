@@ -637,6 +637,29 @@ def merge_flake_outputs [environment: string generated_flake: string] {
   | save --force $generated_flake
 }
 
+def get_modified [
+  environment: string
+  --generated
+] {
+  let base_directory = if $generated {
+    "build"
+  } else {
+    "src"
+  }
+
+  ls --short-names $base_directory
+  | where name == $environment
+  | first
+  | get modified
+}
+
+def is_outdated [environment: string] {
+  let src_modified = (get_modified $environment)
+  let generated_modified = (get_modified --generated $environment)
+
+  return ($src_modified > $generated_modified)
+}
+
 # Build dev environments
 def main [environment?: string --skip-dev-flake] {
   let environments = if ($environment | is-empty) {
@@ -649,6 +672,11 @@ def main [environment?: string --skip-dev-flake] {
   $environments
   | par-each {
       |environment|
+
+      if not (is_outdated $environment) {
+        continue
+      }
+
       print $"Building ($environment)..."
 
       let skip_flake = if $environment == "dev" and $skip_dev_flake {
