@@ -19,9 +19,9 @@
           git-cliff
           lychee
           nodePackages.pnpm
-          pdm
-          python311
-          python311Packages.pre-commit-hooks
+          python3
+          python312Packages.pre-commit-hooks
+          uv
         ];
 
         env = {
