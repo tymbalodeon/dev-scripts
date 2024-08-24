@@ -13,10 +13,6 @@
 @check *args:
     ./scripts/check.nu {{ args }}
 
-# View commit history
-@commits *args:
-    ./scripts/commits.nu {{ args }}
-
 # List dependencies
 @deps *args:
     ./scripts/deps.nu {{ args }}
@@ -30,7 +26,7 @@
 @find-recipe *search_term:
     ./scripts/find-recipe.nu {{ invocation_directory() }} {{ search_term }}
 
-# Search project history
+# View project history
 @history *args:
     ./scripts/history.nu {{ invocation_directory() }} {{ args }}
 
