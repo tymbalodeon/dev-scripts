@@ -60,14 +60,19 @@ def get_diff [type: string local_file: record file?: string accept = false] {
   }
 }
 
-def main [type?: string --file: string --accept] {
+def main [
+  type?: string 
+  --file: string 
+  --update
+] {
   let type = if ($type | is-empty) {
-    "main"
+    "generic"
   } else {
     $type
   }
 
   for local_file in (ls --all) {
-    print (get_diff $type $local_file $file $accept)
+    print (get_diff $type $local_file $file $update)
+    # print $local_file.name
   }
 }
