@@ -322,115 +322,51 @@ def get_target_value [source_value: record target: list column: string] {
   )
 }
 
-# def merge_records_by_key [a: list<record> b: list<record> key: string] {
-#   mut records = []
+def merge_records_by_key [a: list b: list key: string] {
+  mut records = []
 
-#   for b_record in $b {
-#     if ($b_record | get $key) in ($a | get $key) {
-#       $records = (
-#         $records
-#         | append (
-#             $a
-#             | filter {
-#                 |a_record|
+  for b_record in $b {
+    if ($b_record | get $key) in ($a | get $key) {
+      let a_record = (
+        $a 
+        | filter {
+            |a_record| 
+          
+            ($a_record | get $key) == ($b_record | get $key)
+          } 
+        | first      
+      )
 
-#                 ($a_record | get $key) == ($b_record | get $key)
-#               }
-#             | first
-#             | merge $b_record
-#           )
-#       )
-#     } else {
-#       $b_record
-#     }
-#   }
+      if $key == "repo" {
+        let a_hooks = $a_record.hooks
+        let b_hooks = $b_record.hooks
+        let hooks = (merge_records_by_key $a_hooks $b_hooks "id")
 
-#   for a_record in $a {
-#     if not (($a_record | get $key) in ($records | get $key)) {
-#       $records = ($records | append $a_record)
-#     }
-#   }
-
-#   return $records
-# }
-
-def merge_yaml [source: list target: list] {
-  return (
-    $source
-    | par-each {
-        |source_repo|
-
-        let target_repo = (get_target_value $source_repo $target "repo")
-
-        if ($target_repo | is-empty) {
-          $source_repo
-        } else {
-          let $repo_hook_ids = $source_repo.hooks.id
-
-          $source_repo
-          | update hooks (
-              $source_repo.hooks
-              | par-each {
-                  |source_hook|
-
-                  let target_hook = (
-                    get_target_value $source_hook $target_repo.hooks "id"
-                  )
-
-                  if ($target_hook | is-empty) {
-                    $source_hook
-                  } else {
-                    mut merged_hook = $source_hook
-
-                    for column in (
-                      $source_hook
-                      | reject id
-                      | columns
-                    ) {
-                      let value = ($source_hook | get $column)
-
-                      $merged_hook = (
-                        $source_hook
-                        | merge (
-                          {
-                            $column: (
-                              if (
-                                $value
-                                | describe --detailed
-                                | get environment
-                              ) == "list" {
-                                $value
-                                | append (
-                                  $target_hook
-                                  | get $column
-                                )
-                                | uniq
-                              } else {
-                                $target_hook
-                                | get $column
-                              }
-                            )
-                          }
-                        )
-                        | merge $target_hook
-                      )
-                    }
-
-                    $merged_hook
-                  }
-                }
-                | append (
-                  $target_repo.hooks
-                  | filter {
-                      |target_hook|
-
-                      not ($target_hook.id in $repo_hook_ids)
-                    }
-                )
-            )
-        }
+        $records = (
+          $records
+          | append ($b_record | update hooks $hooks)
+        )
+      } else {
+        $records = (
+          $records
+          | append ($a_record | merge $b_record)
+        )
       }
-  )
+    } else {
+      $records = (
+        $records
+        | append $b_record
+      )
+    }
+  }
+
+  for a_record in $a {
+    if not (($a_record | get $key) in ($records | get $key)) {
+      $records = ($records | append $a_record)
+    }
+  }
+
+  return $records
 }
 
 def update_pre_commit_update [environment: string] {
@@ -443,15 +379,12 @@ def update_pre_commit_update [environment: string] {
 }
 
 def merge_pre_commit_config [environment: string] {
-  [$environment generic]
-  | par-each {
-      |environment|
-
-      update_pre_commit_update $environment
-    }
-  | null
-
   let pre_commit_config_filename = ".pre-commit-config.yaml"
+
+  let environment_config_path = (
+    (get_base_directory $environment)
+    | path join $pre_commit_config_filename
+  )
 
   let generic_config = (
     open (
@@ -460,66 +393,26 @@ def merge_pre_commit_config [environment: string] {
     ) | get repos
   )
 
-  let environment_config_path = (
-    (get_base_directory $environment)
-    | path join $pre_commit_config_filename
-  )
-
   let generated_config_path = (
     get_base_directory $environment --generated
     | path join ".pre-commit-config.yaml"
   )
+  
+  update_pre_commit_update generic
 
-  let repos = if (
-    $environment_config_path
-    | path exists
-  ) {
+  let repos = if ($environment_config_path | path exists) {
+    update_pre_commit_update $environment
+
     let environment_config = (open $environment_config_path | get repos)
-    let merged_config = (merge_yaml $generic_config $environment_config)
 
-    $environment_config
-    | filter {
-        |repo|
-
-        (
-          not ($repo.repo in $merged_config.repo)
-          or (
-            (
-              (
-                $generic_config
-                | where repo == $repo.repo
-              ).hooks | flatten
-            ) != $repo.hooks
-          )
-        )
-      }
+    merge_records_by_key $generic_config $environment_config repo
   } else {
     $generic_config
   }
 
-  # let repos = {
-  #   repos: (
-  #     $environment_config
-  #     | append $generic_config
-  #     | uniq
-  #   )
-  # }
-
-  # mut existing_repos = []
-  # mut final_repos = { repos: [] }
-
-  # for repo in $repos.repos {
-  #   if not ($repo.repo in $existing_repos) {
-  #     $existing_repos = ($existing_repos | append $repo.repo)
-  #     $final_repos.repos = ($final_repos.repos | append $repo)
-  #   }
-  # }
-
-  # $final_repos.repos = ($final_repos.repos | reverse)
-
-  # $final_repos
-  # | to yaml
-  # | save --force $generated_config_path
+  {repos: $repos}
+  | to yaml
+  | save --force $generated_config_path
 }
 
 def get_flake [environment: string] {
@@ -692,7 +585,11 @@ def is_outdated [environment: string] {
 }
 
 # Build dev environments
-def main [environment?: string --skip-dev-flake] {
+def main [
+  environment?: string 
+  --force # Build environments even if up-to-date
+  --skip-dev-flake # Skip building the dev flake.nix to avoid triggering direnv
+] {
   let environments = if ($environment | is-empty) {
     eza src
     | lines
@@ -704,7 +601,7 @@ def main [environment?: string --skip-dev-flake] {
   | par-each {
       |environment|
 
-      if not (is_outdated $environment) {
+      if not $force and not (is_outdated $environment) {
         continue
       }
 
