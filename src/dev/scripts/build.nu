@@ -328,13 +328,13 @@ def merge_records_by_key [a: list b: list key: string] {
   for b_record in $b {
     if ($b_record | get $key) in ($a | get $key) {
       let a_record = (
-        $a 
+        $a
         | filter {
-            |a_record| 
-          
+            |a_record|
+
             ($a_record | get $key) == ($b_record | get $key)
-          } 
-        | first      
+          }
+        | first
       )
 
       if $key == "repo" {
@@ -397,7 +397,7 @@ def merge_pre_commit_config [environment: string] {
     get_base_directory $environment --generated
     | path join ".pre-commit-config.yaml"
   )
-  
+
   update_pre_commit_update generic
 
   let repos = if ($environment_config_path | path exists) {
@@ -586,7 +586,7 @@ def is_outdated [environment: string] {
 
 # Build dev environments
 def main [
-  environment?: string 
+  environment?: string
   --force # Build environments even if up-to-date
   --skip-dev-flake # Skip building the dev flake.nix to avoid triggering direnv
 ] {
