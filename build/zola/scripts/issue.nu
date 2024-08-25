@@ -50,5 +50,25 @@ def main [
     } else {
       glab issue view $issue_number
     }
+  } else {
+    let repo_name = (pwd | path basename)
+
+    let todos = (
+      nb todo $repo_name
+      | lines
+      | each {
+          |line|
+
+          $line
+          | ansi strip
+          | split row --regex '[\[\]0-9]'
+          | last
+          | str trim
+      }
+    )
+
+    let new_todo = if ($repo_name in $todos)
+
+    nb todo add --edit
   }
 }

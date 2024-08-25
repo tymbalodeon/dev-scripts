@@ -13,10 +13,6 @@
 @clean *help:
     ./scripts/clean.nu {{ help }}
 
-# View commit history
-@commits *args:
-    ./scripts/commits.nu {{ args }}
-
 # Compile
 @compile *help:
     ./scripts/compile.nu {{ help }}
@@ -34,7 +30,7 @@
 @find-recipe *search_term:
     ./scripts/find-recipe.nu {{ invocation_directory() }} {{ search_term }}
 
-# Search project history
+# View project history
 @history *args:
     ./scripts/history.nu {{ invocation_directory() }} {{ args }}
 

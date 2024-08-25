@@ -12,7 +12,7 @@ def get_base_directory [environment: string --generated] {
   }
 }
 
-def get_environment_files [environment: string] {
+export def get_environment_files [environment: string] {
   let src_directory = (
     get_base_directory $environment
   )
@@ -566,14 +566,16 @@ def get_modified [
   --generated
 ] {
   let base_directory = if $generated {
-    "build"
+    if $environment == "dev" {
+      pwd
+    } else {
+      get_base_directory --generated $environment
+    }
   } else {
-    "src"
+    get_base_directory $environment
   }
 
-  ls --short-names $base_directory
-  | where name == $environment
-  | first
+  ls --directory $base_directory
   | get modified
 }
 
@@ -585,7 +587,7 @@ def is_outdated [environment: string] {
 }
 
 # Build dev environments
-def main [
+export def main [
   environment?: string
   --force # Build environments even if up-to-date
   --skip-dev-flake # Skip building the dev flake.nix to avoid triggering direnv

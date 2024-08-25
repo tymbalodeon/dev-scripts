@@ -21,10 +21,6 @@
 @clean *args:
     ./scripts/clean.nu {{ args }}
 
-# View commit history
-@commits *args:
-    ./scripts/commits.nu {{ args }}
-
 # Run coverage report
 @coverage *fail_under:
     ./scripts/coverage.nu {{ fail_under }}
@@ -42,7 +38,7 @@
 @find-recipe *search_term:
     ./scripts/find-recipe.nu {{ invocation_directory() }} {{ search_term }}
 
-# Search project history
+# View project history
 @history *args:
     ./scripts/history.nu {{ invocation_directory() }} {{ args }}
 

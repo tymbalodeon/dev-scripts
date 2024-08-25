@@ -1,6 +1,7 @@
 #!/usr/bin/env nu
 
 use ./build.nu
+use ./build.nu get_environment_files
 
 # List available environments and files
 def main [
@@ -13,6 +14,7 @@ def main [
   } else {
     build $environment
 
-    eza --all --tree $"build/($environment)"
+    # eza --all --tree $"build/($environment)"
+    get_environment_files $environment
   }
 }

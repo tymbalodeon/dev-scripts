@@ -13,10 +13,6 @@
 @clean *search_term:
     ./scripts/clean.nu {{ search_term }}
 
-# View commit history
-@commits *args:
-    ./scripts/commits.nu {{ args }}
-
 # Compile pdfs
 @compile *search_term:
     ./scripts/compile.nu {{ search_term }}
@@ -42,7 +38,7 @@
 @find-recipe *search_term:
     ./scripts/find-recipe.nu {{ invocation_directory() }} {{ search_term }}
 
-# Search project history
+# View project history
 @history *args:
     ./scripts/history.nu {{ invocation_directory() }} {{ args }}
 
