@@ -3,8 +3,8 @@
 const base_url = "https://raw.githubusercontent.com/tymbalodeon/dev-scripts/trunk"
 
 def main [
-  type?: string 
-  --file: string 
+  type?: string
+  --file: string
   --update
 ] {
   let type = if ($type | is-empty) {
@@ -20,7 +20,7 @@ def main [
   )
 
   let environment_files = (
-    
+
   )
 
   let files = if ($file | is-empty) {
