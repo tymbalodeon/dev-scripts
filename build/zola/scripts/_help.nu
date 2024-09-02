@@ -9,7 +9,8 @@ def main [] {
         [
           "Available recipes:"
           "(run `just <recipe> --help/-h` for more info)\n"
-        ] | to text
+        ] 
+        | to text
       )
   )
 }

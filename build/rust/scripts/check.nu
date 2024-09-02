@@ -10,11 +10,12 @@ def main [
 ] {
     if $list {
         return (
-            rg '\-\s+id:' .pre-commit-config.yaml
-            | lines
-            | str replace --all --regex '-\s+id:' ""
-            | str trim
-            | sort
+            open .pre-commit-config.yaml 
+            | get repos 
+            | get hooks 
+            | each {|hook| $hook | get id} 
+            | flatten 
+            | sort 
             | to text
         )
     }
