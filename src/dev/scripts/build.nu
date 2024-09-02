@@ -35,7 +35,15 @@ export def get_environment_files [environment: string] {
 
       let base_directory = ($row | first)
 
-      if ($base_directory | str ends-with ":") {
+      let directories = (
+        $base_directory 
+        | split row "/" 
+        | str replace ":" ""
+      )
+
+      if "scripts" in $directories {
+        null
+      } else if ($base_directory | str ends-with ":") {
         let base_directory = (
           $base_directory
           | str replace --regex ":$" ""

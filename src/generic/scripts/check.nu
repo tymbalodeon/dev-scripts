@@ -1,5 +1,15 @@
 #!/usr/bin/env nu
 
+export def get_pre_commit_hook_names [config: record<repos: list<any>>] {
+    $config
+    | get repos 
+    | get hooks 
+    | each {|hook| $hook | get id} 
+    | flatten 
+    | sort 
+    | to text
+}
+
 # Check flake and run pre-commit hooks
 def main [
     ...hooks: string # The hooks to run
@@ -10,13 +20,7 @@ def main [
 ] {
     if $list {
         return (
-            open .pre-commit-config.yaml 
-            | get repos 
-            | get hooks 
-            | each {|hook| $hook | get id} 
-            | flatten 
-            | sort 
-            | to text
+            get_pre_commit_hook_names (open .pre-commit-config.yaml)
         )
     }
 
