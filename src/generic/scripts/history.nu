@@ -24,7 +24,6 @@ def --wrapped cog-log [...args: string] {
 
 # View project history
 def main [
-  invocation_directory: string
   filename?: string
   --author: string # Filter on commit author
   --breaking-change # Filter BREAKING CHANGE commits
@@ -51,6 +50,6 @@ def main [
       )
     }
   } else {
-    git log --patch ($invocation_directory | path join $filename)
+    git log --patch $filename
   }
 }

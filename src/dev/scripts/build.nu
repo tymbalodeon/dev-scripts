@@ -149,7 +149,7 @@ def get_recipes [environment: string] {
     )
 
     if $environment == "generic" {
-      let help_command = "_help"
+      let help_command = "help"
 
       $recipes
       | append (get_recipe $environment $justfile $help_command)
@@ -248,7 +248,7 @@ def merge_justfiles [environment: string] {
     | sort-by command
   )
 
-  let help_command = "_help"
+  let help_command = "help"
   mut help_command_index = 0;
 
   for recipe in ($recipes | enumerate) {

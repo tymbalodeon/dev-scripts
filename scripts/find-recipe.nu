@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def find_recipe [_invocation_directory: string] {
+export def find_recipe [] {
   return (
     just --summary
     | split row " "
@@ -8,7 +8,7 @@ export def find_recipe [_invocation_directory: string] {
     | (
         fzf
           --preview
-          $"bat --force-colorization ($_invocation_directory)/{}.nu"
+          $"bat --force-colorization {}.nu"
       )
     | str trim
     | split row " "
@@ -18,11 +18,10 @@ export def find_recipe [_invocation_directory: string] {
 
 # Search available `just` recipes
 def main [
-  _invocation_directory: string
   search_term?: string # Regex pattern to match
 ] {
   if ($search_term | is-empty) {
-    let command = (find_recipe $_invocation_directory)
+    let command = (find_recipe)
 
     let out = (
       just $command

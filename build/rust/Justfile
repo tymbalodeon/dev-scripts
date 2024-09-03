@@ -1,13 +1,15 @@
-@_help:
-    ./scripts/_help.nu
+[private]
+@help:
+    ./scripts/help.nu
 
 # Add dependencies
 @add *dependencies:
     ./scripts/add.nu {{ dependencies }}
 
 # View file annotated with version control information
+[no-cd]
 @annotate *filename:
-    ./scripts/annotate.nu {{ invocation_directory() }} {{ filename }}
+    ./scripts/annotate.nu {{ filename }}
 
 # Build the application
 @build *release:
@@ -38,13 +40,15 @@
     ./scripts/diff-env.nu {{ args }}
 
 # Search available `just` recipes
+[no-cd]
 [no-exit-message]
 @find-recipe *search_term:
-    ./scripts/find-recipe.nu {{ invocation_directory() }} {{ search_term }}
+    ./scripts/find-recipe.nu {{ search_term }}
 
 # View project history
+[no-cd]
 @history *args:
-    ./scripts/history.nu {{ invocation_directory() }} {{ args }}
+    ./scripts/history.nu {{ args }}
 
 # Initialize direnv environment
 @init *help:
@@ -87,5 +91,6 @@
     ./scripts/update-deps.nu {{ help }}
 
 # View the source code for a recipe
+[no-cd]
 @view-source *recipe:
-    ./scripts/view-source.nu {{ invocation_directory() }} {{ recipe }}
+    ./scripts/view-source.nu {{ recipe }}
