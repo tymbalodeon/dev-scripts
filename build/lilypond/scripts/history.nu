@@ -11,7 +11,7 @@ def --wrapped cog-log [...args: string] {
         let type = ($value | describe)
 
         if $type == "string" {
-          not ($value | is-empty)
+          $value | is-not-empty
         } else if $type == "bool" {
           $value
         }

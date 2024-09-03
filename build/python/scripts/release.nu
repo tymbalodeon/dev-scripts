@@ -32,7 +32,7 @@ def main [
       exit 1
   }
 
-  if not (git status --short | is-empty) {
+  if (git status --short | is-not-empty) {
       print "Please commit all changes before releasing."
       exit 1
   }

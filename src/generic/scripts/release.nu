@@ -11,7 +11,7 @@ def main [
       return "Can only release from the trunk branch."
     }
 
-    if not (git status --short | is-empty) {
+    if (git status --short | is-not-empty) {
       return "Please commit all changes before releasing."
     }
 

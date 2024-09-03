@@ -59,7 +59,7 @@ def main [
         }
     )
 
-    if not ($errors | is-empty) {
+    if ($errors | is-not-empty) {
       print ""
       print ($errors | table --index false)
     }

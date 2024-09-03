@@ -19,7 +19,7 @@ def list-dependencies [
             |line|
 
             (
-                (not ($line | is-empty))
+                ($line | is-not-empty)
                 and (not ($line | str starts-with "#"))
             )
         }

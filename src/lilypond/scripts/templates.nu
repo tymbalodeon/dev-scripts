@@ -5,14 +5,14 @@ def main [
   --files: string # View files for specified template name
   --src: string # View source code for specified template file stem
 ] {
-  if not ($files | is-empty) {
+  if ($files | is-not-empty) {
     return (
       fd $files templates
       | lines
     )
   }
 
-  if not ($src | is-empty) {
+  if ($src | is-not-empty) {
     return (open (fd $"^($src).\(i\)?ly$" templates))
   }
 

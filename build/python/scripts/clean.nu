@@ -42,7 +42,7 @@ def main [
 
     for file in $files_to_clean {
         let files_list = (
-            {{ generated_files }}
+            $generated_files
             | where Option == $file
             | get "Files to clean"
             | flatten
@@ -54,8 +54,8 @@ def main [
         }
 
         if $file == "venv" and (
-            not (command -v pdm | is-empty)) and (
-            not (pdm run command -v pre-commit | is-empty)
+            (command -v pdm | is-not-empty)) and (
+            (pdm run command -v pre-commit | is-not-empty)
         ) {
             pdm run pre-commit uninstall
         }

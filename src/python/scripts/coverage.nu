@@ -8,7 +8,7 @@ def main [
 ] {
   test out+err> /dev/null
 
-  if not ($fail_under | is-empty) {
+  if ($fail_under | is-not-empty) {
       (
           pdm run coverage report -m
               --skip-covered

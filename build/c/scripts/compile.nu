@@ -52,7 +52,7 @@ def main [
       | lines
     )
 
-    let file = if not ($files | is-empty) {
+    let file = if ($files | is-not-empty) {
       $files | first
     }
 
