@@ -1,4 +1,5 @@
 # Remove pdfs
+[confirm]
 @clean *search_term:
     ./scripts/clean.nu {{ search_term }}
 
