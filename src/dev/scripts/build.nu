@@ -36,8 +36,8 @@ export def get_environment_files [environment: string] {
       let base_directory = ($row | first)
 
       let directories = (
-        $base_directory 
-        | split row "/" 
+        $base_directory
+        | split row "/"
         | str replace ":" ""
       )
 
@@ -138,23 +138,12 @@ def get_recipes [environment: string] {
   let justfile = (get_justfile $environment)
 
   if ($justfile | path exists) {
-    let recipes = (
-      just --justfile $justfile --summary
-      | split row " "
-      | par-each {
-          |recipe|
+    just --justfile $justfile --summary
+    | split row " "
+    | par-each {
+        |recipe|
 
-          get_recipe $environment $justfile $recipe
-      }
-    )
-
-    if $environment == "generic" {
-      let help_command = "help"
-
-      $recipes
-      | append (get_recipe $environment $justfile $help_command)
-    } else {
-      $recipes
+        get_recipe $environment $justfile $recipe
     }
   } else {
     return []

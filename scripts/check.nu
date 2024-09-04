@@ -2,11 +2,11 @@
 
 export def get_pre_commit_hook_names [config: record<repos: list<any>>] {
     $config
-    | get repos 
-    | get hooks 
-    | each {|hook| $hook | get id} 
-    | flatten 
-    | sort 
+    | get repos
+    | get hooks
+    | each {|hook| $hook | get id}
+    | flatten
+    | sort
     | to text
 }
 

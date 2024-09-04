@@ -1,6 +1,6 @@
-[private]
-@help:
-    ./scripts/help.nu
+# View help text
+@help *recipe:
+    ./scripts/help.nu {{ recipe }}
 
 # Add dependencies
 @add *args:
