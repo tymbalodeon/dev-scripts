@@ -18,8 +18,6 @@ repos:
       - id: trailing-whitespace
 "
 
-let actual_hooks = (get_pre_commit_hook_names ($config | from yaml))
-
 let expected_hooks = "check-merge-conflict
 check-yaml
 end-of-file-fixer
@@ -27,5 +25,7 @@ pre-commit-update
 sort-simple-yaml
 trailing-whitespace
 "
+
+let actual_hooks = (get_pre_commit_hook_names ($config | from yaml))
 
 assert equal $actual_hooks $expected_hooks
