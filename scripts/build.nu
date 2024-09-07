@@ -264,33 +264,27 @@ def merge_justfiles [environment: string] {
   "\n" | save --append $justfile
 }
 
-def merge_gitignore [environment: string] {
-  let generic = (
-    open "src/generic/.gitignore"
+def get_gitignore_source [environment: string] {
+  let file = $"(get_base_directory $environment)/.gitignore"
+
+  if ($file | path exists) {
+    open $file
     | lines
-  )
-
-  let environment_gitignore_path = if $environment == "dev" {
-    ".gitignore"
   } else {
-    $"($environment)/.gitignore"
+    []
   }
+}
 
-  let merged_gitignore = if ($environment_gitignore_path | path exists) {
-    $generic
-    | append (open $environment_gitignore_path | lines)
-    | uniq
-    | sort
-    | to text
-  } else {
-    $generic
-  }
-
-  $merged_gitignore
+def merge_gitignore [environment: string] {
+  get_gitignore_source generic
+  | append (get_gitignore_source $environment)
+  | uniq
+  | sort
+  | to text
   | save --force (
       get_base_directory $environment --generated
       | path join ".gitignore"
-    )
+  )
 }
 
 def get_target_value [source_value: record target: list column: string] {

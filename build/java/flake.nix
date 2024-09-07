@@ -48,6 +48,7 @@
           nodePackages.prettier
           nushell
           openjdk
+          pdm
           pre-commit
           python312Packages.pre-commit-hooks
           ripgrep
