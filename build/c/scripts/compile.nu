@@ -3,7 +3,7 @@
 def get_binary_file_name [file: string] {
   $file
   | str replace ".c" ""
-  | str replace "src" "out"
+  | str replace "src" "build"
 }
 
 def get_modified [file: string] {

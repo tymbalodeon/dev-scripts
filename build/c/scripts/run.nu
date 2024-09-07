@@ -15,5 +15,5 @@ def main [
 
   compile $file
 
-  ^$"./out/($file)"
+  ^$"./build/($file)"
 }
