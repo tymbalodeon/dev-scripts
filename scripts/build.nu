@@ -3,19 +3,17 @@
 def get_base_directory [environment: string --generated] {
   if $generated {
     if $environment == "dev" {
-      return ""
+      ""
+    } else {
+      $"build/($environment)/"
     }
-
-    return $"build/($environment)/"
   } else {
-    return $"src/($environment)/"
+    $"src/($environment)/"
   }
 }
 
 export def get_environment_files [environment: string] {
-  let src_directory = (
-    get_base_directory $environment
-  )
+  let src_directory = (get_base_directory $environment)
 
   (
     eza
@@ -28,11 +26,7 @@ export def get_environment_files [environment: string] {
   | par-each {
       |row|
 
-      let row = (
-        $row
-        | lines
-      )
-
+      let row = ($row | lines)
       let base_directory = ($row | first)
 
       let directories = (

@@ -51,8 +51,8 @@
     ./scripts/list.nu {{ help }}
 
 # Create a new release
-@release *args:
-    ./scripts/release.nu  {{ args }}
+@release *preview:
+    ./scripts/release.nu  {{ preview }}
 
 # View remote repository
 @remote *web:

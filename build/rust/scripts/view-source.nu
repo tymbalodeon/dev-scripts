@@ -7,11 +7,10 @@ use ./find-recipe.nu find_recipe
 # to `just` applied. Pass `""` as args to see the code when no args are
 # provided to a recipe, and to see the code with `just` variables expanded.
 def main [
-  _invocation_directory: string
   recipe?: string # The recipe command
 ] {
   let recipe = if ($recipe | is-empty) {
-    find_recipe $_invocation_directory
+    find_recipe
   } else {
     $recipe
   }

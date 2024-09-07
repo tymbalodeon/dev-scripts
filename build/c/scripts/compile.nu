@@ -35,6 +35,8 @@ def main [
   file?: string # The file to compile
   --force # Re-compile even if up-to-date
 ] {
+  mkdir build
+
   if ($file | is-empty) {
     for file in (ls src/*.c | get name) {
       compile $file $force

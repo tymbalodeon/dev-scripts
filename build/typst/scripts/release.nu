@@ -4,7 +4,7 @@ use ./check.nu
 
 # Create a new release
 def main [
-    --preview # Preview new additions to the CHANGELOG without modifyiing anything
+  --preview # Preview new additions to the CHANGELOG without modifyiing anything
 ] {
   if not $preview {
     if not ((git branch --show-current) == "trunk") {
