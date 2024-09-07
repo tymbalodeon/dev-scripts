@@ -31,7 +31,7 @@ def compile [file: string force: bool] {
   }
 }
 
-def main [
+export def main [
   file?: string # The file to compile
   --force # Re-compile even if up-to-date
 ] {
