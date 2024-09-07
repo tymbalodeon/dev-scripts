@@ -1,25 +1,26 @@
 #!/usr/bin/env nu
 
+export def get_flake_dependencies [flake: string] {
+  $flake
+  | rg --multiline "packages = .+\\[(\n|[^;])+\\];"
+  | lines
+  | drop
+  | drop nth 0
+  | str trim
+  | to text
+}
+
 # List dependencies
 def main [
   dependency?: string
 ] {
-  let dependencies = (
-    open flake.nix
-    | rg --multiline "packages = .+\\[(\n|[^;])+\\];"
-    | lines
-    | drop
-    | drop nth 0
-    | str trim
-    | to text
-  )
+  let dependencies = (get_flake_dependencies (open flake.nix))
 
-  let dependencies = if ($dependency | is-empty) {
-    return ($dependencies | table --index false)
+  if ($dependency | is-empty) {
+    $dependencies 
+    | table --index false
   } else {
-    return (
-      $dependencies
-      | rg --color always $dependency
-    )
+    $dependencies
+    | rg --color always $dependency
   }
 }

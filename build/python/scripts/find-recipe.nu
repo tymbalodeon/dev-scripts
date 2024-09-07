@@ -1,19 +1,17 @@
 #!/usr/bin/env nu
 
 export def find_recipe [] {
-  return (
-    just --summary
-    | split row " "
-    | to text
-    | (
-        fzf
-          --preview
-          $"bat --force-colorization {}.nu"
-      )
-    | str trim
-    | split row " "
-    | first
-  )
+  just --summary
+  | split row " "
+  | to text
+  | (
+      fzf
+        --preview
+        $"bat --force-colorization {}.nu"
+    )
+  | str trim
+  | split row " "
+  | first
 }
 
 # Search available `just` recipes
