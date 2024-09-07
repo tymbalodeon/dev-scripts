@@ -18,5 +18,5 @@ def main [
     check
   }
 
-  return (cog changelog)
+  cog changelog
 }

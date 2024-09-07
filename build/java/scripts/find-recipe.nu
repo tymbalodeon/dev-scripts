@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def find_recipe [] {
+def find_recipe [] {
   just --summary
   | split row " "
   | to text

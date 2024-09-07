@@ -1,18 +1,14 @@
 #!/usr/bin/env nu
 
 def get_binary_file_name [file: string] {
-  return (
-    $file
-    | str replace ".c" ""
-    | str replace "src" "out"
-  )
+  $file
+  | str replace ".c" ""
+  | str replace "src" "out"
 }
 
 def get_modified [file: string] {
-  return (
-    ls $file
-    | get modified
-  )
+  ls $file
+  | get modified
 }
 
 def is_outdated [source_file: string target_file?: string] {
@@ -22,12 +18,9 @@ def is_outdated [source_file: string target_file?: string] {
     $target_file
   }
 
-  return (
-    not ($target_file | path exists)
-    or (
-      (get_modified $source_file) >
-      (get_modified $target_file)
-    )
+  not ($target_file | path exists) or (
+    (get_modified $source_file) >
+    (get_modified $target_file)
   )
 }
 
