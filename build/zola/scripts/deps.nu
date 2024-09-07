@@ -17,7 +17,7 @@ def main [
   let dependencies = (get_flake_dependencies (open flake.nix))
 
   if ($dependency | is-empty) {
-    $dependencies 
+    $dependencies
     | table --index false
   } else {
     $dependencies
