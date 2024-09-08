@@ -1,5 +1,7 @@
 #!/usr/bin/env nu
 
+use ./build.nu get_base_directory
+
 # Run an environment Justfile
 def main [
   environment?: string # The environment whose Justfile to run
@@ -11,12 +13,8 @@ def main [
     $environment
   }
 
-  let base_directory = if $environment == "dev" {
-    ""
-  } else {
-    $"build/($environment)/"
-  }
+  let base_environment = (get_base_directory $environment)
+  let justfile = $"($base_environment)/just/($environment).just"
 
-  print (pwd)
-  just --justfile $"($base_directory)Justfile" ...$args
+  just --justfile $justfile ...$args
 }

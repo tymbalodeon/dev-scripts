@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-def get_base_directory [environment: string --generated] {
+export def get_base_directory [environment: string --generated] {
   if $generated {
     if $environment == "dev" {
       ""
