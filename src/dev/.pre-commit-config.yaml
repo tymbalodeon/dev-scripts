@@ -3,6 +3,6 @@ repos:
     hooks:
       - id: build
         name: build
-        entry: just build
+        entry: just dev-scripts build
         language: system
         pass_filenames: false

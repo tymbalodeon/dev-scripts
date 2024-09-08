@@ -1,3 +1,5 @@
+mod dev-scripts "just/dev-scripts.just"
+
 # View help text
 @help *recipe:
     ./scripts/help.nu {{ recipe }}
@@ -6,10 +8,6 @@
 [no-cd]
 @annotate *filename:
     ./scripts/annotate.nu {{ filename }}
-
-# Build dev environments
-@build *args:
-    ./scripts/build.nu {{ args }}
 
 # Check flake and run pre-commit hooks
 @check *args:
@@ -41,14 +39,6 @@
 # View issues
 @issue *args:
     ./scripts/issue.nu {{ args }}
-
-# Run an environment Justfile
-@justfile *args:
-    ./scripts/justfile.nu {{ args }}
-
-# List available environments and files
-@list *help:
-    ./scripts/list.nu {{ help }}
 
 # Create a new release
 @release *preview:
