@@ -46,10 +46,6 @@
 @remote *web:
     ./scripts/remote.nu  {{ web }}
 
-# Serve the site
-@start *args:
-    ./scripts/start.nu {{ args }}
-
 # View repository analytics
 @stats *help:
     ./scripts/stats.nu {{ help }}

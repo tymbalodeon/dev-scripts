@@ -1,5 +1,0 @@
-set dotenv-load
-
-# Serve the site
-@start *args:
-    ./scripts/start.nu {{ args }}

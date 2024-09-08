@@ -11,14 +11,6 @@
 @check *args:
     ./scripts/check.nu {{ args }}
 
-# Remove compiled files
-@clean *help:
-    ./scripts/clean.nu {{ help }}
-
-# Compile
-@compile *help:
-    ./scripts/compile.nu {{ help }}
-
 # List dependencies
 @deps *args:
     ./scripts/deps.nu {{ args }}
@@ -53,10 +45,6 @@
 # View remote repository
 @remote *web:
     ./scripts/remote.nu  {{ web }}
-
-# Run
-@run *args:
-    ./scripts/run.nu {{ args }}
 
 # View repository analytics
 @stats *help:

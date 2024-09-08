@@ -2,38 +2,18 @@
 @help *recipe:
     ./scripts/help.nu {{ recipe }}
 
-# Add dependencies
-@add *dependencies:
-    ./scripts/add.nu {{ dependencies }}
-
 # View file annotated with version control information
 [no-cd]
 @annotate *filename:
     ./scripts/annotate.nu {{ filename }}
 
-# Build the application
-@build *release:
-    ./scripts/build.nu {{ release }}
-
 # Check flake and run pre-commit hooks
 @check *args:
     ./scripts/check.nu {{ args }}
 
-# Remove generated files
-@clean *help:
-    ./scripts/clean.nu {{ help }}
-
-# Run clippy
-@clippy *help:
-    ./scripts/clippy.nu {{ help }}
-
-# Show application dependencies
-@deps *help:
-    ./scripts/deps.nu {{ help }}
-
-# Open a pre-configured development environment
-@dev *help:
-    ./scripts/dev.nu {{ help }}
+# List dependencies
+@deps *args:
+    ./scripts/deps.nu {{ args }}
 
 # View the diff between environments
 @diff-env *args:
@@ -54,10 +34,6 @@
 @init *help:
     ./scripts/init.nu {{ help }}
 
-# Install the application
-@install *help:
-    ./scripts/install.nu {{ help }}
-
 # View issues
 @issue *args:
     ./scripts/issue.nu {{ args }}
@@ -70,21 +46,9 @@
 @remote *web:
     ./scripts/remote.nu  {{ web }}
 
-# Remove dependencies
-@remove *dependencies:
-    ./scripts/remove.nu {{ dependencies }}
-
-# Run the application, with any provided <args>.
-@run *args:
-    ./scripts/run.nu {{ args }}
-
 # View repository analytics
 @stats *help:
     ./scripts/stats.nu {{ help }}
-
-# Run the tests
-@test *package:
-    ./scripts/test.nu {{ package }}
 
 # Update dependencies
 @update-deps *help:

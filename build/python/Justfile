@@ -2,32 +2,16 @@
 @help *recipe:
     ./scripts/help.nu {{ recipe }}
 
-# Add dependencies
-@add *args:
-    ./scripts/add.nu {{ args }}
-
 # View file annotated with version control information
 [no-cd]
 @annotate *filename:
     ./scripts/annotate.nu {{ filename }}
 
-# Build and install the application
-@build *help:
-    ./scripts/build.nu {{ help }}
-
 # Check flake and run pre-commit hooks
 @check *args:
     ./scripts/check.nu {{ args }}
 
-# Remove generated files
-@clean *args:
-    ./scripts/clean.nu {{ args }}
-
-# Run coverage report
-@coverage *fail_under:
-    ./scripts/coverage.nu {{ fail_under }}
-
-# Show application dependencies
+# List dependencies
 @deps *args:
     ./scripts/deps.nu {{ args }}
 
@@ -50,49 +34,25 @@
 @init *help:
     ./scripts/init.nu {{ help }}
 
-# Install dependencies
-@install *args:
-    ./scripts/install.nu {{ args }}
-
 # View issues
 @issue *args:
     ./scripts/issue.nu {{ args }}
 
-# Profile a command and view results
-@profile *args:
-    ./scripts/profile.nu {{ args }}
-
-# Release a new version of the application
-@release *args:
-    ./scripts/release.nu {{ args }}
+# Create a new release
+@release *preview:
+    ./scripts/release.nu  {{ preview }}
 
 # View remote repository
 @remote *web:
     ./scripts/remote.nu  {{ web }}
 
-# Remove dependencies
-@remove *dependencies:
-    ./scripts/remove.nu {{ dependencies }}
-
-# Run the application
-@run *args:
-    ./scripts/run.nu {{ args }}
-
-# Open an interactive python shell
-@shell *help:
-    ./scripts/shell.nu {{ help }}
-
 # View repository analytics
 @stats *help:
     ./scripts/stats.nu {{ help }}
 
-# Run tests
-@test *help:
-    ./scripts/test.nu {{ help }}
-
 # Update dependencies
-@update-deps *prod:
-    ./scripts/update-deps.nu {{ prod }}
+@update-deps *help:
+    ./scripts/update-deps.nu {{ help }}
 
 # View the source code for a recipe
 [no-cd]

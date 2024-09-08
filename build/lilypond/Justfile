@@ -11,19 +11,6 @@
 @check *args:
     ./scripts/check.nu {{ args }}
 
-# Remove pdfs
-[confirm]
-@clean *search_term:
-    ./scripts/clean.nu {{ search_term }}
-
-# Compile pdfs
-@compile *search_term:
-    ./scripts/compile.nu {{ search_term }}
-
-# Create new score
-@create *args:
-    ./scripts/create.nu {{ args }}
-
 # List dependencies
 @deps *args:
     ./scripts/deps.nu {{ args }}
@@ -31,10 +18,6 @@
 # View the diff between environments
 @diff-env *args:
     ./scripts/diff-env.nu {{ args }}
-
-# Open <score> in $EDITOR and pdf viewer, recompiling on file changes
-@edit *args:
-    ./scripts/edit.nu {{ args }}
 
 # Search available `just` recipes
 [no-cd]
@@ -47,10 +30,6 @@
 @history *args:
     ./scripts/history.nu {{ args }}
 
-# Get info about scores
-@info *search_term:
-    ./scripts/info.nu {{ search_term }}
-
 # Initialize direnv environment
 @init *help:
     ./scripts/init.nu {{ help }}
@@ -58,10 +37,6 @@
 # View issues
 @issue *args:
     ./scripts/issue.nu {{ args }}
-
-# Open pdfs
-@open-pdf *search_term:
-    ./scripts/open-pdf.nu {{ search_term }}
 
 # Create a new release
 @release *preview:
@@ -71,21 +46,9 @@
 @remote *web:
     ./scripts/remote.nu  {{ web }}
 
-# View project settings
-@settings *args:
-    ./scripts/settings.nu {{ args }}
-
 # View repository analytics
 @stats *help:
     ./scripts/stats.nu {{ help }}
-
-# View available templates
-@templates *args:
-    ./scripts/templates.nu {{ args }}
-
-# Update dependencies and score LilyPond version
-@update *help:
-    ./scripts/update-deps.nu {{ help }}
 
 # Update dependencies
 @update-deps *help:

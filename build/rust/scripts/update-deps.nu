@@ -1,5 +1,7 @@
 #!/usr/bin/env nu
 
+# Update dependencies
 def main [] {
-  cargo update
+    nix flake update
+    pdm update
 }
