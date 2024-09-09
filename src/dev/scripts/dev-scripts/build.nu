@@ -1,267 +1,83 @@
 #!/usr/bin/env nu
 
-export def get_base_directory [environment: string --generated] {
-  if $generated {
-    if $environment == "dev" {
-      ""
-    } else {
-      $"build/($environment)/"
-    }
+def get_source_directory [environment: string] {
+  $"../src/($environment)"
+}
+
+def get_build_directory [environment: string] {
+  if $environment == "dev" {
+    ".."
   } else {
-    $"../src/($environment)/"
+    $"../build/($environment)"
   }
 }
 
-export def get_environment_files [environment: string] {
-  let src_directory = (get_base_directory $environment)
+def get_build_path [path: string] {
+  let build_directory = $"../build/(
+    $path
+    | parse "../src/{environment}"
+    | first
+    | get environment
+    | path dirname
+  )"
 
-  (
-    eza
-      --all
-      --git-ignore
-      --oneline
-      --recurse
-      $src_directory
-  ) | split row "\n\n"
-  | par-each {
-      |row|
-
-      let row = ($row | lines)
-      let base_directory = ($row | first)
-
-      let directories = (
-        $base_directory
-        | split row "/"
-        | str replace ":" ""
-      )
-
-      if "scripts" in $directories {
-        null
-      } else if ($base_directory | str ends-with ":") {
-        let base_directory = (
-          $base_directory
-          | str replace --regex ":$" ""
-        )
-
-        $row
-        | drop nth 0
-        | par-each {
-            |item|
-
-            $base_directory
-            | path join $item
-        }
-      } else {
-        $row
-        | filter {
-            |item|
-
-            (
-              $item
-              | path type
-            ) != "dir" and not (
-              $item in [
-                "flake.nix"
-                "Justfile"
-              ]
-            )
-
-        }
-      | par-each {
-          |file|
-
-          $src_directory
-          | path join $file
-        }
-      }
-    }
-  | flatten
+  $build_directory
+  | path join (
+    $path  
+    | str replace --regex ".+/src/.+/" ""
+  )
 }
 
 def copy_files [environment: string] {
-  let src_files = (
-    get_environment_files $environment
-  ) | append (
-    get_environment_files generic
-  )
+  let src_directory = (get_source_directory $environment)
+  let build_directory = (get_build_directory $environment)
 
-  let generated_directory = (
-    get_base_directory --generated $environment
-  )
-
-  if $environment != "dev" {
-    rm --force --recursive $generated_directory
-  }
-
-  $src_files
-  | each {
-      |file|
-
-      let filename = (
-        $file
-        | str replace $"src/($environment)/" ""
-        | str replace $"src/generic/" ""
-      )
-
-      let generated_file = ($generated_directory | path join $filename)
-
-      mkdir ($generated_file | path parse | get parent)
-      cp --recursive $file $generated_file
-    }
-}
-
-def get_justfile [environment: string] {
-  let base_directory = (get_base_directory $environment)
-
-  return $"($base_directory)Justfile"
-}
-
-def get_recipe [
-  environment: string
-  justfile: string
-  recipe: string
-] {
-  return {
-    recipe: (just --justfile $justfile --show $recipe)
-    environment: $environment
-    command: $recipe
-  }
-}
-
-def get_recipes [environment: string] {
-  let justfile = (get_justfile $environment)
-
-  if ($justfile | path exists) {
-    just --justfile $justfile --summary
-    | split row " "
-    | par-each {
-        |recipe|
-
-        get_recipe $environment $justfile $recipe
-    }
-  } else {
-    return []
-  }
-}
-
-def get_command_name [recipe: record<recipe: string, environment: string>] {
-  return (
-    $recipe.recipe
+  let directories = (
+    fd --hidden "" $src_directory
     | lines
-    | filter {|line| $line | str starts-with "@"}
-    | par-each {
-        |line|
-
-        $line
-        | split row " "
-        | first
-        | str replace --regex "^@_?" ""
-        | str replace ":" ""
-      }
-    | first
+    | path dirname
+    | uniq
+    | filter {|directory| $directory != $src_directory}
+    | each {|directory| get_build_path $directory}
   )
+
+  for directory in $directories {
+    mkdir $directory
+  }
+
+  fd --hidden "" $src_directory
+  | lines
+  | filter {
+      |file| 
+
+      ($file | path basename) not-in [.gitignore .pre-commit-config.yaml]
+    }
+  | each {|file| cp --recursive $file (get_build_path $file)}
 }
 
-def get_generated_justfile [environment: string] {
-  let base_directory = (get_base_directory $environment --generated)
-
-  return $"($base_directory)Justfile"
-}
-
-def get_generatead_scripts_directory [environment: string] {
-  let base_directory = (get_base_directory $environment --generated)
-
-  return $"($base_directory)scripts"
+def get_justfile [base_directory: string] {
+  $base_directory | path join Justfile
 }
 
 def merge_justfiles [environment: string] {
-  let shared_recipes = (get_recipes "generic")
-  let environment_recipes = (get_recipes $environment)
+  let justfile = (get_justfile (get_source_directory generic))
+  let environment_justfile = (get_justfile (get_build_directory $environment))
 
-  let recipes = (
-    $shared_recipes
-    | filter {
-        |recipe|
+  cp $justfile $environment_justfile
 
-        not ($recipe.command in ($environment_recipes.command))
-    } | append $environment_recipes
+  let environment_justfile_name = $"($environment).just"
+
+  let environment_justfile = (
+    get_source_directory $environment 
+    | path join $"just/($environment_justfile_name)"
   )
 
-  let generated_scripts_directory = (
-    get_generatead_scripts_directory $environment
-  )
-
-  mkdir $generated_scripts_directory
-
-  $recipes
-  | par-each {
-      |recipe|
-      let source_scripts_directory = $"../src/($recipe.environment)/scripts"
-      let script_file = $"($source_scripts_directory)/($recipe.command).nu"
-
-      cp $script_file $generated_scripts_directory
-
-      open $script_file
-      | rg '^use .+\.nu'
-      | lines
-      | par-each {
-          |line|
-
-          let import = (
-            $line
-            | split row " "
-            | get 1
-            | path basename
-          )
-
-          cp --update (
-            $source_scripts_directory
-            | path join (
-                $line
-                | split row " "
-                | get 1
-                | path basename
-              )
-          ) $generated_scripts_directory
-        }
-    }
-
-  let recipes = (
-    $recipes
-    | sort-by command
-  )
-
-  let help_command = "help"
-  mut help_command_index = 0;
-
-  for recipe in ($recipes | enumerate) {
-    if ($recipe.item.command) == $help_command {
-      $help_command_index = $recipe.index
-
-      break
-    }
+  if (
+    $environment_justfile
+    | path exists
+  ) {
+    # TODO add mod and aliases to end of justfile
   }
-
-  let help_command = (
-    $recipes
-    | filter {|recipe| ($recipe.command) == $help_command}
-    | first
-  )
-
-  let recipes = (
-    $recipes
-    | drop nth $help_command_index
-  ) | prepend $help_command
-
-  let justfile = (get_generated_justfile $environment)
-
-  (
-    $recipes.recipe
-    | str join "\n\n"
-    | save --force $justfile
-  )
-
-  "\n" | save --append $justfile
 }
 
 def get_gitignore_source [environment: string] {
@@ -584,13 +400,16 @@ export def main [
     [$environment]
   }
 
+  let environments = if $force {
+    $environments
+  } else {
+    $environments
+    | filter {|environment| not (is_outdated $environment)}
+  }
+
   $environments
   | par-each {
       |environment|
-
-      if not $force and not (is_outdated $environment) {
-        continue
-      }
 
       print $"Building ($environment)..."
 
@@ -600,17 +419,21 @@ export def main [
         false
       }
 
+      if $environment != "dev" {
+        rm --recursive --force (get_build_directory $environment)
+      }
+
       copy_files $environment
       merge_justfiles $environment
-      merge_gitignore $environment
-      merge_pre_commit_config $environment
+      # merge_gitignore $environment
+      # merge_pre_commit_config $environment
 
-      if not $skip_flake {
-        let generated_flake = (get_generated_flake $environment)
+      # if not $skip_flake {
+      #   let generated_flake = (get_generated_flake $environment)
 
-        merge_flake_outputs $environment $generated_flake
-        merge_flake_inputs $environment $generated_flake
-      }
+      #   merge_flake_outputs $environment $generated_flake
+      #   merge_flake_inputs $environment $generated_flake
+      # }
     }
-  | null
+  # | null
 }

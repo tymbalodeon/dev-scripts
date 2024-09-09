@@ -1,3 +1,5 @@
+set unstable
+
 # View help text
 @help *recipe:
     ./scripts/help.nu {{ recipe }}
