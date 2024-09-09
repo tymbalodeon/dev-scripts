@@ -118,7 +118,7 @@ def merge_justfiles [environment: string] {
 }
 
 def get_gitignore_source [environment: string] {
-  let file = $"(get_base_directory $environment)/.gitignore"
+  let file = $"(get_source_directory $environment)/.gitignore"
 
   if ($file | path exists) {
     open $file
@@ -135,7 +135,7 @@ def merge_gitignore [environment: string] {
   | sort
   | to text
   | save --force (
-      get_base_directory $environment --generated
+      get_build_directory $environment
       | path join ".gitignore"
   )
 }
@@ -208,7 +208,7 @@ def merge_records_by_key [a: list b: list key: string] {
 }
 
 def update_pre_commit_update [environment: string] {
-  let directory = (get_base_directory $environment)
+  let directory = (get_source_directory $environment)
 
   try {
     cd $directory
@@ -220,19 +220,19 @@ def merge_pre_commit_config [environment: string] {
   let pre_commit_config_filename = ".pre-commit-config.yaml"
 
   let environment_config_path = (
-    (get_base_directory $environment)
+    (get_source_directory $environment)
     | path join $pre_commit_config_filename
   )
 
   let generic_config = (
     open (
-      get_base_directory generic
+      get_source_directory generic
       | path join $pre_commit_config_filename
     ) | get repos
   )
 
   let generated_config_path = (
-    get_base_directory $environment --generated
+    get_build_directory $environment
     | path join ".pre-commit-config.yaml"
   )
 
@@ -254,7 +254,7 @@ def merge_pre_commit_config [environment: string] {
 }
 
 def get_flake [environment: string] {
-  return $"(get_base_directory $environment)flake.nix"
+  return $"(get_source_directory $environment)flake.nix"
 }
 
 def get_flake_inputs [environment: string] {
@@ -274,7 +274,7 @@ def get_generated_flake [environment: string] {
     return (mktemp --tmpdir flake-XXX.nix)
   }
 
-  let base_directory = (get_base_directory $environment --generated)
+  let base_directory = (get_build_directory $environment)
 
   return $"($base_directory)flake.nix"
 }
@@ -407,10 +407,10 @@ def get_modified [
     if $environment == "dev" {
       pwd
     } else {
-      get_base_directory --generated $environment
+      get_build_directory $environment
     }
   } else {
-    get_base_directory $environment
+    get_source_directory $environment
   }
 
   ls --directory $base_directory

@@ -1,11 +1,18 @@
 repos:
 - repo: local
   hooks:
-  - id: build
-    name: build
-    entry: just dev-scripts build
+  - id: clang-format
+    name: clang-format
+    entry: clang-format
     language: system
-    pass_filenames: false
+    types:
+    - c
+  - id: clang-tidy
+    name: clang-tidy
+    entry: clang-tidy
+    language: system
+    types:
+    - c
   - id: flake-checker
     name: flake-checker
     entry: flake-checker

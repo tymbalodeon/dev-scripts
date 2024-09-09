@@ -1,10 +1,15 @@
 repos:
+- repo: https://github.com/doublify/pre-commit-rust
+  rev: v1.0
+  hooks:
+  - id: fmt
+  - id: cargo-check
 - repo: local
   hooks:
-  - id: build
-    name: build
-    entry: just dev-scripts build
+  - id: clippy
+    name: clippy
     language: system
+    entry: just clippy
     pass_filenames: false
   - id: flake-checker
     name: flake-checker
