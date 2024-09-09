@@ -462,15 +462,15 @@ export def main [
 
       copy_files $environment
       merge_justfiles $environment
-      # merge_gitignore $environment
-      # merge_pre_commit_config $environment
+      merge_gitignore $environment
+      merge_pre_commit_config $environment
 
-      # if not $skip_flake {
-      #   let generated_flake = (get_generated_flake $environment)
+      if not $skip_flake {
+        let generated_flake = (get_generated_flake $environment)
 
-      #   merge_flake_outputs $environment $generated_flake
-      #   merge_flake_inputs $environment $generated_flake
-      # }
+        merge_flake_outputs $environment $generated_flake
+        merge_flake_inputs $environment $generated_flake
+      }
     }
   | null
 }
