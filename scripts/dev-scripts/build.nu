@@ -15,7 +15,7 @@ def get_build_directory [environment: string] {
 def get_build_path [environment: string path: string] {
   get_build_directory $environment
   | path join (
-    $path  
+    $path
     | str replace --regex ".+/src/[a-zA-Z]+/" ""
   )
 }
@@ -26,9 +26,9 @@ def get_justfile [base_directory: string] {
 
 def get_recipes [justfile: string] {
   (
-    just 
+    just
       --justfile $justfile
-      --summary  
+      --summary
     | split row " "
   )
 }
@@ -131,7 +131,7 @@ def update_pre_commit_update [environment: string] {
 }
 
 def get_flake [environment: string] {
-  (get_source_directory $environment) 
+  (get_source_directory $environment)
   | path join flake.nix
 }
 
@@ -360,7 +360,7 @@ export def main [
 
       $source_files
       | filter {
-          |file| 
+          |file|
 
           ($file | path basename) not-in [.gitignore .pre-commit-config.yaml]
         }
@@ -391,7 +391,7 @@ export def main [
               )
           }
         )
-    
+
         open $justfile
         | append (
             $"mod ($environment) \"just/($environment).just\""
@@ -400,7 +400,7 @@ export def main [
                 | each {|recipe| create_environment_recipe $environment $recipe}
               )
           | str join "\n\n"
-          ) 
+          )
         | to text
         | save --force (get_justfile (get_build_directory $environment))
       }
