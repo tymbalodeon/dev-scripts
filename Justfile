@@ -61,14 +61,14 @@
 
 mod dev-scripts "just/dev-scripts.just"
 
-[private]
+# Alias for `dev-scripts build`
 @build *args:
     just dev-scripts build {{ args }}
 
-[private]
+# Alias for `dev-scripts justfile`
 @justfile *args:
     just dev-scripts justfile {{ args }}
 
-[private]
+# Alias for `dev-scripts list`
 @list *args:
     just dev-scripts list {{ args }}
