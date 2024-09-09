@@ -1,31 +1,4 @@
 repos:
-  - repo: local
-    hooks:
-      - id: build
-        name: build
-        entry: just dev-scripts build
-        language: system
-        pass_filenames: false
-      - id: flake-checker
-        name: flake-checker
-        entry: flake-checker
-        language: system
-        pass_filenames: false
-      - id: justfile
-        name: justfile
-        entry: just --fmt --unstable
-        language: system
-        pass_filenames: false
-      - id: statix
-        name: statix
-        entry: statix fix
-        language: system
-        pass_filenames: false
-      - id: yamlfmt
-        name: yamlfmt
-        entry: yamlfmt
-        language: system
-        pass_filenames: false
   - repo: https://gitlab.com/vojko.pribudic.foss/pre-commit-update
     rev: v0.4.0post1
     hooks:
@@ -63,13 +36,33 @@ repos:
       - id: deadnix
         args:
           - --edit
+  - repo: local
+    hooks:
+      - id: flake-checker
+        name: flake-checker
+        entry: flake-checker
+        language: system
+        pass_filenames: false
+      - id: justfile
+        name: justfile
+        entry: just --fmt --unstable
+        language: system
+        pass_filenames: false
+      - id: statix
+        name: statix
+        entry: statix fix
+        language: system
+        pass_filenames: false
+      - id: yamlfmt
+        name: yamlfmt
+        entry: yamlfmt
+        language: system
+        pass_filenames: false
   - repo: https://github.com/lycheeverse/lychee.git
     rev: v0.15.1
     hooks:
       - id: lychee
-        args:
-          - --no-progress
-          - .
+        args: ["--no-progress", "."]
         pass_filenames: false
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v3.4.0

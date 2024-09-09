@@ -8,10 +8,10 @@ def main [
     (
       just
         --color always
+        --justfile dev-scripts.just
         --list
-        --list-submodules
     )
   } else {
-    nu $"./scripts/($recipe).nu" --help
-  }
+    nu $"../scripts/dev-scripts/($recipe).nu" --help
+ }
 }

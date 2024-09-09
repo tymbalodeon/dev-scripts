@@ -8,7 +8,7 @@ export def get_base_directory [environment: string --generated] {
       $"build/($environment)/"
     }
   } else {
-    $"src/($environment)/"
+    $"../src/($environment)/"
   }
 }
 
@@ -196,7 +196,7 @@ def merge_justfiles [environment: string] {
   $recipes
   | par-each {
       |recipe|
-      let source_scripts_directory = $"src/($recipe.environment)/scripts"
+      let source_scripts_directory = $"../src/($recipe.environment)/scripts"
       let script_file = $"($source_scripts_directory)/($recipe.command).nu"
 
       cp $script_file $generated_scripts_directory
@@ -578,7 +578,7 @@ export def main [
   --skip-dev-flake # Skip building the dev flake.nix to avoid triggering direnv
 ] {
   let environments = if ($environment | is-empty) {
-    eza src
+    eza ../src
     | lines
   } else {
     [$environment]

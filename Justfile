@@ -1,5 +1,3 @@
-mod dev-scripts "just/dev-scripts.just"
-
 # View help text
 @help *recipe:
     ./scripts/help.nu {{ recipe }}
@@ -60,3 +58,17 @@ mod dev-scripts "just/dev-scripts.just"
 [no-cd]
 @view-source *recipe:
     ./scripts/view-source.nu {{ recipe }}
+
+mod dev-scripts "just/dev-scripts.just"
+
+[private]
+@build *args:
+    just dev-scripts build {{ args }}
+
+[private]
+@justfile *args:
+    just dev-scripts justfile {{ args }}
+
+[private]
+@list *args:
+    just dev-scripts list {{ args }}
