@@ -59,12 +59,26 @@ def get_justfile [base_directory: string] {
   $base_directory | path join Justfile
 }
 
+def get_recipes [justfile: string] {
+  (
+    just 
+      --justfile $justfile
+      --summary  
+    | split row " "
+  )
+}
+
+def create_environment_recipe [environment: string recipe: string] {
+  let documentation = $"# Alias for `($environment) ($recipe)`"
+  let declaration = $"@($recipe) *args:"
+  let content = $"    just ($environment) ($recipe) {{ args }}"
+
+  [$documentation $declaration $content]
+  | str join "\n"
+}
+
 def merge_justfiles [environment: string] {
   let justfile = (get_justfile (get_source_directory generic))
-  let environment_justfile = (get_justfile (get_build_directory $environment))
-
-  cp $justfile $environment_justfile
-
   let environment_justfile_name = $"($environment).just"
 
   let environment_justfile = (
@@ -76,7 +90,30 @@ def merge_justfiles [environment: string] {
     $environment_justfile
     | path exists
   ) {
-    # TODO add mod and aliases to end of justfile
+    let mod = $"mod ($environment) \"just/($environment).just\""
+
+    let unique_environment_recipes = (
+      get_recipes $environment_justfile
+      | filter {
+          |recipe|
+
+          $recipe not-in (
+            get_recipes $justfile
+          )
+      }
+    )
+    
+    open $justfile
+    | append (
+        $"mod ($environment) \"just/($environment).just\""
+        | append (
+            $unique_environment_recipes
+            | each {|recipe| create_environment_recipe $environment $recipe}
+          )
+      | str join "\n\n"
+      ) 
+    | to text
+    | save --force (get_justfile (get_build_directory $environment))
   }
 }
 
@@ -435,5 +472,5 @@ export def main [
       #   merge_flake_inputs $environment $generated_flake
       # }
     }
-  # | null
+  | null
 }

@@ -61,44 +61,8 @@ set unstable
 @view-source *recipe:
     ./scripts/view-source.nu {{ recipe }}
 
-mod python "just/python.just"
+mod zola "just/zola.just"
 
-# Alias for `python add`
-@add *args:
-    just python add {{ args }}
-
-# Alias for `python build`
-@build *args:
-    just python build {{ args }}
-
-# Alias for `python clean`
-@clean *args:
-    just python clean {{ args }}
-
-# Alias for `python coverage`
-@coverage *args:
-    just python coverage {{ args }}
-
-# Alias for `python install`
-@install *args:
-    just python install {{ args }}
-
-# Alias for `python profile`
-@profile *args:
-    just python profile {{ args }}
-
-# Alias for `python remove`
-@remove *args:
-    just python remove {{ args }}
-
-# Alias for `python run`
-@run *args:
-    just python run {{ args }}
-
-# Alias for `python shell`
-@shell *args:
-    just python shell {{ args }}
-
-# Alias for `python test`
-@test *args:
-    just python test {{ args }}
+# Alias for `zola start`
+@start *args:
+    just zola start {{ args }}

@@ -8,7 +8,8 @@
     ];
 
     forEachSupportedSystem = f:
-      nixpkgs.lib.genAttrs supportedSystems (system:
+      nixpkgs.lib.genAttrs supportedSystems
+      (system:
         f {
           pkgs = import nixpkgs {inherit system;};
         });
@@ -16,20 +17,12 @@
     devShells = forEachSupportedSystem ({pkgs}: {
       default = pkgs.mkShell {
         packages = with pkgs; [
-          git-cliff
-          lychee
-          nodePackages.pnpm
           pdm
-          python311
-          python311Packages.pre-commit-hooks
+          python3
         ];
 
-        env = {
-          PNPM_HOME = "~/.pnpm";
-        };
-
         shellHook = ''
-          export PATH="''${PNPM_HOME}:''${PATH}"
+          pdm install
         '';
       };
     });

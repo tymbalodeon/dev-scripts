@@ -1,3 +1,5 @@
+set unstable
+
 # View help text
 @help *recipe:
     ./scripts/help.nu {{ recipe }}
@@ -58,3 +60,5 @@
 [no-cd]
 @view-source *recipe:
     ./scripts/view-source.nu {{ recipe }}
+
+mod typst "just/typst.just"

@@ -61,44 +61,40 @@ set unstable
 @view-source *recipe:
     ./scripts/view-source.nu {{ recipe }}
 
-mod python "just/python.just"
+mod rust "just/rust.just"
 
-# Alias for `python add`
+# Alias for `rust add`
 @add *args:
-    just python add {{ args }}
+    just rust add {{ args }}
 
-# Alias for `python build`
+# Alias for `rust build`
 @build *args:
-    just python build {{ args }}
+    just rust build {{ args }}
 
-# Alias for `python clean`
+# Alias for `rust clean`
 @clean *args:
-    just python clean {{ args }}
+    just rust clean {{ args }}
 
-# Alias for `python coverage`
-@coverage *args:
-    just python coverage {{ args }}
+# Alias for `rust clippy`
+@clippy *args:
+    just rust clippy {{ args }}
 
-# Alias for `python install`
+# Alias for `rust dev`
+@dev *args:
+    just rust dev {{ args }}
+
+# Alias for `rust install`
 @install *args:
-    just python install {{ args }}
+    just rust install {{ args }}
 
-# Alias for `python profile`
-@profile *args:
-    just python profile {{ args }}
-
-# Alias for `python remove`
+# Alias for `rust remove`
 @remove *args:
-    just python remove {{ args }}
+    just rust remove {{ args }}
 
-# Alias for `python run`
+# Alias for `rust run`
 @run *args:
-    just python run {{ args }}
+    just rust run {{ args }}
 
-# Alias for `python shell`
-@shell *args:
-    just python shell {{ args }}
-
-# Alias for `python test`
+# Alias for `rust test`
 @test *args:
-    just python test {{ args }}
+    just rust test {{ args }}
