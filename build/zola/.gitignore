@@ -1,1 +1,6 @@
+.config
+.direnv
+.envrc
+.pdm-python
+.venv
 public/

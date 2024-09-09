@@ -6,7 +6,7 @@ def get_source_directory [environment: string] {
 
 def get_build_directory [environment: string] {
   if $environment == "dev" {
-    ".."
+    "../"
   } else {
     $"../build/($environment)"
   }
@@ -405,7 +405,7 @@ export def main [
         | save --force (get_justfile (get_build_directory $environment))
       }
 
-      get_gitignore_source $environment
+      get_gitignore_source generic
       | append (get_gitignore_source $environment)
       | uniq
       | sort
