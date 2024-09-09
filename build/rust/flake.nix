@@ -1,134 +1,85 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     crane = {
+      inputs = {nixpkgs = {follows = "nixpkgs";};};
       url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nixpkgs = {url = "github:NixOS/nixpkgs/nixos-unstable";};
+    nushell-syntax = {
+      flake = false;
+      owner = "stevenxxiu";
+      repo = "sublime_text_nushell";
+      type = "github";
+    };
+    rust-overlay = {
+      inputs = {nixpkgs = {follows = "nixpkgs";};};
+      url = "github:oxalica/rust-overlay";
     };
   };
 
   outputs = {
     nixpkgs,
-    rust-overlay,
-    crane,
+    nushell-syntax,
+    ...
   }: let
-    overlays = [
-      rust-overlay.overlays.default
-      (final: _prev: {
-        rustToolchain = final.rust-bin.nightly.latest.default;
-      })
-    ];
-
     supportedSystems = [
-      "x86_64-linux"
       "x86_64-darwin"
+      "x86_64-linux"
     ];
 
     forEachSupportedSystem = f:
-      nixpkgs.lib.genAttrs supportedSystems (
-        system:
-          f {
-            inherit system;
-
-            pkgs = import nixpkgs {inherit overlays system;};
-          }
-      );
+      nixpkgs.lib.genAttrs supportedSystems
+      (system:
+        f {
+          pkgs = import nixpkgs {inherit system;};
+        });
   in {
-    packages = forEachSupportedSystem ({
-      pkgs,
-      system,
-    }:
-      with pkgs; let
-        craneLib = crane.lib.${system};
-
-        buildPackages = [
-          libiconv
+    devShells = forEachSupportedSystem ({pkgs}: {
+      default = pkgs.mkShell {
+        packages = with pkgs; [
+          alejandra
+          ansible-language-server
+          bat
+          cocogitto
+          deadnix
+          eza
+          flake-checker
+          fzf
+          gh
+          just
+          lychee
+          markdown-oxide
+          marksman
+          nil
+          nodePackages.prettier
+          nushell
+          pdm
+          pre-commit
+          python312Packages.pre-commit-hooks
+          ripgrep
+          statix
+          stylelint
+          taplo
+          tokei
+          vscode-langservers-extracted
+          yaml-language-server
+          yamlfmt
         ];
 
-        darwinBuildPackages = [
-          zlib.dev
-          darwin.apple_sdk.frameworks.CoreFoundation
-          darwin.apple_sdk.frameworks.CoreServices
-          darwin.apple_sdk.frameworks.SystemConfiguration
-          darwin.IOKit
-        ];
+        shellHook = ''
+          nushell_syntax="${nushell-syntax}/nushell.sublime-syntax"
+          bat_config_dir=".config/bat"
+          bat_syntax_dir="''${bat_config_dir}/syntaxes"
+          bat_nushell_syntax="''${bat_syntax_dir}/nushell.sublime-syntax"
 
-        linuxBuildPackages = [
-          pkg-config
-          openssl
-        ];
-      in {
-        default = craneLib.buildPackage {
-          src = craneLib.cleanCargoSource (craneLib.path ./.);
+          mkdir -p "''${bat_syntax_dir}"
+          cp "''${nushell_syntax}" "''${bat_nushell_syntax}"
+          bat cache --build --source "''${bat_config_dir}"
 
-          buildInputs =
-            buildPackages
-            ++ (
-              if stdenv.isDarwin
-              then darwinBuildPackages
-              else
-                (
-                  if stdenv.isLinux
-                  then linuxBuildPackages
-                  else []
-                )
-            );
-        };
-      });
+          pre-commit install --hook-type commit-msg
 
-    devShells = forEachSupportedSystem ({pkgs}:
-      with pkgs; let
-        buildPackages = [
-          libiconv
-        ];
-
-        darwinBuildPackages = [
-          zlib.dev
-          darwin.apple_sdk.frameworks.CoreFoundation
-          darwin.apple_sdk.frameworks.CoreServices
-          darwin.apple_sdk.frameworks.SystemConfiguration
-          darwin.IOKit
-        ];
-
-        linuxBuildPackages = [
-          pkg-config
-          openssl
-        ];
-
-        devPackages = [
-          cargo-bloat
-          cargo-edit
-          cargo-outdated
-          cargo-udeps
-          cargo-watch
-          rust-analyzer
-          rustToolchain
-          zellij
-        ];
-      in {
-        default = pkgs.mkShell {
-          packages =
-            buildPackages
-            ++ devPackages
-            ++ (
-              if stdenv.isDarwin
-              then darwinBuildPackages
-              else
-                (
-                  if stdenv.isLinux
-                  then linuxBuildPackages
-                  else []
-                )
-            );
-
-          env.RUST_BACKTRACE = "1";
-        };
-      });
+        '';
+      };
+    });
   };
 }

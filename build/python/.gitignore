@@ -4,7 +4,6 @@
 .direnv
 .envrc
 .pdm-python
-.venv
 __pycache__/
 build/
 dist/

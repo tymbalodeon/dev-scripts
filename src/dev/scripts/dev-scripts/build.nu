@@ -12,47 +12,12 @@ def get_build_directory [environment: string] {
   }
 }
 
-def get_build_path [path: string] {
-  let build_directory = $"../build/(
-    $path
-    | parse "../src/{environment}"
-    | first
-    | get environment
-    | path dirname
-  )"
-
-  $build_directory
+def get_build_path [environment: string path: string] {
+  get_build_directory $environment
   | path join (
     $path  
-    | str replace --regex ".+/src/.+/" ""
+    | str replace --regex ".+/src/[a-zA-Z]+/" ""
   )
-}
-
-def copy_files [environment: string] {
-  let src_directory = (get_source_directory $environment)
-  let build_directory = (get_build_directory $environment)
-
-  let directories = (
-    fd --hidden "" $src_directory
-    | lines
-    | path dirname
-    | uniq
-    | filter {|directory| $directory != $src_directory}
-    | each {|directory| get_build_path $directory}
-  )
-
-  for directory in $directories {
-    mkdir $directory
-  }
-
-  fd --hidden "" $src_directory
-  | lines
-  | filter {
-      |file| 
-
-      ($file | path basename) not-in [.gitignore .pre-commit-config.yaml]
-    }
-  | each {|file| cp --recursive $file (get_build_path $file)}
 }
 
 def get_justfile [base_directory: string] {
@@ -77,46 +42,6 @@ def create_environment_recipe [environment: string recipe: string] {
   | str join "\n"
 }
 
-def merge_justfiles [environment: string] {
-  let justfile = (get_justfile (get_source_directory generic))
-  let environment_justfile_name = $"($environment).just"
-
-  let environment_justfile = (
-    get_source_directory $environment 
-    | path join $"just/($environment_justfile_name)"
-  )
-
-  if (
-    $environment_justfile
-    | path exists
-  ) {
-    let mod = $"mod ($environment) \"just/($environment).just\""
-
-    let unique_environment_recipes = (
-      get_recipes $environment_justfile
-      | filter {
-          |recipe|
-
-          $recipe not-in (
-            get_recipes $justfile
-          )
-      }
-    )
-    
-    open $justfile
-    | append (
-        $"mod ($environment) \"just/($environment).just\""
-        | append (
-            $unique_environment_recipes
-            | each {|recipe| create_environment_recipe $environment $recipe}
-          )
-      | str join "\n\n"
-      ) 
-    | to text
-    | save --force (get_justfile (get_build_directory $environment))
-  }
-}
-
 def get_gitignore_source [environment: string] {
   let file = $"(get_source_directory $environment)/.gitignore"
 
@@ -129,15 +54,6 @@ def get_gitignore_source [environment: string] {
 }
 
 def merge_gitignore [environment: string] {
-  get_gitignore_source generic
-  | append (get_gitignore_source $environment)
-  | uniq
-  | sort
-  | to text
-  | save --force (
-      get_build_directory $environment
-      | path join ".gitignore"
-  )
 }
 
 def get_target_value [source_value: record target: list column: string] {
@@ -150,14 +66,12 @@ def get_target_value [source_value: record target: list column: string] {
       }
   )
 
-  return (
-    if ($target_value | is-empty) {
-      $target_value
-    } else {
-      $target_value
-      | first
-    }
-  )
+  if ($target_value | is-empty) {
+    $target_value
+  } else {
+    $target_value
+    | first
+  }
 }
 
 def merge_records_by_key [a: list b: list key: string] {
@@ -204,7 +118,7 @@ def merge_records_by_key [a: list b: list key: string] {
     }
   }
 
-  return $records
+  $records
 }
 
 def update_pre_commit_update [environment: string] {
@@ -216,45 +130,9 @@ def update_pre_commit_update [environment: string] {
   }
 }
 
-def merge_pre_commit_config [environment: string] {
-  let pre_commit_config_filename = ".pre-commit-config.yaml"
-
-  let environment_config_path = (
-    (get_source_directory $environment)
-    | path join $pre_commit_config_filename
-  )
-
-  let generic_config = (
-    open (
-      get_source_directory generic
-      | path join $pre_commit_config_filename
-    ) | get repos
-  )
-
-  let generated_config_path = (
-    get_build_directory $environment
-    | path join ".pre-commit-config.yaml"
-  )
-
-  update_pre_commit_update generic
-
-  let repos = if ($environment_config_path | path exists) {
-    update_pre_commit_update $environment
-
-    let environment_config = (open $environment_config_path | get repos)
-
-    merge_records_by_key $generic_config $environment_config repo
-  } else {
-    $generic_config
-  }
-
-  {repos: $repos}
-  | to yaml
-  | save --force $generated_config_path
-}
-
 def get_flake [environment: string] {
-  return $"(get_source_directory $environment)flake.nix"
+  (get_source_directory $environment) 
+  | path join flake.nix
 }
 
 def get_flake_inputs [environment: string] {
@@ -271,12 +149,11 @@ def get_flake_inputs [environment: string] {
 
 def get_generated_flake [environment: string] {
   if $environment == "dev" {
-    return (mktemp --tmpdir flake-XXX.nix)
+    mktemp --tmpdir flake-XXX.nix
+  } else {
+    get_build_directory $environment
+    | path join flake.nix
   }
-
-  let base_directory = (get_build_directory $environment)
-
-  return $"($base_directory)flake.nix"
 }
 
 def merge_flake_inputs [environment: string generated_flake: string] {
@@ -322,25 +199,21 @@ def merge_flake_inputs [environment: string generated_flake: string] {
 }
 
 def get_flake_packages [environment: string] {
-  return (
-    open (get_flake $environment)
-    | rg --multiline "packages = with pkgs; \\[(\n|.)+\\];"
-    | lines
-    | drop nth 0
-    | drop
-    | str trim
-  )
+  open (get_flake $environment)
+  | rg --multiline "packages = with pkgs; \\[(\n|.)+\\];"
+  | lines
+  | drop nth 0
+  | drop
+  | str trim
 }
 
 def get_flake_shell_hook [environment: string] {
-  return (
-    open (get_flake $environment)
-    | rg --multiline "shellHook = ''(\n|.)+'';"
-    | lines
-    | drop nth 0
-    | drop
-    | str trim
-  )
+  open (get_flake $environment)
+  | rg --multiline "shellHook = ''(\n|.)+'';"
+  | lines
+  | drop nth 0
+  | drop
+  | str trim
 }
 
 def merge_flake_outputs [environment: string generated_flake: string] {
@@ -418,10 +291,10 @@ def get_modified [
 }
 
 def is_outdated [environment: string] {
-  let src_modified = (get_modified $environment)
+  let source_modified = (get_modified $environment)
   let generated_modified = (get_modified --generated $environment)
 
-  return ($src_modified > $generated_modified)
+  $source_modified > $generated_modified
 }
 
 # Build dev environments
@@ -460,10 +333,122 @@ export def main [
         rm --recursive --force (get_build_directory $environment)
       }
 
-      copy_files $environment
-      merge_justfiles $environment
-      merge_gitignore $environment
-      merge_pre_commit_config $environment
+      let source_directory = (get_source_directory $environment)
+      let build_directory = (get_build_directory $environment)
+
+      let source_files = (
+        fd --hidden "" $source_directory
+        | lines
+        | append (
+          fd "" (get_source_directory generic | path join scripts)
+          | lines
+        )
+      )
+
+      let directories = (
+        $source_files
+        | path dirname
+        | uniq
+        | filter {|directory| $directory != $source_directory}
+        | each {|directory| get_build_path $environment $directory}
+        | uniq
+      )
+
+      for directory in $directories {
+        mkdir $directory
+      }
+
+      $source_files
+      | filter {
+          |file| 
+
+          ($file | path basename) not-in [.gitignore .pre-commit-config.yaml]
+        }
+      | filter {|item| ($item | path type) != dir}
+      | each {|file| cp $file (get_build_path $environment $file)}
+
+      let justfile = (get_justfile (get_source_directory generic))
+      let environment_justfile_name = $"($environment).just"
+
+      let environment_justfile = (
+        $source_directory
+        | path join $"just/($environment_justfile_name)"
+      )
+
+      if (
+        $environment_justfile
+        | path exists
+      ) {
+        let mod = $"mod ($environment) \"just/($environment).just\""
+
+        let unique_environment_recipes = (
+          get_recipes $environment_justfile
+          | filter {
+              |recipe|
+
+              $recipe not-in (
+                get_recipes $justfile
+              )
+          }
+        )
+    
+        open $justfile
+        | append (
+            $"mod ($environment) \"just/($environment).just\""
+            | append (
+                $unique_environment_recipes
+                | each {|recipe| create_environment_recipe $environment $recipe}
+              )
+          | str join "\n\n"
+          ) 
+        | to text
+        | save --force (get_justfile (get_build_directory $environment))
+      }
+
+      get_gitignore_source $environment
+      | append (get_gitignore_source $environment)
+      | uniq
+      | sort
+      | to text
+      | save --force (
+          $build_directory
+          | path join ".gitignore"
+      )
+
+      let pre_commit_config_filename = ".pre-commit-config.yaml"
+
+      let environment_config_path = (
+        $source_directory
+        | path join $pre_commit_config_filename
+      )
+
+      let generic_config = (
+        open (
+          get_source_directory generic
+          | path join $pre_commit_config_filename
+        ) | get repos
+      )
+
+      let generated_config_path = (
+        $build_directory
+        | path join ".pre-commit-config.yaml"
+      )
+
+      update_pre_commit_update generic
+
+      let repos = if ($environment_config_path | path exists) {
+        update_pre_commit_update $environment
+
+        let environment_config = (open $environment_config_path | get repos)
+
+        merge_records_by_key $generic_config $environment_config repo
+      } else {
+        $generic_config
+      }
+
+      {repos: $repos}
+      | to yaml
+      | save --force $generated_config_path
 
       if not $skip_flake {
         let generated_flake = (get_generated_flake $environment)

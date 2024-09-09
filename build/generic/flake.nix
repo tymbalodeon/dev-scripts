@@ -1,12 +1,11 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-
+    nixpkgs = {url = "github:nixos/nixpkgs/nixos-unstable";};
     nushell-syntax = {
-      type = "github";
+      flake = false;
       owner = "stevenxxiu";
       repo = "sublime_text_nushell";
-      flake = false;
+      type = "github";
     };
   };
 

@@ -2,9 +2,4 @@
 *.midi
 *.pdf
 *~
-.config
-.direnv
-.envrc
-.pdm-python
-.venv
 settings.toml
