@@ -323,6 +323,7 @@ export def main [
 
       print $"Building ($environment)..."
 
+      let generic_source_directory = (get_source_directory generic)
       let source_directory = (get_source_directory $environment)
       let build_directory = (get_build_directory $environment)
 
@@ -334,7 +335,7 @@ export def main [
         fd --hidden "" $source_directory
         | lines
         | append (
-          fd "" (get_source_directory generic | path join scripts)
+          fd "" ($generic_source_directory | path join scripts)
           | lines
         )
       )
@@ -361,22 +362,23 @@ export def main [
       | filter {|item| ($item | path type) != dir}
       | each {|file| cp $file (get_build_path $environment $file)}
 
-      let justfile = (get_justfile (get_source_directory generic))
-      let environment_justfile_name = $"($environment).just"
+      let justfile = (get_justfile $generic_source_directory)
 
-      let environment_justfile = (
+      let environment_justfile = $"just/($environment).just"
+
+      let absolute_environment_justfile_path = (
         $source_directory
-        | path join $"just/($environment_justfile_name)"
+        | path join $environment_justfile
       )
 
       if (
-        $environment_justfile
+        $absolute_environment_justfile_path
         | path exists
       ) {
-        let mod = $"mod ($environment) \"just/($environment).just\""
+        let mod = $"mod ($environment) ($environment_justfile)"
 
         let unique_environment_recipes = (
-          get_recipes $environment_justfile
+          get_recipes $absolute_environment_justfile_path
           | filter {
               |recipe|
 
@@ -418,7 +420,7 @@ export def main [
 
       let generic_config = (
         open (
-          get_source_directory generic
+          $generic_source_directory
           | path join $pre_commit_config_filename
         ) | get repos
       )
