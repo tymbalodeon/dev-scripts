@@ -22,7 +22,7 @@ for origin in $origins {
 }
 
 let invalid_origin = "github.com/tymbalodeon/dev-scripts"
-let actual_invalid_origin = (parse_git_origin $invalid_origin)
+let actual_invalid_origin = (parse_git_origin --quiet $invalid_origin)
 
 assert equal ($actual_invalid_origin | get domain) null
 assert equal ($actual_invalid_origin | get owner) null
