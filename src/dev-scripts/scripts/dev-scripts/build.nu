@@ -121,7 +121,7 @@ def copy_source_files [
 }
 
 def get_justfile [base_directory: string] {
-  $base_directory 
+  $base_directory
   | path join Justfile
 }
 
@@ -182,8 +182,8 @@ def copy_justfile [
         | append (
             $unique_environment_recipes
             | each {
-                |recipe| 
-                
+                |recipe|
+
                 create_environment_recipe $settings.environment $recipe
               }
           )
@@ -358,7 +358,7 @@ def get_generated_flake [
 }
 
 def merge_flake_inputs [
-  generated_flake: string 
+  generated_flake: string
   settings: record<
     environment: string
     generic_source_directory: string
@@ -369,7 +369,7 @@ def merge_flake_inputs [
   mut merged_inputs = {}
 
   for directory in [
-    $settings.generic_source_directory 
+    $settings.generic_source_directory
     $settings.source_directory
   ] {
     let inputs = (get_flake_inputs $directory)
@@ -429,7 +429,7 @@ def get_flake_shell_hook [source_directory: string] {
 }
 
 def merge_flake_outputs [
-  generated_flake: string 
+  generated_flake: string
   settings: record<
     environment: string
     generic_source_directory: string
@@ -539,11 +539,11 @@ export def main [
       copy_source_files $settings
       copy_justfile $settings
       copy_gitignore $settings
-      copy_pre_commit_config $settings 
+      copy_pre_commit_config $settings
 
       if $environment != "dev-scripts" or not $skip_dev_flake {
         copy_flake $settings
-      } 
+      }
     }
   | null
 }

@@ -16,3 +16,8 @@
 [no-cd]
 @list *help:
     ./scripts/dev-scripts/list.nu {{ help }}
+
+# Run tests
+[no-cd]
+@test *args:
+    ./scripts/dev-scripts/test.nu {{ args }}

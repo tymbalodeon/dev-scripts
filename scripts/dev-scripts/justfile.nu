@@ -16,8 +16,8 @@ def main [
   let build_directory = (get_build_directory $environment)
 
   (
-    just 
-      --justfile (".." | path join $build_directory | path join Justfile) 
+    just
+      --justfile (".." | path join $build_directory | path join Justfile)
       --list
       --list-submodules
       ...$args
