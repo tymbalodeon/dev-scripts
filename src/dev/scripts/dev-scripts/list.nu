@@ -7,12 +7,12 @@ def main [
   environment?: string # List files for environment
 ] {
   if ($environment | is-empty) {
-    ls --short-names ../src
+    ls --short-names src
     | get name
     | to text
   } else {
     build $environment
 
-    eza --all --tree ("../build" | path join $environment)
+    eza --all --tree ("build" | path join $environment)
   }
 }

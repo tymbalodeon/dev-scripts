@@ -1,14 +1,14 @@
 #!/usr/bin/env nu
 
 def get_source_directory [environment: string] {
-  $"../src/($environment)"
+  $"src/($environment)"
 }
 
 export def get_build_directory [environment: string] {
   if $environment == "dev" {
-    "../"
+    ""
   } else {
-    $"../build/($environment)"
+    $"build/($environment)"
   }
 }
 
@@ -16,7 +16,7 @@ def get_build_path [environment: string path: string] {
   get_build_directory $environment
   | path join (
     $path
-    | str replace --regex ".+/src/[a-zA-Z]+/" ""
+    | str replace --regex "src/[a-zA-Z]+/" ""
   )
 }
 
@@ -193,7 +193,7 @@ def merge_flake_inputs [environment: string generated_flake: string] {
   alejandra --quiet --quiet $generated_flake
 
   if $environment == "dev" {
-    cp $generated_flake ../flake.nix
+    cp $generated_flake flake.nix
     rm $generated_flake
   }
 }
@@ -304,7 +304,7 @@ export def main [
   --skip-dev-flake # Skip building the dev flake.nix to avoid triggering direnv
 ] {
   let environments = if ($environment | is-empty) {
-    eza ../src
+    eza src
     | lines
   } else {
     [$environment]
@@ -316,6 +316,8 @@ export def main [
     $environments
     | filter {|environment| not (is_outdated $environment)}
   }
+
+  print (pwd)
 
   $environments
   | par-each {

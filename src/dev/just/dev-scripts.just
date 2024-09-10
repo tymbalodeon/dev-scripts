@@ -3,8 +3,9 @@
     ../scripts/dev-scripts/help.nu {{ recipe }}
 
 # Build dev environments
+[no-cd]
 @build *args:
-    ../scripts/dev-scripts/build.nu {{ args }}
+    ./scripts/dev-scripts/build.nu {{ args }}
 
 # Run an environment Justfile
 @justfile *args:
