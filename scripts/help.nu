@@ -9,6 +9,7 @@ def main [
       just
         --color always
         --list
+        --list-submodules
     )
   } else {
     nu $"./scripts/($recipe).nu" --help
