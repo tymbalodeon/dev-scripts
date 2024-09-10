@@ -193,7 +193,7 @@ def merge_flake_inputs [environment: string generated_flake: string] {
   alejandra --quiet --quiet $generated_flake
 
   if $environment == "dev" {
-    cp $generated_flake flake.nix
+    cp $generated_flake ../flake.nix
     rm $generated_flake
   }
 }
@@ -323,18 +323,12 @@ export def main [
 
       print $"Building ($environment)..."
 
-      let skip_flake = if $environment == "dev" and $skip_dev_flake {
-        true
-      } else {
-        false
-      }
-
-      if $environment != "dev" {
-        rm --recursive --force (get_build_directory $environment)
-      }
-
       let source_directory = (get_source_directory $environment)
       let build_directory = (get_build_directory $environment)
+
+      if $environment != "dev" {
+        rm --recursive --force $build_directory
+      }
 
       let source_files = (
         fd --hidden "" $source_directory
@@ -449,6 +443,12 @@ export def main [
       {repos: $repos}
       | to yaml
       | save --force $generated_config_path
+
+      let skip_flake = if $environment == "dev" and $skip_dev_flake {
+        true
+      } else {
+        false
+      }
 
       if not $skip_flake {
         let generated_flake = (get_generated_flake $environment)

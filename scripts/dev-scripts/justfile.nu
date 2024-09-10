@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-use ./build.nu get_base_directory
+use ./build.nu get_build_directory
 
 # Run an environment Justfile
 def main [
@@ -13,8 +13,8 @@ def main [
     $environment
   }
 
-  let base_environment = (get_base_directory $environment)
-  let justfile = $"($base_environment)/just/($environment).just"
+  let build_directory = (get_build_directory $environment)
+  let justfile = $"($build_directory)/just/($environment).just"
 
   just --justfile $justfile ...$args
 }
