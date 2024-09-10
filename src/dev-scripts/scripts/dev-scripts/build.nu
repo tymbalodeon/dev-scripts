@@ -5,7 +5,7 @@ def get_source_directory [environment: string] {
 }
 
 export def get_build_directory [environment: string] {
-  if $environment == "dev" {
+  if $environment == "dev-scripts" {
     ""
   } else {
     $"build/($environment)"
@@ -26,7 +26,7 @@ def get_modified [
   --generated
 ] {
   let base_directory = if $generated {
-    if $environment == "dev" {
+    if $environment == "dev-scripts" {
       pwd
     } else {
       get_build_directory $environment
@@ -66,7 +66,7 @@ def get_build_path [environment: string path: string] {
   get_build_directory $environment
   | path join (
     $path
-    | str replace --regex "src/[a-zA-Z]+/" ""
+    | str replace --regex "src/[a-zA-Z-_]+/" ""
   )
 }
 
@@ -349,7 +349,7 @@ def get_generated_flake [
     build_directory: string
   >
 ] {
-  if $settings.environment == "dev" {
+  if $settings.environment == "dev-scripts" {
     mktemp --tmpdir flake-XXX.nix
   } else {
     $settings.build_directory
@@ -404,7 +404,7 @@ def merge_flake_inputs [
 
   alejandra --quiet --quiet $generated_flake
 
-  if $settings.environment == "dev" {
+  if $settings.environment == "dev-scripts" {
     cp $generated_flake flake.nix
     rm $generated_flake
   }
@@ -521,7 +521,7 @@ export def main [
     $environments
   } else {
     $environments
-    | filter {|environment| not (is_outdated $environment)}
+    | filter {|environment| is_outdated $environment}
   }
 
   $environments
@@ -532,7 +532,7 @@ export def main [
 
       let settings = (get_settings $environment)
 
-      if $environment != "dev" {
+      if $environment != "dev-scripts" {
         rm --recursive --force $settings.build_directory
       }
 
@@ -541,7 +541,7 @@ export def main [
       copy_gitignore $settings
       copy_pre_commit_config $settings 
 
-      if $environment != "dev" or not $skip_dev_flake {
+      if $environment != "dev-scripts" or not $skip_dev_flake {
         copy_flake $settings
       } 
     }
