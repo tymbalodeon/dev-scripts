@@ -60,6 +60,7 @@ def get_source_files [
       fd "" ($settings.generic_source_directory | path join scripts)
       | lines
     )
+  | filter {|file| "scripts/tests" not-in $file}
 }
 
 def get_build_path [environment: string path: string] {
