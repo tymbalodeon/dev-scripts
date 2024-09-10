@@ -4,7 +4,7 @@ def get_source_directory [environment: string] {
   $"../src/($environment)"
 }
 
-def get_build_directory [environment: string] {
+export def get_build_directory [environment: string] {
   if $environment == "dev" {
     "../"
   } else {
