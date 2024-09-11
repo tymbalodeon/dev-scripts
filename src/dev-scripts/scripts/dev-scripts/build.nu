@@ -308,18 +308,25 @@ def merge_records_by_key [a: list b: list key: string] {
   $records
 }
 
+def get_pre_commit_config_repos [config: string] {
+  $config
+  | from yaml
+  | get repos
+}
+
+export def get_pre_commit_config_yaml [config: list<any>] {
+  {repos: $config}
+  | to yaml
+}
+
 export def merge_pre_commit_configs [
   generic_config: string
   environment_config: string
 ] {
-  let generic_config = ($generic_config | from yaml | get repos)
-  let environment_config = ($environment_config | from yaml | get repos)
+  let generic_config = (get_pre_commit_config_repos $generic_config)
+  let environment_config = (get_pre_commit_config_repos $environment_config)
 
-  {
-    repos: (
-      merge_records_by_key $generic_config $environment_config repo
-    )
-  } | to yaml
+  merge_records_by_key $generic_config $environment_config repo
 }
 
 def copy_pre_commit_config [
@@ -358,16 +365,10 @@ def copy_pre_commit_config [
 
     merge_pre_commit_configs $generic_config $environment_config
   } else {
-    {
-      repos: (
-        $generic_config
-        | from yaml
-        | get repos
-      )
-    } | to yaml
+    get_pre_commit_config_repos $generic_config
   }
 
-  $repos
+  get_pre_commit_config_yaml $repos
   | save --force $generated_config_path
 }
 

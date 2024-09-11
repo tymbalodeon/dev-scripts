@@ -1,5 +1,6 @@
 use std assert
 
+use ../build.nu get_pre_commit_config_yaml
 use ../build.nu merge_gitignores
 use ../build.nu merge_justfiles
 use ../build.nu merge_pre_commit_configs
@@ -247,9 +248,11 @@ let environment_pre_commit_config = "repos:
 "
 
 let actual_pre_commit_conifg = (
-    merge_pre_commit_configs 
+    get_pre_commit_config_yaml (
+      merge_pre_commit_configs 
         $generic_pre_commit_config 
         $environment_pre_commit_config
+    )
 )
 
 let expected_pre_commit_config = "repos:
