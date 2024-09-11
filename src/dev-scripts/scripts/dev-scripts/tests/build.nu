@@ -249,8 +249,8 @@ let environment_pre_commit_config = "repos:
 
 let actual_pre_commit_conifg = (
     get_pre_commit_config_yaml (
-      merge_pre_commit_configs 
-        $generic_pre_commit_config 
+      merge_pre_commit_configs
+        $generic_pre_commit_config
         $environment_pre_commit_config
     )
 )
@@ -338,6 +338,6 @@ let expected_pre_commit_config = "repos:
   - id: conventional-pre-commit
     stages:
     - commit-msg
-" 
+"
 
 assert equal $actual_pre_commit_conifg $expected_pre_commit_config

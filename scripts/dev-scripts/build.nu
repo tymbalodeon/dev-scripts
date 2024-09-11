@@ -196,9 +196,9 @@ def copy_justfile [
     | path exists
   ) {
     (
-      merge_justfiles 
-        $settings.environment 
-        $generic_justfile 
+      merge_justfiles
+        $settings.environment
+        $generic_justfile
         $environment_justfile
     ) | save --force (get_justfile $settings.build_directory)
   } else {
@@ -208,7 +208,7 @@ def copy_justfile [
 
 def get_gitignore [source_directory: string] {
   let path = (
-    $source_directory 
+    $source_directory
     | path join .gitignore
   )
 
@@ -243,7 +243,7 @@ def copy_gitignore [
   >
 ] {
   (
-    merge_gitignores 
+    merge_gitignores
       (get_gitignore $settings.generic_source_directory)
       (get_gitignore $settings.source_directory)
   ) | save --force (
@@ -348,7 +348,7 @@ def copy_pre_commit_config [
     open --raw (
       $settings.generic_source_directory
       | path join $pre_commit_config_filename
-    ) 
+    )
   )
 
   let generated_config_path = (
@@ -377,80 +377,18 @@ def get_flake [source_directory: string] {
   | path join flake.nix
 }
 
-def get_flake_inputs [source_directory: string] {
+def get_flake_inputs [flake: string] {
   (
     nix eval
       --apply 'builtins.getAttr "inputs"'
-      --file (get_flake $source_directory)
+      --file $flake
       --json
     | from json
   )
 }
 
-def get_generated_flake [
-  settings: record<
-    environment: string
-    generic_source_directory: string
-    source_directory: string
-    build_directory: string
-  >
-] {
-  if $settings.environment == "dev-scripts" {
-    mktemp --tmpdir flake-XXX.nix
-  } else {
-    $settings.build_directory
-    | path join flake.nix
-  }
-}
-
-def merge_flake_inputs [
-  generated_flake: string
-  settings: record<
-    environment: string
-    generic_source_directory: string
-    source_directory: string
-    build_directory: string
-  >
-] {
-  mut merged_inputs = {}
-
-  for directory in [
-    $settings.generic_source_directory
-    $settings.source_directory
-  ] {
-    let inputs = (get_flake_inputs $directory)
-
-    $merged_inputs = ($merged_inputs | merge $inputs)
-  }
-
-  let merged_inputs = {inputs: $merged_inputs}
-
-  let inputs = (
-    nix eval
-      --apply builtins.fromJSON
-      --expr (
-        $merged_inputs
-        | to json
-        | to json
-      )
-    | alejandra --quiet --quiet
-    | lines
-    | drop nth 0
-    | drop
-  )
-
-  "\{\n"
-  | append $inputs
-  | append "\n"
-  | append (
-    open $generated_flake
-    | lines
-    | drop nth 0
-  ) | save --force $generated_flake
-}
-
-def get_flake_packages [source_directory: string] {
-  open (get_flake $source_directory)
+def get_flake_packages [flake: string] {
+  open $flake
   | rg --multiline "packages = with pkgs; \\[(\n|.)+\\];"
   | lines
   | drop nth 0
@@ -458,8 +396,8 @@ def get_flake_packages [source_directory: string] {
   | str trim
 }
 
-def get_flake_shell_hook [source_directory: string] {
-  open (get_flake $source_directory)
+def get_flake_shell_hook [flake: string] {
+  open $flake
   | rg --multiline "shellHook = ''(\n|.)+'';"
   | lines
   | drop nth 0
@@ -467,66 +405,76 @@ def get_flake_shell_hook [source_directory: string] {
   | str trim
 }
 
-def merge_flake_outputs [
-  generated_flake: string
-  settings: record<
-    environment: string
-    generic_source_directory: string
-    source_directory: string
-    build_directory: string
-  >
+def merge_flakes [
+  generic_flake: string
+  environment_flake: string
 ] {
-  let packages = if $settings.environment == "generic" {
-     get_flake_packages $settings.generic_source_directory
-  } else {
-    get_flake_packages $settings.generic_source_directory
-    | append (get_flake_packages $settings.source_directory)
-    | uniq
-    | sort
-  }
-
-  let shell_hook = (
-    if $settings.environment == "generic" {
-      get_flake_shell_hook $settings.generic_source_directory
-    } else {
-      get_flake_shell_hook $settings.generic_source_directory
-      | append ""
-      | append (get_flake_shell_hook $settings.source_directory)
-    } | to text
+  let inputs = (
+    nix eval
+      --apply builtins.fromJSON
+      --expr (
+        {
+          inputs: (
+            get_flake_inputs $generic_flake
+            | merge (get_flake_inputs $environment_flake)
+          )
+        } | to json
+        | to json
+      )
+    # | alejandra --quiet --quiet
+    | lines
+    | drop nth 0
+    | drop
+    | to text
   )
 
-  $"
-    \{
-      outputs = \{
-        nixpkgs,
-        nushell-syntax,
-        ...
-      \}: let
-        supportedSystems = [
-          \"x86_64-darwin\"
-          \"x86_64-linux\"
-        ];
+  let packages = (
+    get_flake_packages $generic_flake
+    | append (get_flake_packages $environment_flake)
+    | uniq
+    | sort
+  )
 
-        forEachSupportedSystem = f:
-          nixpkgs.lib.genAttrs supportedSystems
-          \(system:
-            f \{
-              pkgs = import nixpkgs \{inherit system;\};
-            \}\);
-      in \{
-        devShells = forEachSupportedSystem \(\{pkgs\}: \{
-          default = pkgs.mkShell \{
-            packages = with pkgs; [
-              ($packages | to text)
-            ];
+  let shell_hook = (
+      get_flake_shell_hook $generic_flake
+      | append ""
+      | append (get_flake_shell_hook $environment_flake)
+      | to text
+  )
 
-            shellHook = ''\n($shell_hook)'';
-          \};
-      \}\);
-      \};
-    \}
-  " | alejandra --quiet --quiet
-  | save --force $generated_flake
+  let outputs = $"
+    outputs = \{
+      nixpkgs,
+      nushell-syntax,
+      ...
+    \}: let
+      supportedSystems = [
+        \"x86_64-darwin\"
+        \"x86_64-linux\"
+      ];
+
+      forEachSupportedSystem = f:
+        nixpkgs.lib.genAttrs supportedSystems
+        \(system:
+          f \{
+            pkgs = import nixpkgs \{inherit system;\};
+          \}\);
+    in \{
+      devShells = forEachSupportedSystem \(\{pkgs\}: \{
+        default = pkgs.mkShell \{
+          packages = with pkgs; [
+            ($packages | to text)
+          ];
+
+          shellHook = ''\n($shell_hook)'';
+        \};
+    \}\);
+    \};
+  "
+
+  | append (["{" $inputs $outputs "}"] | str join "\n")
+  | to text
+  | alejandra --quiet --quiet
 }
 
 def copy_flake [
@@ -537,17 +485,12 @@ def copy_flake [
     build_directory: string
   >
 ] {
-  let generated_flake = (get_generated_flake $settings)
+  let generic_flake = (get_flake $settings.generic_source_directory)
+  let environment_flake = (get_flake $settings.source_directory)
+  let merged_flakes = (merge_flakes $generic_flake $environment_flake)
 
-  merge_flake_outputs $generated_flake $settings
-  merge_flake_inputs $generated_flake $settings
-
-  alejandra --quiet --quiet $generated_flake
-
-  if $settings.environment == "dev-scripts" {
-    cp $generated_flake flake.nix
-    rm $generated_flake
-  }
+  $merged_flakes
+  | save --force (get_flake $settings.build_directory)
 }
 
 # Build dev environments
