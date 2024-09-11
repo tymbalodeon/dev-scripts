@@ -361,6 +361,7 @@ def copy_pre_commit_config [
     {
       repos: (
         $generic_config
+        | from yaml
         | get repos
       )
     } | to yaml
