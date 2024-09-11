@@ -421,10 +421,10 @@ def merge_flakes [
         } | to json
         | to json
       )
-    | lines
+    | split row " "
     | drop nth 0
     | drop
-    | to text
+    | str join " "
   )
 
   let packages = (
@@ -471,9 +471,12 @@ def merge_flakes [
     \};
   "
 
-  | append (["{" $inputs $outputs "}"] | str join "\n")
+  ["{" $inputs $outputs "}"] 
+  | str join "\n"
   | to text
   | alejandra --quiet --quiet
+  | lines
+  | to text
 }
 
 def copy_flake [
