@@ -338,7 +338,7 @@ def copy_pre_commit_config [
   )
 
   let generic_config = (
-    open (
+    open --raw (
       $settings.generic_source_directory
       | path join $pre_commit_config_filename
     ) 
@@ -354,7 +354,7 @@ def copy_pre_commit_config [
   let repos = if ($environment_config_path | path exists) {
     update_pre_commit_update $settings.environment
 
-    let environment_config = (open $environment_config_path)
+    let environment_config = (open --raw $environment_config_path)
 
     merge_pre_commit_configs $generic_config $environment_config
   } else {
