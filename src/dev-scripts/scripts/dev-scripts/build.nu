@@ -405,7 +405,7 @@ def get_flake_shell_hook [flake: string] {
   | str trim
 }
 
-def merge_flakes [
+export def merge_flakes [
   generic_flake: string
   environment_flake: string
 ] {
