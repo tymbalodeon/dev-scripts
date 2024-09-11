@@ -206,15 +206,32 @@ def copy_justfile [
   }
 }
 
-def get_gitignore_source [environment: string] {
-  let file = $"(get_source_directory $environment)/.gitignore"
+def get_gitignore [source_directory: string] {
+  let path = (
+    $source_directory 
+    | path join .gitignore
+  )
 
-  if ($file | path exists) {
-    open $file
-    | lines
+  if (
+    $path
+    | path exists
+  ) {
+    open $path
   } else {
-    []
+    ""
   }
+}
+
+export def merge_gitignores [
+  generic_gitignore: string
+  environment_gitignore: string
+] {
+  $generic_gitignore
+  | lines
+  | append ($environment_gitignore | lines)
+  | uniq
+  | sort
+  | to text
 }
 
 def copy_gitignore [
@@ -225,12 +242,11 @@ def copy_gitignore [
     build_directory: string
   >
 ] {
-  get_gitignore_source generic
-  | append (get_gitignore_source $settings.environment)
-  | uniq
-  | sort
-  | to text
-  | save --force (
+  (
+    merge_gitignores 
+      (get_gitignore $settings.generic_source_directory)
+      (get_gitignore $settings.source_directory)
+  ) | save --force (
       $settings.build_directory
       | path join ".gitignore"
     )

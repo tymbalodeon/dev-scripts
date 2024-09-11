@@ -1,6 +1,28 @@
 use std assert
 
+use ../build.nu merge_gitignores
 use ../build.nu merge_justfiles
+
+let generic_gitignore = ".one
+two/*
+three
+"
+
+let environment_gitignore = ".one
+four/**/*.nu
+"
+
+let actual_gitignore = (
+    merge_gitignores $generic_gitignore $environment_gitignore
+)
+
+let expected_gitignore = ".one
+four/**/*.nu
+three
+two/*
+"
+
+assert equal $actual_gitignore $expected_gitignore
 
 let generic_justfile = ($env.FILE_PWD | path join generic-justfile.just)
 let environment_justfile = ($env.FILE_PWD | path join environment-justfile.just)
