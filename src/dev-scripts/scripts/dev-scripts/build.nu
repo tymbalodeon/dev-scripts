@@ -497,15 +497,15 @@ def copy_flake [
 
 # Build dev environments
 export def main [
-  environment?: string
+  ...environments: string
   --force # Build environments even if up-to-date
   --skip-dev-flake # Skip building the dev flake.nix to avoid triggering direnv
 ] {
-  let environments = if ($environment | is-empty) {
+  let environments = if ($environments | is-empty) {
     eza src
     | lines
   } else {
-    [$environment]
+    $environments
   }
 
   let environments = if $force {

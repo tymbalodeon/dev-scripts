@@ -405,7 +405,7 @@ def get_flake_shell_hook [flake: string] {
   | str trim
 }
 
-def merge_flakes [
+export def merge_flakes [
   generic_flake: string
   environment_flake: string
 ] {
@@ -497,15 +497,15 @@ def copy_flake [
 
 # Build dev environments
 export def main [
-  environment?: string
+  ...environments: string
   --force # Build environments even if up-to-date
   --skip-dev-flake # Skip building the dev flake.nix to avoid triggering direnv
 ] {
-  let environments = if ($environment | is-empty) {
+  let environments = if ($environments | is-empty) {
     eza src
     | lines
   } else {
-    [$environment]
+    $environments
   }
 
   let environments = if $force {
