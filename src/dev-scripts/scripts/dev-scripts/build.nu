@@ -471,7 +471,7 @@ export def merge_flakes [
     \};
   "
 
-  ["{" $inputs $outputs "}"] 
+  ["{" $inputs $outputs "}"]
   | str join "\n"
   | to text
   | alejandra --quiet --quiet
