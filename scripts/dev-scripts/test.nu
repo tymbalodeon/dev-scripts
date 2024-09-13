@@ -28,6 +28,7 @@ def main [
 
   for test in $tests {
     print $"Running ($test)..."
+
     nu $test
   }
 }

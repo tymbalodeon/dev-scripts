@@ -16,6 +16,7 @@ def get_settings [environment: string] {
   {
     environment: $environment
     generic_source_directory: (get_source_directory generic)
+    generic_build_directory: (get_build_directory generic)
     source_directory: (get_source_directory $environment)
     build_directory: (get_build_directory $environment)
   }
@@ -46,20 +47,43 @@ def is_outdated [environment: string] {
   $source_modified > $generated_modified
 }
 
-def get_source_files [
+def get_files [directory: string] {
+  fd --hidden "" $directory
+  | lines
+}
+
+def get_environment_files [
   settings: record<
     environment: string
     generic_source_directory: string
+    generic_build_directory: string
     source_directory: string
     build_directory: string
   >
+  --build
 ] {
-  fd --hidden "" $settings.source_directory
-  | lines
-  | append (
-      fd "" ($settings.generic_source_directory | path join scripts)
-      | lines
-    )
+  let source_directory = if $build {
+    $settings.build_directory
+  } else {
+    $settings.source_directory  
+  }
+
+  let generic_directory = if $build {
+    $settings.generic_build_directory
+  } else {
+    $settings.generic_source_directory
+  }
+
+  let files = (get_files $source_directory)
+
+  let files = if $settings.environment != "generic" {
+    $files
+    | append (get_files ($generic_directory | path join scripts))
+  } else {
+    $files
+  }
+
+  $files
   | filter {|file| "/tests" not-in $file}
 }
 
@@ -76,6 +100,7 @@ def get_source_directories [
   settings: record<
     environment: string
     generic_source_directory: string
+    generic_build_directory: string
     source_directory: string
     build_directory: string
   >
@@ -92,11 +117,12 @@ def copy_source_files [
   settings: record<
     environment: string
     generic_source_directory: string
+    generic_build_directory: string
     source_directory: string
     build_directory: string
   >
 ] {
-  let source_files = (get_source_files $settings)
+  let source_files = (get_environment_files $settings)
 
   let directories = (
     get_source_directories $source_files $settings
@@ -180,6 +206,7 @@ def copy_justfile [
   settings: record<
     environment: string
     generic_source_directory: string
+    generic_build_directory: string
     source_directory: string
     build_directory: string
   >
@@ -238,6 +265,7 @@ def copy_gitignore [
   settings: record<
     environment: string
     generic_source_directory: string
+    generic_build_directory: string
     source_directory: string
     build_directory: string
   >
@@ -333,6 +361,7 @@ def copy_pre_commit_config [
   settings: record<
     environment: string
     generic_source_directory: string
+    generic_build_directory: string
     source_directory: string
     build_directory: string
   >
@@ -483,6 +512,7 @@ def copy_flake [
   settings: record<
     environment: string
     generic_source_directory: string
+    generic_build_directory: string
     source_directory: string
     build_directory: string
   >
@@ -493,6 +523,52 @@ def copy_flake [
 
   $merged_flakes
   | save --force (get_flake $settings.build_directory)
+}
+
+# TODO Continue working from here
+def get_outdated_files [environment: string] {
+  let settings = (get_settings $environment)
+
+  let source_files = (
+    get_environment_files $settings
+    | str replace "src/" ""
+  )
+
+  let build_files = (get_environment_files --build $settings)
+
+  for file in (
+    $build_files 
+    | filter {
+        |file| 
+
+        (
+          $file 
+          | str replace "build/" ""
+        ) not-in $source_files
+      }
+  ) {
+    rm $file
+  }
+
+  $source_files
+  | filter {
+      |file|
+
+      let build_file = (
+        "build" 
+        | path join $file 
+      )
+
+      not ($build_file | path exists) or (
+        (
+          ls ("src" | path join $file)
+          | get modified
+        ) > (
+          ls $build_file 
+          | get modified
+        )
+      )
+  }
 }
 
 # Build dev environments
@@ -523,7 +599,7 @@ export def main [
 
       let settings = (get_settings $environment)
 
-      if $environment != "dev-scripts" {
+      if $environment != "dev-scripts" and $force {
         rm --recursive --force $settings.build_directory
       }
 
