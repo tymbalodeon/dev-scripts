@@ -114,6 +114,7 @@ def get_source_directories [
 }
 
 def copy_source_files [
+  source_files: list<string>
   settings: record<
     environment: string
     generic_source_directory: string
@@ -122,7 +123,6 @@ def copy_source_files [
     build_directory: string
   >
 ] {
-  let source_files = (get_environment_files $settings)
   let directories = (get_source_directories $source_files $settings)
 
   for directory in $directories {
@@ -570,8 +570,9 @@ def remove_deleted_files [
         ) not-in $source_files
       }
   ) {
-    print $"Would remove ($file)"
-    # rm $file
+    rm $file
+
+    print $"Removed deleted file: ($file)"
   }
 }
 
@@ -592,7 +593,7 @@ def force_copy_files [
       $settings.environment
   )
 
-  copy_source_files $settings
+  copy_source_files (get_environment_files $settings) $settings
   copy_justfile $settings
   copy_gitignore $settings
   copy_pre_commit_config $settings
@@ -634,18 +635,22 @@ def copy_outdated_files [
           | get modified
         )
 
-        let build_modified = (
-          ls $build_file
-          | get modified
-        )
+        if not ($build_file | path exists) {
+          true
+        } else {
+          let build_modified = (
+            ls $build_file
+            | get modified
+          )
 
-        not ($build_file | path exists) or (
-          $source_modified > $build_modified
-        )
+          not ($build_file | path exists) or (
+            $source_modified > $build_modified
+          )
+        }
     }
   )
 
-  mut plain_files = []
+  mut source_files = []
 
   for file in $outdated_files {
     let basename = ($file | path basename)
@@ -663,14 +668,12 @@ def copy_outdated_files [
     ) == "just" {
       copy_justfile $settings
     } else {
-      $plain_files = ($plain_files | append $file)      
+      $source_files = ($source_files | append $file)      
     }
   }
 
   # FIXME
-  for file in $plain_files {
-    print $file
-  }
+  copy_source_files $source_files $settings
 }
 
 # Build dev environments
