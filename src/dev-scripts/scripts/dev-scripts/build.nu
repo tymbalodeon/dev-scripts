@@ -76,11 +76,11 @@ def get_environment_files [
 
   let files = (get_files $source_directory)
 
-  let files = if $settings.environment != "generic" {
+  let files = if $settings.environment == "generic" or $build {
     $files
-    | append (get_files ($generic_directory | path join scripts))
   } else {
     $files
+    | append (get_files ($generic_directory | path join scripts))
   }
 
   $files
@@ -123,10 +123,7 @@ def copy_source_files [
   >
 ] {
   let source_files = (get_environment_files $settings)
-
-  let directories = (
-    get_source_directories $source_files $settings
-  )
+  let directories = (get_source_directories $source_files $settings)
 
   for directory in $directories {
     mkdir $directory
@@ -525,23 +522,42 @@ def copy_flake [
   | save --force (get_flake $settings.build_directory)
 }
 
-# TODO Continue working from here
-def get_outdated_files [environment: string] {
-  let settings = (get_settings $environment)
+def get_source_files [
+  settings: record<
+    environment: string
+    generic_source_directory: string
+    generic_build_directory: string
+    source_directory: string
+    build_directory: string
+  >
+] {
+  get_environment_files $settings
+  | str replace "src/" ""
+  | str replace $"generic/" $"($settings.environment)/"
+}
 
-  let source_files = (
-    get_environment_files $settings
-    | str replace "src/" ""
-  )
+def get_build_files [
+  settings: record<
+    environment: string
+    generic_source_directory: string
+    generic_build_directory: string
+    source_directory: string
+    build_directory: string
+  >
+] {
+  get_environment_files --build $settings
+}
 
-  let build_files = (get_environment_files --build $settings)
-
+def remove_deleted_files [
+  $source_files: list<string>
+  $build_files: list<string>
+] {
   for file in (
     $build_files 
     | filter {
         |file| 
 
-        (
+        let file = (
           $file 
           | str replace "build/" ""
         ) not-in $source_files
@@ -549,26 +565,64 @@ def get_outdated_files [environment: string] {
   ) {
     rm $file
   }
+}
 
-  $source_files
-  | filter {
-      |file|
+def force_copy_files [
+  settings: record<
+    environment: string
+    generic_source_directory: string
+    generic_build_directory: string
+    source_directory: string
+    build_directory: string
+  >
+  skip_dev_flake: bool
+] {
+  remove_deleted_files (get_source_files $settings) (get_build_files $settings)
+  copy_source_files $settings
+  copy_justfile $settings
+  copy_gitignore $settings
+  copy_pre_commit_config $settings
 
-      let build_file = (
-        "build" 
-        | path join $file 
-      )
-
-      not ($build_file | path exists) or (
-        (
-          ls ("src" | path join $file)
-          | get modified
-        ) > (
-          ls $build_file 
-          | get modified
-        )
-      )
+  if $settings.environment != "dev-scripts" or not $skip_dev_flake {
+    copy_flake $settings
   }
+}
+
+def copy_outdated_files [
+  settings: record<
+    environment: string
+    generic_source_directory: string
+    generic_build_directory: string
+    source_directory: string
+    build_directory: string
+  >
+] {
+  let source_files = (get_source_files $settings)
+  let build_files = (get_build_files $settings)
+
+  remove_deleted_files $source_files $build_files
+
+  let outdated_files = (
+    $source_files
+    | filter {
+        |file|
+
+        let build_file = (
+          "build" 
+          | path join $file 
+        )
+
+        not ($build_file | path exists) or (
+          (
+            ls ("src" | path join $file)
+            | get modified
+          ) > (
+            ls $build_file 
+            | get modified
+          )
+        )
+    }
+  )
 }
 
 # Build dev environments
@@ -584,13 +638,6 @@ export def main [
     $environments
   }
 
-  let environments = if $force {
-    $environments
-  } else {
-    $environments
-    | filter {|environment| is_outdated $environment}
-  }
-
   $environments
   | par-each {
       |environment|
@@ -599,17 +646,10 @@ export def main [
 
       let settings = (get_settings $environment)
 
-      if $environment != "dev-scripts" and $force {
-        rm --recursive --force $settings.build_directory
-      }
-
-      copy_source_files $settings
-      copy_justfile $settings
-      copy_gitignore $settings
-      copy_pre_commit_config $settings
-
-      if $environment != "dev-scripts" or not $skip_dev_flake {
-        copy_flake $settings
+      if $force {
+        force_copy_files $settings $skip_dev_flake
+      } else {
+        copy_outdated_files $settings
       }
     }
   | null
