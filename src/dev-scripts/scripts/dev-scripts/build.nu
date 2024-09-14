@@ -80,7 +80,7 @@ def get_environment_files [
     $files
   } else {
     $files
-    | append (get_files ($generic_directory | path join scripts))
+    | append (get_files $generic_directory)
   }
 
   $files
@@ -134,7 +134,12 @@ def copy_source_files [
     | filter {
         |file|
 
-        ($file | path basename) not-in [.gitignore .pre-commit-config.yaml]
+        ($file | path basename) not-in [
+          .gitignore 
+          .pre-commit-config.yaml
+          flake.nix
+          Justfile
+        ]
       }
     | filter {|item| ($item | path type) != dir}
   )

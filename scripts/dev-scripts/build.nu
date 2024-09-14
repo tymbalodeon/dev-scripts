@@ -80,7 +80,7 @@ def get_environment_files [
     $files
   } else {
     $files
-    | append (get_files ($generic_directory | path join scripts))
+    | append (get_files $generic_directory)
   }
 
   $files
@@ -134,12 +134,18 @@ def copy_source_files [
     | filter {
         |file|
 
-        ($file | path basename) not-in [.gitignore .pre-commit-config.yaml]
+        ($file | path basename) not-in [
+          .gitignore 
+          .pre-commit-config.yaml
+          flake.nix
+          Justfile
+        ]
       }
     | filter {|item| ($item | path type) != dir}
   )
 
   for file in $source_files {
+    print $"Copying ($file)..."
     cp $file (get_build_path $settings.environment $file)
   }
 }
@@ -649,6 +655,8 @@ def copy_outdated_files [
         }
     }
   )
+
+  print $outdated_files
 
   mut source_files = []
 
