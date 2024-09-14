@@ -655,8 +655,6 @@ def copy_outdated_files [
     }
   )
 
-  print $outdated_files
-
   mut source_files = []
 
   for file in $outdated_files {
