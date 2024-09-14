@@ -522,6 +522,51 @@ def copy_flake [
   | save --force (get_flake $settings.build_directory)
 }
 
+def get_source_files [
+  settings: record<
+    environment: string
+    generic_source_directory: string
+    generic_build_directory: string
+    source_directory: string
+    build_directory: string
+  >
+] {
+  get_environment_files $settings
+  | str replace "src/" ""
+  # | str replace $"generic/" $"($settings.environment)/"
+}
+
+def get_build_files [
+  settings: record<
+    environment: string
+    generic_source_directory: string
+    generic_build_directory: string
+    source_directory: string
+    build_directory: string
+  >
+] {
+  get_environment_files --build $settings
+}
+
+def remove_deleted_files [
+  $source_files: list<string>
+  $build_files: list<string>
+] {
+  for file in (
+    $build_files
+    | filter {
+        |file|
+
+        let file = (
+          $file
+          | str replace "build/" ""
+        ) not-in $source_files
+      }
+  ) {
+    rm $file
+  }
+}
+
 def force_copy_files [
   settings: record<
     environment: string
@@ -532,9 +577,7 @@ def force_copy_files [
   >
   skip_dev_flake: bool
 ] {
-  if $settings.environment != "dev-scripts" {
-    rm --recursive --force $settings.build_directory
-  }
+  remove_deleted_files (get_source_files $settings) (get_build_files $settings)
 
   copy_source_files $settings
   copy_justfile $settings
@@ -555,39 +598,22 @@ def copy_outdated_files [
     build_directory: string
   >
 ] {
-  let source_files = (
-    get_environment_files $settings
-    | str replace "src/" ""
-    | str replace $"generic/" $"($settings.environment)/"
-  )
+  let source_files = (get_source_files $settings)
+  let build_files = (get_build_files $settings)
 
-  let build_files = (get_environment_files --build $settings)
-
-  print $source_files
-  print $build_files
-
-  for file in (
-    $build_files
-    | filter {
-        |file|
-
-        let file = (
-          $file
-          | str replace "build/" ""
-        )
-
-        # print $file
-        # print ($file in $source_files)
-        $file not-in $source_files
-      }
-  ) {
-    print $"Would remove ($file)"
-    # rm $file
-  }
+  remove_deleted_files $source_files $build_files
 
   let outdated_files = (
     $source_files
+    | str replace $"generic/" $"($settings.environment)/"
     | filter {
+        |item|
+
+        $item
+        | path parse
+        | get extension
+        | is-not-empty
+    } | filter {
         |file|
 
         let build_file = (
@@ -595,19 +621,45 @@ def copy_outdated_files [
           | path join $file
         )
 
+        let source_modified = (
+          ls ("src" | path join $build_file)
+          | get modified
+        )
+
+        let build_modified = (
+          ls $build_file
+          | get modified
+        )
+
         not ($build_file | path exists) or (
-          (
-            ls ("src" | path join $file)
-            | get modified
-          ) > (
-            ls $build_file
-            | get modified
-          )
+          $source_modified > $build_modified
         )
     }
   )
 
-  # print $outdated_files
+  mut plain_files = []
+
+  for file in $outdated_files {
+    let basename = ($file | path basename)
+
+    if $basename == ".gitignore" {
+      copy_gitignore $settings
+    } else if $basename == ".pre-commit-config.yaml" {
+      copy_pre_commit_config $settings
+    } else if $basename == "flake.nix" {
+      copy_flake $settings
+    } else if $basename == "Justfile" or (
+      $basename 
+      | path parse
+      | get extension
+    ) == "just" {
+      copy_justfile $settings
+    } else {
+      $plain_files = ($plain_files | append $file)      
+    }
+  }
+
+  print ($plain_files)
 }
 
 # Build dev environments
