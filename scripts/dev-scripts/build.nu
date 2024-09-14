@@ -145,7 +145,6 @@ def copy_source_files [
   )
 
   for file in $source_files {
-    print $"Copying ($file)..."
     cp $file (get_build_path $settings.environment $file)
   }
 }
@@ -675,12 +674,15 @@ def copy_outdated_files [
       | get extension
     ) == "just" {
       copy_justfile $settings
+
+      let environment = $settings.environment
+
+      touch $"build/($environment)/just/($environment).just"
     } else {
       $source_files = ($source_files | append $file)      
     }
   }
 
-  # FIXME
   copy_source_files $source_files $settings
 }
 
