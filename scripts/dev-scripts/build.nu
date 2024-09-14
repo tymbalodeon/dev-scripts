@@ -65,7 +65,7 @@ def get_environment_files [
   let source_directory = if $build {
     $settings.build_directory
   } else {
-    $settings.source_directory  
+    $settings.source_directory
   }
 
   let generic_directory = if $build {
@@ -567,15 +567,15 @@ def copy_outdated_files [
   print $build_files
 
   for file in (
-    $build_files 
+    $build_files
     | filter {
-        |file| 
+        |file|
 
         let file = (
-          $file 
+          $file
           | str replace "build/" ""
-        ) 
-        
+        )
+
         # print $file
         # print ($file in $source_files)
         $file not-in $source_files
@@ -591,8 +591,8 @@ def copy_outdated_files [
         |file|
 
         let build_file = (
-          "build" 
-          | path join $file 
+          "build"
+          | path join $file
         )
 
         not ($build_file | path exists) or (
@@ -600,7 +600,7 @@ def copy_outdated_files [
             ls ("src" | path join $file)
             | get modified
           ) > (
-            ls $build_file 
+            ls $build_file
             | get modified
           )
         )
