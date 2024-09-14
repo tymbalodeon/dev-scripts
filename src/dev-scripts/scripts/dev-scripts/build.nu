@@ -532,9 +532,8 @@ def get_source_files [
   >
 ] {
   get_environment_files $settings
+  | filter {|file| ($file | path type) != "dir"}
   | str replace "src/" ""
-  # FIXME
-  # | str replace $"generic/" $"($settings.environment)/"
 }
 
 def get_build_files [
@@ -547,24 +546,32 @@ def get_build_files [
   >
 ] {
   get_environment_files --build $settings
+  | filter {|file| ($file | path type) != "dir"}
 }
 
 def remove_deleted_files [
   $source_files: list<string>
   $build_files: list<string>
+  $environment: string
 ] {
+  let source_files = (
+    $source_files
+    | str replace $"generic/" $"($environment)/"
+  )
+
   for file in (
     $build_files
     | filter {
         |file|
 
-        let file = (
+        (
           $file
           | str replace "build/" ""
         ) not-in $source_files
       }
   ) {
-    rm $file
+    print $"Would remove ($file)"
+    # rm $file
   }
 }
 
@@ -578,7 +585,12 @@ def force_copy_files [
   >
   skip_dev_flake: bool
 ] {
-  remove_deleted_files (get_source_files $settings) (get_build_files $settings)
+  (
+    remove_deleted_files 
+      (get_source_files $settings) 
+      (get_build_files $settings) 
+      $settings.environment
+  )
 
   copy_source_files $settings
   copy_justfile $settings
@@ -602,28 +614,23 @@ def copy_outdated_files [
   let source_files = (get_source_files $settings)
   let build_files = (get_build_files $settings)
 
-  remove_deleted_files $source_files $build_files
+  remove_deleted_files $source_files $build_files $settings.environment
 
   let outdated_files = (
     $source_files
     | filter {
-        |item|
-
-        $item
-        | path parse
-        | get extension
-        | is-not-empty
-    } | filter {
         |file|
 
-        # FIXME
         let build_file = (
           "build"
-          | path join $file
+          | path join (
+            $file
+            | str replace "generic/" $"($settings.environment)/"
+          )
         )
 
         let source_modified = (
-          ls ("src" | path join $build_file)
+          ls ("src" | path join $file)
           | get modified
         )
 
@@ -661,7 +668,9 @@ def copy_outdated_files [
   }
 
   # FIXME
-  print ($plain_files)
+  for file in $plain_files {
+    print $file
+  }
 }
 
 # Build dev environments
