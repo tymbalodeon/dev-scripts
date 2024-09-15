@@ -15,8 +15,6 @@ def main [
 
   let build_directory = (get_build_directory $environment)
 
-  print $build_directory
-
   (
     just
       --justfile ($build_directory | path join Justfile)
