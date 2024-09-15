@@ -17,7 +17,7 @@ def main [
 
   (
     just
-      --justfile (".." | path join $build_directory | path join Justfile)
+      --justfile ($build_directory | path join Justfile)
       --list
       --list-submodules
       ...$args
