@@ -170,13 +170,17 @@ def copy_source_files [
           .pre-commit-config.yaml
           flake.nix
           Justfile
-        ]
+        ] and ($file | path parse | get extension) != "just"
       }
     | filter {|item| ($item | path type) != dir}
   )
 
   for file in $source_files {
-    cp $file (get_build_path $settings.environment $file)
+    let build_path = (get_build_path $settings.environment $file)
+
+    cp $file $build_path
+
+    print $"Updated ($build_path)"
   }
 }
 
@@ -255,14 +259,32 @@ def copy_justfile [
     $environment_justfile
     | path exists
   ) {
+    let build_justfile = (get_justfile $settings.build_directory)
+
     (
       merge_justfiles
         $settings.environment
         $generic_justfile
         $environment_justfile
-    ) | save --force (get_justfile $settings.build_directory)
+    ) | save --force $build_justfile
+
+    print $"Updated ($build_justfile)"
+
+    let environment_justfile_directory = (
+      $settings.build_directory 
+      | path join "just"
+    )
+
+    mkdir $environment_justfile_directory
+    cp $environment_justfile $environment_justfile_directory
+
+    print $"Updated (get_build_path $settings.environment $environment_justfile)"
   } else {
-    cp $generic_justfile $settings.build_directory
+    let build_path = ($settings.build_directory | path join Justfile)
+
+    cp $generic_justfile $build_path
+
+    print $"Updated ($build_path)"
   }
 }
 
@@ -303,14 +325,18 @@ def copy_gitignore [
     build_directory: string
   >
 ] {
+  let build_gitignore = (
+    $settings.build_directory
+    | path join ".gitignore"
+  )
+
   (
     merge_gitignores
       (get_gitignore $settings.generic_source_directory)
       (get_gitignore $settings.source_directory)
-  ) | save --force (
-      $settings.build_directory
-      | path join ".gitignore"
-    )
+  ) | save --force $build_gitignore
+
+  print $"Updated ($build_gitignore)"
 }
 
 def update_pre_commit_update [environment: string] {
@@ -413,7 +439,7 @@ def copy_pre_commit_config [
     )
   )
 
-  let generated_config_path = (
+  let build_pre_commit_config = (
     $settings.build_directory
     | path join ".pre-commit-config.yaml"
   )
@@ -431,7 +457,9 @@ def copy_pre_commit_config [
   }
 
   get_pre_commit_config_yaml $repos
-  | save --force $generated_config_path
+  | save --force $build_pre_commit_config
+
+  print $"Updated ($build_pre_commit_config)"
 }
 
 def get_flake [source_directory: string] {
@@ -553,9 +581,12 @@ def copy_flake [
   let generic_flake = (get_flake $settings.generic_source_directory)
   let environment_flake = (get_flake $settings.source_directory)
   let merged_flakes = (merge_flakes $generic_flake $environment_flake)
+  let build_flake = (get_flake $settings.build_directory)
 
   $merged_flakes
-  | save --force (get_flake $settings.build_directory)
+  | save --force $build_flake
+
+  print $"Updated ($build_flake)"
 }
 
 def get_source_files [
@@ -714,15 +745,11 @@ def copy_outdated_files [
     } else if $basename == "flake.nix" {
       copy_flake $settings
     } else if $basename == "Justfile" or (
-      $basename 
-      | path parse
-      | get extension
-    ) == "just" {
+        $basename 
+        | path parse
+        | get extension
+      ) == "just" {
       copy_justfile $settings
-
-      let environment = $settings.environment
-
-      touch $"build/($environment)/just/($environment).just"
     } else {
       $source_files = ($source_files | append $file)      
     }
