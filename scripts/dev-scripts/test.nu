@@ -7,14 +7,20 @@ def main [
 ] {
   let tests = try {
     let files = if ($environment | is-empty) {
-      "src/**/tests/*.nu"
+      "src/**/tests/test_*.nu"
     } else if ($file | is-empty) {
-      $"src/($environment)/**/tests/*.nu"
+      $"src/($environment)/**/tests/test_*.nu"
     } else {
       let file = if ($file | path parse | get extension) == "nu" {
         $file
       } else {
         $"($file).nu"
+      }
+
+      let file = if (($file | path basename) | str starts-with "test_") {
+        $file
+      } else {
+        $"test_($file)"
       }
 
       $"src/($environment)/**/tests/($file)"
@@ -27,8 +33,10 @@ def main [
   }
 
   for test in $tests {
-    print $"Running ($test)..."
+    print $"(ansi magenta)($test)(ansi reset)"
 
     nu $test
+
+    print ""
   }
 }

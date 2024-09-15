@@ -1,6 +1,7 @@
 use std assert
 
 use ../check.nu get_pre_commit_hook_names
+use ./print_test.nu
 
 let config = "
 repos:
@@ -29,4 +30,4 @@ trailing-whitespace
 let actual_hooks = (get_pre_commit_hook_names ($config | from yaml))
 
 assert equal $actual_hooks $expected_hooks
-print "Get pre-commit hooks...OK"
+print_test "Get pre-commit hooks"
