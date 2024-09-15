@@ -657,21 +657,30 @@ def copy_outdated_files [
 ] {
   let source_files = (get_source_files $settings)
   let build_files = (get_build_files $settings)
+  let environment = $settings.environment
 
-  remove_deleted_files $source_files $build_files $settings.environment
+  remove_deleted_files $source_files $build_files $environment
 
   let outdated_files = (
     $source_files
     | filter {
         |file|
 
-        let build_file = (
-          "build"
-          | path join (
-            $file
-            | str replace "generic/" $"($settings.environment)/"
-          )
-        )
+        let build_file = if $environment == "dev-scripts" {
+          $file
+          | str replace "dev-scripts/" ""
+        } else {
+          "build" 
+          | path join $file
+        }
+
+        let build_file = if $environment == "dev-scripts" {
+          $build_file
+          | str replace "generic/" ""
+        } else {
+          $build_file
+          | str replace "generic/" $"($environment)/"
+        }
 
         let source_modified = (
           ls ("src" | path join $file)
