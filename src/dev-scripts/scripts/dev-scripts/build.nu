@@ -48,8 +48,39 @@ def is_outdated [environment: string] {
 }
 
 def get_files [directory: string] {
-  fd --hidden "" $directory
-  | lines
+  let directory = if ($directory | is-empty) {
+    "./"
+  } else {
+    $directory
+  }
+
+  let files = (
+    git ls-files $directory
+    | lines
+  )
+
+  if ($directory == "./") {
+    $files
+    | filter {
+        |file|
+
+        for item in [
+          build
+          src
+          CHANGELOG.md
+          flake.lock
+          pdm.lock
+        ] {
+          if $item in $file {
+            return false
+          }
+        }
+
+        true
+      }
+  } else {
+    $files
+  }
 }
 
 def get_environment_files [
@@ -569,10 +600,17 @@ def remove_deleted_files [
     | filter {
         |file|
 
-        (
-          $file
-          | str replace "build/" ""
-        ) not-in $source_files
+        if $environment == "dev-scripts" {
+          (
+            "dev-scripts" 
+            | path join $file
+          ) not-in $source_files
+        } else {
+          (
+            $file
+            | str replace "build/" ""
+          ) not-in $source_files
+        }
       }
   ) {
     rm $file
