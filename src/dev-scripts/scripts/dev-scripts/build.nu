@@ -40,13 +40,6 @@ def get_modified [
   | get modified
 }
 
-def is_outdated [environment: string] {
-  let source_modified = (get_modified $environment)
-  let generated_modified = (get_modified --generated $environment)
-
-  $source_modified > $generated_modified
-}
-
 def get_files [directory: string] {
   let directory = if ($directory | is-empty) {
     "./"
