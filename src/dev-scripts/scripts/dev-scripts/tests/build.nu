@@ -99,6 +99,7 @@ let expected_flake = "{
 "
 
 assert equal $actual_flake $expected_flake
+print "Merge flakes...OK"
 
 let generic_gitignore = ".config
 .direnv
@@ -131,6 +132,7 @@ dist/
 "
 
 assert equal $actual_gitignore $expected_gitignore
+print "Merge gitignore...OK"
 
 let generic_justfile = ($env.FILE_PWD | path join generic-justfile.just)
 let environment_justfile = ($env.FILE_PWD | path join environment-justfile.just)
@@ -244,6 +246,7 @@ mod python \"just/python.just\"
 "
 
 assert equal $actual_justfile $expected_justfile
+print "Merge Justfile...OK"
 
 let generic_pre_commit_config = "repos:
   - repo: https://gitlab.com/vojko.pribudic.foss/pre-commit-update
@@ -436,3 +439,4 @@ let expected_pre_commit_config = "repos:
 "
 
 assert equal $actual_pre_commit_conifg $expected_pre_commit_config
+print "Merge pre-commit config...OK"

@@ -19,6 +19,18 @@ for origin in $origins {
   assert equal ($actual_origin | get domain) $expected_domain
   assert equal ($actual_origin | get owner) $expected_owner
   assert equal ($actual_origin | get repo) $expected_repo
+
+  let type = if ($origin | str starts-with "git") {
+    "git"
+  } else if ($origin | str starts-with "ssh") {
+    "ssh"
+  } else if ($origin | str starts-with "https") {
+    "https"
+  } else if ($origin | str starts-with "http") {
+    "http"
+  }
+
+  print $"Parse \"($type)\" git origin...OK"
 }
 
 let invalid_origin = "github.com/tymbalodeon/dev-scripts"
@@ -27,3 +39,5 @@ let actual_invalid_origin = (parse_git_origin --quiet $invalid_origin)
 assert equal ($actual_invalid_origin | get domain) null
 assert equal ($actual_invalid_origin | get owner) null
 assert equal ($actual_invalid_origin | get repo) null
+
+print "Parse invalid git origin...OK"

@@ -112,3 +112,4 @@ yamlfmt
 let actual_dependencies = (get_flake_dependencies $flake)
 
 assert equal $actual_dependencies $expected_dependencies
+print "Get dependencies...OK"
