@@ -1,11 +1,12 @@
 {
   inputs = {
-    nixpkgs = {url = "github:nixos/nixpkgs/nixos-unstable";};
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
     nushell-syntax = {
-      flake = false;
+      type = "github";
       owner = "stevenxxiu";
       repo = "sublime_text_nushell";
-      type = "github";
+      flake = false;
     };
   };
 
@@ -48,7 +49,6 @@
             nushell
             pdm
             pre-commit
-            python3
             python312Packages.pre-commit-hooks
             ripgrep
             statix
@@ -80,8 +80,6 @@
           bat cache --build --source "''${bat_config_dir}"
 
           pre-commit install --hook-type commit-msg
-
-          pdm install
         '';
       };
     });

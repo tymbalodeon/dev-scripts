@@ -1,19 +1,12 @@
 {
   inputs = {
-    crane = {
-      inputs = {nixpkgs = {follows = "nixpkgs";};};
-      url = "github:ipetkov/crane";
-    };
-    nixpkgs = {url = "github:NixOS/nixpkgs/nixos-unstable";};
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
     nushell-syntax = {
-      flake = false;
+      type = "github";
       owner = "stevenxxiu";
       repo = "sublime_text_nushell";
-      type = "github";
-    };
-    rust-overlay = {
-      inputs = {nixpkgs = {follows = "nixpkgs";};};
-      url = "github:oxalica/rust-overlay";
+      flake = false;
     };
   };
 
@@ -36,8 +29,45 @@
   in {
     devShells = forEachSupportedSystem ({pkgs}: {
       default = pkgs.mkShell {
-        packages = with pkgs; [
-        ];
+        packages = with pkgs;
+          [
+            alejandra
+            ansible-language-server
+            bat
+            cocogitto
+            deadnix
+            eza
+            flake-checker
+            fzf
+            gh
+            just
+            lychee
+            markdown-oxide
+            marksman
+            nil
+            nodePackages.prettier
+            nushell
+            pdm
+            pre-commit
+            python312Packages.pre-commit-hooks
+            ripgrep
+            statix
+            stylelint
+            taplo
+            tokei
+            vscode-langservers-extracted
+            yaml-language-server
+            yamlfmt
+          ]
+          ++ (
+            if builtins.pathExists ./nix
+            then
+              lib.lists.flatten (
+                map (module: (import ./nix/${module} {inherit pkgs;}).packages)
+                (builtins.attrNames (builtins.readDir ./nix))
+              )
+            else []
+          );
 
         shellHook = ''
           nushell_syntax="${nushell-syntax}/nushell.sublime-syntax"
@@ -50,7 +80,6 @@
           bat cache --build --source "''${bat_config_dir}"
 
           pre-commit install --hook-type commit-msg
-
         '';
       };
     });

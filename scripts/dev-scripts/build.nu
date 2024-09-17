@@ -573,13 +573,23 @@ def copy_flake [
 ] {
   let generic_flake = (get_flake $settings.generic_source_directory)
   let environment_flake = (get_flake $settings.source_directory)
-  let merged_flakes = (merge_flakes $generic_flake $environment_flake)
-  let build_flake = (get_flake $settings.build_directory)
+  let build_path = ($settings.build_directory | path join flake.nix)
 
-  $merged_flakes
-  | save --force $build_flake
+  cp $generic_flake $build_path
 
-  print $"Updated ($build_flake)"
+  print $"Updated ($build_path)"
+
+  if ($environment_flake | path exists) {
+    let nix_directory = (get_flkae $settings.build_directory)
+
+    mkdir $nix_directory
+
+    let build_path = (get_flake $nix_directory)
+
+    cp $environment_flake $build_path
+
+    print $"Updated ($build_path)"
+  }
 }
 
 def get_source_files [
