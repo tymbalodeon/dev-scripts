@@ -29,35 +29,40 @@
   in {
     devShells = forEachSupportedSystem ({pkgs}: {
       default = pkgs.mkShell {
-        packages = with pkgs; [
-          alejandra
-          ansible-language-server
-          bat
-          cocogitto
-          deadnix
-          eza
-          flake-checker
-          fzf
-          gh
-          just
-          lychee
-          markdown-oxide
-          marksman
-          nil
-          nodePackages.prettier
-          nushell
-          pdm
-          pre-commit
-          python312Packages.pre-commit-hooks
-          ripgrep
-          statix
-          stylelint
-          taplo
-          tokei
-          vscode-langservers-extracted
-          yaml-language-server
-          yamlfmt
-        ];
+        packages = with pkgs;
+          [
+            alejandra
+            ansible-language-server
+            bat
+            cocogitto
+            deadnix
+            eza
+            flake-checker
+            fzf
+            gh
+            just
+            lychee
+            markdown-oxide
+            marksman
+            nil
+            nodePackages.prettier
+            nushell
+            pdm
+            pre-commit
+            python312Packages.pre-commit-hooks
+            ripgrep
+            statix
+            stylelint
+            taplo
+            tokei
+            vscode-langservers-extracted
+            yaml-language-server
+            yamlfmt
+          ]
+          ++ lib.lists.flatten (
+            map (module: (import ./nix/${module} {inherit pkgs;}).packages)
+            (builtins.attrNames (builtins.readDir ./nix))
+          );
 
         shellHook = ''
           nushell_syntax="${nushell-syntax}/nushell.sublime-syntax"
