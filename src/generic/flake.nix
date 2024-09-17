@@ -59,9 +59,14 @@
             yaml-language-server
             yamlfmt
           ]
-          ++ lib.lists.flatten (
-            map (module: (import ./nix/${module} {inherit pkgs;}).packages)
-            (builtins.attrNames (builtins.readDir ./nix))
+          ++ (
+            if builtins.pathExists ./nix
+            then
+              lib.lists.flatten (
+                map (module: (import ./nix/${module} {inherit pkgs;}).packages)
+                (builtins.attrNames (builtins.readDir ./nix))
+              )
+            else []
           );
 
         shellHook = ''

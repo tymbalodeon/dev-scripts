@@ -29,37 +29,12 @@
     devShells = forEachSupportedSystem ({pkgs}: {
       default = pkgs.mkShell {
         packages = with pkgs; [
-          alejandra
-          ansible-language-server
-          bat
-          cocogitto
-          deadnix
-          eza
-          flake-checker
-          fzf
-          gh
           git-cliff
-          just
           lychee
-          markdown-oxide
-          marksman
-          nil
           nodePackages.pnpm
-          nodePackages.prettier
-          nushell
           pdm
-          pre-commit
           python311
           python311Packages.pre-commit-hooks
-          python312Packages.pre-commit-hooks
-          ripgrep
-          statix
-          stylelint
-          taplo
-          tokei
-          vscode-langservers-extracted
-          yaml-language-server
-          yamlfmt
         ];
 
         shellHook = ''

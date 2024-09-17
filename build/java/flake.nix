@@ -29,37 +29,10 @@
     devShells = forEachSupportedSystem ({pkgs}: {
       default = pkgs.mkShell {
         packages = with pkgs; [
-          alejandra
-          ansible-language-server
-          bat
-          cocogitto
-          deadnix
-          eza
-          flake-checker
-          fzf
-          gh
           google-java-format
           jdt-language-server
-          just
-          lychee
-          markdown-oxide
-          marksman
-          nil
-          nodePackages.prettier
-          nushell
           openjdk
-          pdm
-          pre-commit
-          python312Packages.pre-commit-hooks
-          ripgrep
-          statix
-          stylelint
-          taplo
-          tokei
-          vscode-langservers-extracted
           watchexec
-          yaml-language-server
-          yamlfmt
           zellij
         ];
 
