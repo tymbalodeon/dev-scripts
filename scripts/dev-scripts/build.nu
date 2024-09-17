@@ -455,112 +455,112 @@ def copy_pre_commit_config [
   print $"Updated ($build_pre_commit_config)"
 }
 
-def get_flake [source_directory: string] {
-  $source_directory
-  | path join flake.nix
-}
+# def get_flake [source_directory: string] {
+#   $source_directory
+#   | path join flake.nix
+# }
 
-def get_flake_inputs [flake: string] {
-  (
-    nix eval
-      --apply 'builtins.getAttr "inputs"'
-      --file $flake
-      --json
-    | from json
-  )
-}
+# def get_flake_inputs [flake: string] {
+#   (
+#     nix eval
+#       --apply 'builtins.getAttr "inputs"'
+#       --file $flake
+#       --json
+#     | from json
+#   )
+# }
 
-def get_flake_packages [flake: string] {
-  open $flake
-  | rg --multiline "packages = with pkgs; \\[(\n|.)+\\];"
-  | lines
-  | drop nth 0
-  | drop
-  | str trim
-}
+# def get_flake_packages [flake: string] {
+#   open $flake
+#   | rg --multiline "packages = with pkgs; \\[(\n|.)+\\];"
+#   | lines
+#   | drop nth 0
+#   | drop
+#   | str trim
+# }
 
-def get_flake_shell_hook [flake: string] {
-  open $flake
-  | rg --multiline "shellHook = ''(\n|.)+'';"
-  | lines
-  | drop nth 0
-  | drop
-  | str trim
-}
+# def get_flake_shell_hook [flake: string] {
+#   open $flake
+#   | rg --multiline "shellHook = ''(\n|.)+'';"
+#   | lines
+#   | drop nth 0
+#   | drop
+#   | str trim
+# }
 
-export def merge_flakes [
-  generic_flake: string
-  environment_flake: string
-] {
-  let inputs = (
-    nix eval
-      --apply builtins.fromJSON
-      --expr (
-        {
-          inputs: (
-            get_flake_inputs $generic_flake
-            | merge (get_flake_inputs $environment_flake)
-          )
-        } | to json
-        | to json
-      )
-    | split row " "
-    | drop nth 0
-    | drop
-    | str join " "
-  )
+# export def merge_flakes [
+#   generic_flake: string
+#   environment_flake: string
+# ] {
+#   let inputs = (
+#     nix eval
+#       --apply builtins.fromJSON
+#       --expr (
+#         {
+#           inputs: (
+#             get_flake_inputs $generic_flake
+#             | merge (get_flake_inputs $environment_flake)
+#           )
+#         } | to json
+#         | to json
+#       )
+#     | split row " "
+#     | drop nth 0
+#     | drop
+#     | str join " "
+#   )
 
-  let packages = (
-    get_flake_packages $generic_flake
-    | append (get_flake_packages $environment_flake)
-    | uniq
-    | sort
-  )
+#   let packages = (
+#     get_flake_packages $generic_flake
+#     | append (get_flake_packages $environment_flake)
+#     | uniq
+#     | sort
+#   )
 
-  let shell_hook = (
-      get_flake_shell_hook $generic_flake
-      | append ""
-      | append (get_flake_shell_hook $environment_flake)
-      | to text
-  )
+#   let shell_hook = (
+#       get_flake_shell_hook $generic_flake
+#       | append ""
+#       | append (get_flake_shell_hook $environment_flake)
+#       | to text
+#   )
 
-  let outputs = $"
-    outputs = \{
-      nixpkgs,
-      nushell-syntax,
-      ...
-    \}: let
-      supportedSystems = [
-        \"x86_64-darwin\"
-        \"x86_64-linux\"
-      ];
+#   let outputs = $"
+#     outputs = \{
+#       nixpkgs,
+#       nushell-syntax,
+#       ...
+#     \}: let
+#       supportedSystems = [
+#         \"x86_64-darwin\"
+#         \"x86_64-linux\"
+#       ];
 
-      forEachSupportedSystem = f:
-        nixpkgs.lib.genAttrs supportedSystems
-        \(system:
-          f \{
-            pkgs = import nixpkgs \{inherit system;\};
-          \}\);
-    in \{
-      devShells = forEachSupportedSystem \(\{pkgs\}: \{
-        default = pkgs.mkShell \{
-          packages = with pkgs; [
-            ($packages | to text)
-          ];
+#       forEachSupportedSystem = f:
+#         nixpkgs.lib.genAttrs supportedSystems
+#         \(system:
+#           f \{
+#             pkgs = import nixpkgs \{inherit system;\};
+#           \}\);
+#     in \{
+#       devShells = forEachSupportedSystem \(\{pkgs\}: \{
+#         default = pkgs.mkShell \{
+#           packages = with pkgs; [
+#             ($packages | to text)
+#           ];
 
-          shellHook = ''\n($shell_hook)'';
-        \};
-    \}\);
-    \};
-  "
+#           shellHook = ''\n($shell_hook)'';
+#         \};
+#     \}\);
+#     \};
+#   "
 
-  ["{" $inputs $outputs "}"]
-  | str join "\n"
-  | to text
-  | alejandra --quiet --quiet
-  | lines
-  | to text
-}
+#   ["{" $inputs $outputs "}"]
+#   | str join "\n"
+#   | to text
+#   | alejandra --quiet --quiet
+#   | lines
+#   | to text
+# }
 
 def copy_flake [
   settings: record<
@@ -571,24 +571,33 @@ def copy_flake [
     build_directory: string
   >
 ] {
-  let generic_flake = (get_flake $settings.generic_source_directory)
-  let environment_flake = (get_flake $settings.source_directory)
-  let build_path = ($settings.build_directory | path join flake.nix)
+  let generic_flake = ($settings.generic_source_directory | path join flake.nix)
+  let environment_flake_filename =  $"($settings.environment).nix"
 
-  cp $generic_flake $build_path
+  let environment_flake = (
+    [$settings.source_directory nix $environment_flake_filename]
+    | path join
+  )
 
-  print $"Updated ($build_path)"
+  let build_flake = ($settings.build_directory | path join flake.nix)
+
+  cp $generic_flake $build_flake
+
+  print $"Updated ($build_flake)"
 
   if ($environment_flake | path exists) {
-    let nix_directory = (get_flkae $settings.build_directory)
+    let nix_directory = ($settings.build_directory | path join nix)
 
     mkdir $nix_directory
 
-    let build_path = (get_flake $nix_directory)
+    let build_environment_flake = (
+      $nix_directory 
+      | path join $environment_flake_filename
+    )
 
-    cp $environment_flake $build_path
+    cp $environment_flake $build_environment_flake
 
-    print $"Updated ($build_path)"
+    print $"Updated ($build_environment_flake)"
   }
 }
 
@@ -740,18 +749,15 @@ def copy_outdated_files [
 
   for file in $outdated_files {
     let basename = ($file | path basename)
+    let extension = ($basename | path parse | get extension)
 
     if $basename == ".gitignore" {
       copy_gitignore $settings
     } else if $basename == ".pre-commit-config.yaml" {
       copy_pre_commit_config $settings
-    } else if $basename == "flake.nix" {
+    } else if $extension == "nix" {
       copy_flake $settings
-    } else if $basename == "Justfile" or (
-        $basename 
-        | path parse
-        | get extension
-      ) == "just" {
+    } else if $basename == "Justfile" or $extension == "just" {
       copy_justfile $settings
     } else {
       $source_files = ($source_files | append $file)      
