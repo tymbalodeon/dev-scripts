@@ -2,20 +2,29 @@
 
 export def get_flake_dependencies [flake: string] {
   $flake
-  | rg --multiline "packages = .+\\[(\n|[^;])+\\];"
+  | rg --multiline "packages = .+(\n|\\[|[^;])+\\]"
   | lines
-  | drop
   | drop nth 0
+  | filter {|line| "[" not-in $line and "]" not-in $line}
   | str trim
-  | to text
 }
 
 # List dependencies
 def main [
-  dependency?: string
+  dependency?: string # Search for a dependency
 ] {
-  let dependencies = (get_flake_dependencies (open flake.nix))
 
+  let dependencies = ("flake.nix" ++ (ls nix | get name))
+  | each {
+      |flake|
+
+      get_flake_dependencies (open $flake)
+    } 
+  | flatten
+  | uniq
+  | sort
+  | to text
+   
   if ($dependency | is-empty) {
     $dependencies
     | table --index false

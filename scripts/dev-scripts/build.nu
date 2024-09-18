@@ -1,14 +1,16 @@
 #!/usr/bin/env nu
 
 def get_source_directory [environment: string] {
-  $"src/($environment)"
+  [src $environment] 
+  | path join
 }
 
 export def get_build_directory [environment: string] {
   if $environment == "dev-scripts" {
     ""
   } else {
-    $"build/($environment)"
+    [build $environment]
+    | path join
   }
 }
 
@@ -177,7 +179,7 @@ def copy_source_files [
   }
 }
 
-def get_justfile [base_directory: string] {
+export def get_justfile [base_directory: string] {
   $base_directory
   | path join Justfile
 }

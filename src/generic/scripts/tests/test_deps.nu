@@ -110,7 +110,7 @@ yaml-language-server
 yamlfmt
 "
 
-let actual_dependencies = (get_flake_dependencies $flake)
+let actual_dependencies = (get_flake_dependencies $flake | to text)
 
 assert equal $actual_dependencies $expected_dependencies
 print_test "Get dependencies"

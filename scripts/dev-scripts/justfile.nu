@@ -1,6 +1,7 @@
 #!/usr/bin/env nu
 
 use ./build.nu get_build_directory
+use ./build.nu get_justfile
 
 # Run an environment Justfile
 def main [
@@ -13,13 +14,11 @@ def main [
     $environment
   }
 
-  let build_directory = (get_build_directory $environment)
+  let justfile = (get_justfile (get_build_directory $environment))
 
-  (
-    just
-      --justfile ($build_directory | path join Justfile)
-      --list
-      --list-submodules
-      ...$args
-  )
+  if ($args | is-empty) {
+    just --justfile $justfile --list --list-submodules
+  } else {
+    just --justfile $justfile ...$args
+  }
 }
