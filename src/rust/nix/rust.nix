@@ -8,7 +8,6 @@
       cargo-udeps
       cargo-watch
       rust-analyzer
-      rustToolchain
       zellij
     ]
     ++ (
