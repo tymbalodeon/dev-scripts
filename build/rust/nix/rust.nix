@@ -1,7 +1,7 @@
 {pkgs, ...}: {
   packages = with pkgs;
     [
-      pkgs.libiconv
+      libiconv
       cargo-bloat
       cargo-edit
       cargo-outdated
