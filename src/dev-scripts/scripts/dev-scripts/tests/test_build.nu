@@ -1,6 +1,7 @@
 use std assert
 
 use ../build.nu get_pre_commit_config_yaml
+use ../build.nu get_settings
 use ../build.nu merge_gitignores
 use ../build.nu merge_justfiles
 use ../build.nu merge_pre_commit_configs
@@ -345,3 +346,46 @@ let expected_pre_commit_config = "repos:
 
 assert equal $actual_pre_commit_conifg $expected_pre_commit_config
 print_test "Merge pre-commit config"
+
+let actual_dev_scripts_settings = (get_settings dev-scripts)
+
+let expected_dev_scripts_settings = {
+  environment: dev-scripts
+  generic_source_directory: src/generic
+  generic_build_directory: build/generic
+  source_directory: src/dev-scripts
+  build_directory: ""
+}
+
+assert equal $actual_dev_scripts_settings $expected_dev_scripts_settings
+print_test "Get dev-scripts settings"
+
+let test_settings = [
+  {
+    actual: (get_settings dev-scripts)
+    expected: {
+      environment: dev-scripts
+      generic_source_directory: src/generic
+      generic_build_directory: build/generic
+      source_directory: src/dev-scripts
+      build_directory: ""
+    }
+  }
+
+  {
+    actual: (get_settings python)
+    expected: {
+      environment: python
+      generic_source_directory: src/generic
+      generic_build_directory: build/generic
+      source_directory: src/python
+      build_directory: build/python
+    }
+  }
+]
+
+for settings in $test_settings {
+  assert equal $settings.actual $settings.expected
+}
+
+print_test "Get environment settings"

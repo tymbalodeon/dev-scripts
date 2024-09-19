@@ -14,7 +14,7 @@ export def get_build_directory [environment: string] {
   }
 }
 
-def get_settings [environment: string] {
+export def get_settings [environment: string] {
   {
     environment: $environment
     generic_source_directory: (get_source_directory generic)
@@ -637,7 +637,8 @@ def copy_outdated_files [
             $source_modified > $build_modified
           )
         }
-    }
+      }
+    | each {|file| [src $file] | path join}
   )
 
   mut source_files = []
