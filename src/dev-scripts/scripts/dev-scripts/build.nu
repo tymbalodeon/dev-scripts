@@ -584,6 +584,54 @@ def force_copy_files [
   }
 }
 
+def get_filenames_and_modified [files: list<string>] {
+  $files
+  | each {|file| ls $file}
+  | flatten
+  | select name modified
+}
+
+def get_outdated_files [
+  environment: string
+  source_files: list<string>
+  build_files: list<string>
+] {
+  $source_files
+  | filter {
+      |file|
+
+      let build_file_name = if $environment == "dev-scripts" {
+        $file.name
+        | str replace "dev-scripts/" ""
+      } else {
+        "build" 
+        | path join $file.name
+      }
+
+      let build_file_name = if $environment == "dev-scripts" {
+        $build_file_name
+        | str replace "generic/" ""
+      } else {
+        $build_file_name
+        | str replace "generic/" $"($environment)/"
+      }
+
+      if $build_file_name not-in $build_files {
+        true
+      } else {
+        let build_file_modified = (
+          $build_files          
+          | filter {|file| $file.name == $build_file_name}
+          | first
+          | get modified
+        )
+
+        $file.modified > $build_file_modified
+      }
+    }
+  | each {|file| [src $file.name] | path join}
+}
+
 def copy_outdated_files [
   settings: record<
     environment: string
@@ -599,46 +647,12 @@ def copy_outdated_files [
 
   remove_deleted_files $source_files $build_files $environment
 
+  try {
   let outdated_files = (
-    $source_files
-    | filter {
-        |file|
-
-        let build_file = if $environment == "dev-scripts" {
-          $file
-          | str replace "dev-scripts/" ""
-        } else {
-          "build" 
-          | path join $file
-        }
-
-        let build_file = if $environment == "dev-scripts" {
-          $build_file
-          | str replace "generic/" ""
-        } else {
-          $build_file
-          | str replace "generic/" $"($environment)/"
-        }
-
-        if not ($build_file | path exists) {
-          true
-        } else {
-          let source_modified = (
-            ls ("src" | path join $file)
-            | get modified
-          )
-
-          let build_modified = (
-            ls $build_file
-            | get modified
-          )
-
-          not ($build_file | path exists) or (
-            $source_modified > $build_modified
-          )
-        }
-      }
-    | each {|file| [src $file] | path join}
+    get_outdated_files 
+      $environment
+      (get_filenames_and_modified $source_files)
+      (get_filenames_and_modified $build_files)
   )
 
   mut source_files = []
@@ -661,6 +675,7 @@ def copy_outdated_files [
   }
 
   copy_source_files $source_files $settings
+  } catch {|e| print $e}
 }
 
 # Build dev environments
