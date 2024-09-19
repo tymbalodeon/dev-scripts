@@ -620,14 +620,14 @@ def copy_outdated_files [
           | str replace "generic/" $"($environment)/"
         }
 
-        let source_modified = (
-          ls ("src" | path join $file)
-          | get modified
-        )
-
         if not ($build_file | path exists) {
           true
         } else {
+          let source_modified = (
+            ls ("src" | path join $file)
+            | get modified
+          )
+
           let build_modified = (
             ls $build_file
             | get modified
