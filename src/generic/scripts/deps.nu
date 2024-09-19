@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-export def get_flake_dependencies [flake: string] {
+def get_flake_dependencies [flake: string] {
   $flake
   | rg --multiline "packages = .+(\n|\\[|[^;])+\\]"
   | lines
@@ -9,21 +9,30 @@ export def get_flake_dependencies [flake: string] {
   | str trim
 }
 
-# List dependencies
-def main [
-  dependency?: string # Search for a dependency
-] {
-
-  let dependencies = ("flake.nix" ++ (ls nix | get name))
+export def merge_flake_dependencies [...flakes: string] {
+  $flakes
   | each {
       |flake|
 
-      get_flake_dependencies (open $flake)
+      get_flake_dependencies $flake
     } 
   | flatten
   | uniq
   | sort
   | to text
+}
+
+# List dependencies
+def main [
+  dependency?: string # Search for a dependency
+] {
+
+  let flakes = (
+    "flake.nix" ++ (ls nix | get name)  
+    | each {|flake| open $flake}
+  )
+
+  let dependencies = (merge_flake_dependencies ...$flakes)
    
   if ($dependency | is-empty) {
     $dependencies
