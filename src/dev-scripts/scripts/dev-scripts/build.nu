@@ -54,7 +54,9 @@ def get_files [directory: string] {
     | lines
   )
 
-  if ($directory == "./") {
+  # TODO create filter function for the
+  # following two assignments
+  let files = if $directory == "./" {
     $files
     | filter {
         |file|
@@ -62,9 +64,6 @@ def get_files [directory: string] {
         for item in [
           build
           src
-          CHANGELOG.md
-          flake.lock
-          pdm.lock
         ] {
           if $item in $file {
             return false
@@ -76,6 +75,25 @@ def get_files [directory: string] {
   } else {
     $files
   }
+
+  let files = (
+    $files
+    | filter {
+        |file|
+        
+        for item in [
+          CHANGELOG.md
+          flake.lock
+          pdm.lock
+        ] {
+          if $item in $file {
+            return false
+          }
+        }
+
+        true
+    }
+  )
 }
 
 def get_environment_files [
@@ -507,7 +525,7 @@ def get_source_files [
 ] {
   get_environment_files $settings
   | filter {|file| ($file | path type) != "dir"}
-  | str replace "src/" ""
+  # | str replace "src/" ""
 }
 
 def get_build_files [
@@ -530,6 +548,8 @@ def remove_deleted_files [
 ] {
   let source_files = (
     $source_files
+    # TEMP
+    | str replace "src/" ""
     | str replace $"generic/" $"($environment)/"
   )
 
@@ -597,6 +617,8 @@ def get_outdated_files [
   build_files: list<string>
 ] {
   $source_files
+  # TEMP
+  | update name {|row| $row.name | str replace "src/" ""}
   | filter {
       |file|
 
@@ -616,7 +638,7 @@ def get_outdated_files [
         | str replace "generic/" $"($environment)/"
       }
 
-      if $build_file_name not-in $build_files {
+      if $build_file_name not-in $build_files.name {
         true
       } else {
         let build_file_modified = (
@@ -645,8 +667,14 @@ def copy_outdated_files [
   let build_files = (get_build_files $settings)
   let environment = $settings.environment
 
+  # FIXME
+  try {
   remove_deleted_files $source_files $build_files $environment
+  } catch {
+    |e| print $e
+  }
 
+  # FIXME
   try {
   let outdated_files = (
     get_outdated_files 
@@ -675,7 +703,10 @@ def copy_outdated_files [
   }
 
   copy_source_files $source_files $settings
-  } catch {|e| print $e}
+  # FIXME
+  } catch {
+  |e| print $e
+  }
 }
 
 # Build dev environments
