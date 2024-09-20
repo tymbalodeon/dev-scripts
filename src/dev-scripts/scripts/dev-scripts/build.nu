@@ -75,13 +75,11 @@ def get_files [directory: string] {
     $files
   }
 
-  let files = (
-    filter_files $files [
-      CHANGELOG.md
-      flake.lock
-      pdm.lock
-    ]
-  )
+  filter_files $files [
+    CHANGELOG.md
+    flake.lock
+    pdm.lock
+  ]
 }
 
 def get_environment_files [
@@ -513,7 +511,6 @@ def get_source_files [
 ] {
   get_environment_files $settings
   | filter {|file| ($file | path type) != "dir"}
-  # | str replace "src/" ""
 }
 
 def get_build_files [
@@ -536,7 +533,6 @@ def remove_deleted_files [
 ] {
   let source_files = (
     $source_files
-    # TEMP
     | str replace "src/" ""
     | str replace $"generic/" $"($environment)/"
   )
@@ -605,7 +601,6 @@ def get_outdated_files [
   build_files: list<string>
 ] {
   $source_files
-  # TEMP
   | update name {|row| $row.name | str replace "src/" ""}
   | filter {
       |file|
@@ -655,15 +650,8 @@ def copy_outdated_files [
   let build_files = (get_build_files $settings)
   let environment = $settings.environment
 
-  # FIXME
-  try {
   remove_deleted_files $source_files $build_files $environment
-  } catch {
-    |e| print $e
-  }
 
-  # FIXME
-  try {
   let outdated_files = (
     get_outdated_files 
       $environment
@@ -691,10 +679,6 @@ def copy_outdated_files [
   }
 
   copy_source_files $source_files $settings
-  # FIXME
-  } catch {
-  |e| print $e
-  }
 }
 
 # Build dev environments

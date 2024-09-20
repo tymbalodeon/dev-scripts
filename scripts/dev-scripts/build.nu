@@ -42,6 +42,21 @@ def get_modified [
   | get modified
 }
 
+def filter_files [files: list<string> excluded_patterns: list<string>] {
+  $files
+  | filter {
+      |file|
+
+      for item in $excluded_patterns {
+        if $item in $file {
+          return false
+        }
+      }
+
+      true
+  }
+}
+
 def get_files [directory: string] {
   let directory = if ($directory | is-empty) {
     "./"
@@ -54,46 +69,17 @@ def get_files [directory: string] {
     | lines
   )
 
-  # TODO create filter function for the
-  # following two assignments
   let files = if $directory == "./" {
-    $files
-    | filter {
-        |file|
-
-        for item in [
-          build
-          src
-        ] {
-          if $item in $file {
-            return false
-          }
-        }
-
-        true
-      }
+    filter_files $files [build src]
   } else {
     $files
   }
 
-  let files = (
-    $files
-    | filter {
-        |file|
-        
-        for item in [
-          CHANGELOG.md
-          flake.lock
-          pdm.lock
-        ] {
-          if $item in $file {
-            return false
-          }
-        }
-
-        true
-    }
-  )
+  filter_files $files [
+    CHANGELOG.md
+    flake.lock
+    pdm.lock
+  ]
 }
 
 def get_environment_files [
@@ -525,7 +511,6 @@ def get_source_files [
 ] {
   get_environment_files $settings
   | filter {|file| ($file | path type) != "dir"}
-  # | str replace "src/" ""
 }
 
 def get_build_files [
@@ -664,28 +649,15 @@ def copy_outdated_files [
   let source_files = (get_source_files $settings)
   let build_files = (get_build_files $settings)
   let environment = $settings.environment
-  print one
-  print $source_files
-  print two
-  print $build_files
 
-  try {
   remove_deleted_files $source_files $build_files $environment
-  } catch {
-    |e| print $e
-  }
 
-  print THERE
-
-  try {
   let outdated_files = (
     get_outdated_files 
       $environment
       (get_filenames_and_modified $source_files)
       (get_filenames_and_modified $build_files)
   )
-
-  print $outdated_files
 
   mut source_files = []
 
@@ -707,9 +679,6 @@ def copy_outdated_files [
   }
 
   copy_source_files $source_files $settings
-  } catch {
-  |e| print $e
-  }
 }
 
 # Build dev environments
