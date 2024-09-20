@@ -42,6 +42,21 @@ def get_modified [
   | get modified
 }
 
+def filter_files [files: list<string> excluded_patterns: list<string>] {
+  $files
+  | filter {
+      |file|
+
+      for item in $excluded_patterns {
+        if $item in $file {
+          return false
+        }
+      }
+
+      true
+  }
+}
+
 def get_files [directory: string] {
   let directory = if ($directory | is-empty) {
     "./"
@@ -54,45 +69,18 @@ def get_files [directory: string] {
     | lines
   )
 
-  # TODO create filter function for the
-  # following two assignments
   let files = if $directory == "./" {
-    $files
-    | filter {
-        |file|
-
-        for item in [
-          build
-          src
-        ] {
-          if $item in $file {
-            return false
-          }
-        }
-
-        true
-      }
+    filter_files $files [build src]
   } else {
     $files
   }
 
   let files = (
-    $files
-    | filter {
-        |file|
-        
-        for item in [
-          CHANGELOG.md
-          flake.lock
-          pdm.lock
-        ] {
-          if $item in $file {
-            return false
-          }
-        }
-
-        true
-    }
+    filter_files $files [
+      CHANGELOG.md
+      flake.lock
+      pdm.lock
+    ]
   )
 }
 
