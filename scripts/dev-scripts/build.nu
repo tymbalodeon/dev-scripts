@@ -573,9 +573,7 @@ def remove_deleted_files [
   $source_files: list<string>
   $build_files: list<string>
 ] {
-  for file in (
-    get_deleted_files $environment $source_files $build_files
-  ) {
+  for file in (get_deleted_files $environment $source_files $build_files) {
     rm $file
 
     print $"Removed deleted file: ($file)"
