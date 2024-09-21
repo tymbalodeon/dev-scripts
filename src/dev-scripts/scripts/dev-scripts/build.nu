@@ -42,6 +42,23 @@ def get_modified [
   | get modified
 }
 
+def filter_files [files: list<string> excluded_patterns: list<string>] {
+  $files
+  | filter {
+      |file|
+
+      for item in $excluded_patterns {
+        if ($item | str ends-with "/") and (
+            $item in ($file | path parse | get parent)
+        ) or ($item in $file) {
+          return false
+        }
+      }
+
+      true
+    }
+}
+
 def get_files [directory: string] {
   let directory = if ($directory | is-empty) {
     "./"
@@ -50,32 +67,32 @@ def get_files [directory: string] {
   }
 
   let files = (
-    git ls-files $directory
+    fd --hidden --ignore --exclude .git "" $directory
     | lines
+    | filter {
+        |line|
+
+        not ($line | str ends-with "/")
+      }
+    | each {
+        |line|
+
+        $line
+        | str replace --regex "^./" ""
+    }
   )
 
-  if ($directory == "./") {
-    $files
-    | filter {
-        |file|
-
-        for item in [
-          build
-          src
-          CHANGELOG.md
-          flake.lock
-          pdm.lock
-        ] {
-          if $item in $file {
-            return false
-          }
-        }
-
-        true
-      }
+  let files = if $directory == "./" {
+    filter_files $files [build/ src/]
   } else {
     $files
   }
+
+  filter_files $files [
+    CHANGELOG.md
+    flake.lock
+    pdm.lock
+  ]
 }
 
 def get_environment_files [
@@ -507,7 +524,6 @@ def get_source_files [
 ] {
   get_environment_files $settings
   | filter {|file| ($file | path type) != "dir"}
-  | str replace "src/" ""
 }
 
 def get_build_files [
@@ -530,6 +546,7 @@ def remove_deleted_files [
 ] {
   let source_files = (
     $source_files
+    | str replace "src/" ""
     | str replace $"generic/" $"($environment)/"
   )
 
@@ -584,6 +601,55 @@ def force_copy_files [
   }
 }
 
+def get_filenames_and_modified [files: list<string>] {
+  $files
+  | each {|file| ls $file}
+  | flatten
+  | select name modified
+}
+
+def get_outdated_files [
+  environment: string
+  source_files: list<string>
+  build_files: list<string>
+] {
+  $source_files
+  | update name {|row| $row.name | str replace "src/" ""}
+  | filter {
+      |file|
+
+      let build_file_name = if $environment == "dev-scripts" {
+        $file.name
+        | str replace "dev-scripts/" ""
+      } else {
+        "build" 
+        | path join $file.name
+      }
+
+      let build_file_name = if $environment == "dev-scripts" {
+        $build_file_name
+        | str replace "generic/" ""
+      } else {
+        $build_file_name
+        | str replace "generic/" $"($environment)/"
+      }
+
+      if $build_file_name not-in $build_files.name {
+        true
+      } else {
+        let build_file_modified = (
+          $build_files          
+          | filter {|file| $file.name == $build_file_name}
+          | first
+          | get modified
+        )
+
+        $file.modified > $build_file_modified
+      }
+    }
+  | each {|file| [src $file.name] | path join}
+}
+
 def copy_outdated_files [
   settings: record<
     environment: string
@@ -600,45 +666,10 @@ def copy_outdated_files [
   remove_deleted_files $source_files $build_files $environment
 
   let outdated_files = (
-    $source_files
-    | filter {
-        |file|
-
-        let build_file = if $environment == "dev-scripts" {
-          $file
-          | str replace "dev-scripts/" ""
-        } else {
-          "build" 
-          | path join $file
-        }
-
-        let build_file = if $environment == "dev-scripts" {
-          $build_file
-          | str replace "generic/" ""
-        } else {
-          $build_file
-          | str replace "generic/" $"($environment)/"
-        }
-
-        if not ($build_file | path exists) {
-          true
-        } else {
-          let source_modified = (
-            ls ("src" | path join $file)
-            | get modified
-          )
-
-          let build_modified = (
-            ls $build_file
-            | get modified
-          )
-
-          not ($build_file | path exists) or (
-            $source_modified > $build_modified
-          )
-        }
-      }
-    | each {|file| [src $file] | path join}
+    get_outdated_files 
+      $environment
+      (get_filenames_and_modified $source_files)
+      (get_filenames_and_modified $build_files)
   )
 
   mut source_files = []
