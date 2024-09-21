@@ -608,10 +608,10 @@ def get_filenames_and_modified [files: list<string>] {
   | select name modified
 }
 
-def get_outdated_files [
+export def get_outdated_files [
   environment: string
-  source_files: list<string>
-  build_files: list<string>
+  source_files: list<table<name: string modified: datetime>>
+  build_files: list<table<name: string modified: datetime>>
 ] {
   $source_files
   | update name {|row| $row.name | str replace "src/" ""}

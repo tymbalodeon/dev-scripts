@@ -1,7 +1,6 @@
 use std assert
 
 use ../domain.nu parse_git_origin
-use ./print_test.nu
 
 let origins = [
   "git@github.com:tymbalodeon/dev-scripts.git"
@@ -30,8 +29,6 @@ for origin in $origins {
   } else if ($origin | str starts-with "http") {
     "http"
   }
-
-  print_test $"Parse \"($type)\" git origin"
 }
 
 let invalid_origin = "github.com/tymbalodeon/dev-scripts"
@@ -40,5 +37,3 @@ let actual_invalid_origin = (parse_git_origin --quiet $invalid_origin)
 assert equal ($actual_invalid_origin | get domain) null
 assert equal ($actual_invalid_origin | get owner) null
 assert equal ($actual_invalid_origin | get repo) null
-
-print_test "Parse invalid git origin"

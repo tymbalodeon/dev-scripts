@@ -1,7 +1,6 @@
 use std assert
 
 use ../deps.nu merge_flake_dependencies
-use ./print_test.nu 
 
 let generic_flake = "
 {
@@ -207,5 +206,3 @@ yamlfmt
 for dependencies in $test_dependencies {
   assert equal $dependencies.actual $dependencies.expected
 }
-
-print_test "Get dependencies"

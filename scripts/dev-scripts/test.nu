@@ -33,10 +33,13 @@ def main [
   }
 
   for test in $tests {
-    print $"(ansi magenta)($test)(ansi reset)"
+    # print $test
+    print --no-newline $"($test)..."
 
-    nu $test
+    try {
+      nu $test
 
-    print ""
+      print $"(ansi green_bold)OK(ansi reset)"
+    } 
   }
 }
