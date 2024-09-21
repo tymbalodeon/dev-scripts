@@ -539,10 +539,10 @@ def get_build_files [
   | filter {|file| ($file | path type) != "dir"}
 }
 
-def remove_deleted_files [
+export def get_deleted_files [
+  $environment: string
   $source_files: list<string>
   $build_files: list<string>
-  $environment: string
 ] {
   let source_files = (
     $source_files
@@ -550,23 +550,31 @@ def remove_deleted_files [
     | str replace $"generic/" $"($environment)/"
   )
 
-  for file in (
-    $build_files
-    | filter {
-        |file|
+  $build_files
+  | filter {
+      |file|
 
-        if $environment == "dev-scripts" {
-          (
-            "dev-scripts" 
-            | path join $file
-          ) not-in $source_files
-        } else {
-          (
-            $file
-            | str replace "build/" ""
-          ) not-in $source_files
-        }
+      if $environment == "dev-scripts" {
+        (
+          "dev-scripts" 
+          | path join $file
+        ) not-in $source_files
+      } else {
+        (
+          $file
+          | str replace "build/" ""
+        ) not-in $source_files
       }
+    }
+}
+
+def remove_deleted_files [
+  $environment: string
+  $source_files: list<string>
+  $build_files: list<string>
+] {
+  for file in (
+    get_deleted_files $environment $source_files $build_files
   ) {
     rm $file
 
@@ -586,9 +594,9 @@ def force_copy_files [
 ] {
   (
     remove_deleted_files 
+      $settings.environment
       (get_source_files $settings) 
       (get_build_files $settings) 
-      $settings.environment
   )
 
   copy_source_files (get_environment_files $settings) $settings
@@ -663,7 +671,7 @@ def copy_outdated_files [
   let build_files = (get_build_files $settings)
   let environment = $settings.environment
 
-  remove_deleted_files $source_files $build_files $environment
+  remove_deleted_files $environment $source_files $build_files
 
   let outdated_files = (
     get_outdated_files 

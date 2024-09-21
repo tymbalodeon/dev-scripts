@@ -91,10 +91,61 @@ let build_files = [
 let old = "2024-09-20"
 let new = "2024-09-21"
 
+let test_data = [
+  {
+    source_files_modified: $old
+    build_files_modified: $old
+    expected_outdated_files: []
+  }
+  {
+    source_files_modified: $old
+    build_files_modified: $new
+    expected_outdated_files: []
+  }
+  {
+    source_files_modified: $new
+    build_files_modified: $old
+    expected_outdated_files: $source_files
+  }
+]
+
+for test in $test_data {
+  let source_files_modified = (
+    $source_files
+    | wrap name
+    | insert modified $test.source_files_modified
+  )
+
+  let build_files_modified = (
+    $build_files
+    | wrap name
+    | insert modified $test.build_files_modified
+  )
+
+  let actual_outdated_files = (
+    get_outdated_files
+      python
+      $source_files_modified
+      $build_files_modified
+  )
+
+  assert equal $actual_outdated_files $test.expected_outdated_files
+}
+
+let new_file = "src/python/.gitignore"
+
 let source_files_modified = (
   $source_files
   | wrap name
-  | insert modified $old
+  | insert modified {
+      |row|    
+
+      if $row.name == $new_file {
+        $new
+      } else {
+        $old
+      }
+  }
 )
 
 let build_files_modified = (
@@ -110,6 +161,4 @@ let actual_outdated_files = (
     $build_files_modified
 )
 
-let expected_outdated_files = []
-
-assert equal $actual_outdated_files $expected_outdated_files
+assert equal $actual_outdated_files [$new_file]
