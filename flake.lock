@@ -16,6 +16,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1726755586,
+        "narHash": "sha256-PmUr/2GQGvFTIJ6/Tvsins7Q43KTMvMFhvG6oaYK+Wk=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "c04d5652cfa9742b1d519688f65d1bbccea9eb7e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nushell-syntax": {
       "flake": false,
       "locked": {
@@ -32,10 +48,26 @@
         "type": "github"
       }
     },
+    "python": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "lastModified": 1,
+        "narHash": "sha256-bq6G/muRXvVbu6r96KoqNcezM/KuSYs6pC9+1GybP80=",
+        "path": "/nix/store/zf75y56sywzh4lxhplpbypjq5ldy5dxn-source/nix",
+        "type": "path"
+      },
+      "original": {
+        "path": "/nix/store/zf75y56sywzh4lxhplpbypjq5ldy5dxn-source/nix",
+        "type": "path"
+      }
+    },
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
-        "nushell-syntax": "nushell-syntax"
+        "nushell-syntax": "nushell-syntax",
+        "python": "python"
       }
     }
   },

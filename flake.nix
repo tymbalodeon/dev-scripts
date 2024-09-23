@@ -8,13 +8,15 @@
       repo = "sublime_text_nushell";
       flake = false;
     };
+
+    python.url = "./nix/flake.nix";
   };
 
   outputs = {
     nixpkgs,
     nushell-syntax,
     ...
-  }: let
+  } @ inputs: let
     supportedSystems = [
       "x86_64-darwin"
       "x86_64-linux"
@@ -25,49 +27,47 @@
       (system:
         f {
           pkgs = import nixpkgs {inherit system;};
+          inherit system;
         });
   in {
-    devShells = forEachSupportedSystem ({pkgs}: {
+    devShells = forEachSupportedSystem ({
+      pkgs,
+      system,
+    }: {
       default = pkgs.mkShell {
-        packages = with pkgs;
-          [
-            alejandra
-            ansible-language-server
-            bat
-            cocogitto
-            deadnix
-            eza
-            flake-checker
-            fzf
-            gh
-            just
-            lychee
-            markdown-oxide
-            marksman
-            nil
-            nodePackages.prettier
-            nushell
-            pdm
-            pre-commit
-            python312Packages.pre-commit-hooks
-            ripgrep
-            statix
-            stylelint
-            taplo
-            tokei
-            vscode-langservers-extracted
-            yaml-language-server
-            yamlfmt
-          ]
-          ++ (
-            if builtins.pathExists ./nix
-            then
-              lib.lists.flatten (
-                map (module: (import ./nix/${module} {inherit pkgs;}).packages)
-                (builtins.attrNames (builtins.readDir ./nix))
-              )
-            else []
-          );
+        inputsFrom = [
+          inputs.python.devShells.${system}.default
+        ];
+
+        packages = with pkgs; [
+          alejandra
+          ansible-language-server
+          bat
+          cocogitto
+          deadnix
+          eza
+          flake-checker
+          fzf
+          gh
+          just
+          lychee
+          markdown-oxide
+          marksman
+          nil
+          nodePackages.prettier
+          nushell
+          pdm
+          pre-commit
+          python312Packages.pre-commit-hooks
+          ripgrep
+          statix
+          stylelint
+          taplo
+          tokei
+          vscode-langservers-extracted
+          yaml-language-server
+          yamlfmt
+        ];
 
         shellHook = ''
           nushell_syntax="${nushell-syntax}/nushell.sublime-syntax"
