@@ -79,7 +79,7 @@ files = [
 
 [[package]]
 name = "pre-commit-update"
-version = "0.4.0.post1"
+version = "0.5.0"
 requires_python = ">=3.8"
 summary = "Simple CLI tool to check and update pre-commit hooks."
 groups = ["dev"]
@@ -91,8 +91,8 @@ dependencies = [
     "tomli>=2.0.1",
 ]
 files = [
-    {file = "pre_commit_update-0.4.0.post1-py3-none-any.whl", hash = "sha256:76fafb08f7ed3d0bb9a7eccf3728926cacf722f350ad9d5d9814da0aee8c3c80"},
-    {file = "pre_commit_update-0.4.0.post1.tar.gz", hash = "sha256:2d7a2174d5d980885df47a09f3738c9281ef23217977b191840ba871c6da8083"},
+    {file = "pre_commit_update-0.5.0-py3-none-any.whl", hash = "sha256:2cf51a1b8ab6c1fce89859100c6ab33d7917242af71e55d992f89bf82b1e6c77"},
+    {file = "pre_commit_update-0.5.0.tar.gz", hash = "sha256:de23be97278e5fcff1bf3461a56504da50d7a42d44a086234b091080b2bdece2"},
 ]
 
 [[package]]
