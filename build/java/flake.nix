@@ -23,11 +23,18 @@
     forEachSupportedSystem = f:
       nixpkgs.lib.genAttrs supportedSystems
       (system:
-        f {
+        f rec {
+          modules =
+            map (module: (import ./nix/${module} {inherit pkgs;}))
+            (builtins.attrNames (builtins.readDir ./nix));
+
           pkgs = import nixpkgs {inherit system;};
         });
   in {
-    devShells = forEachSupportedSystem ({pkgs}: {
+    devShells = forEachSupportedSystem ({
+      modules,
+      pkgs,
+    }: {
       default = pkgs.mkShell {
         packages = with pkgs;
           [
@@ -59,15 +66,7 @@
             yaml-language-server
             yamlfmt
           ]
-          ++ (
-            if builtins.pathExists ./nix
-            then
-              lib.lists.flatten (
-                map (module: (import ./nix/${module} {inherit pkgs;}).packages)
-                (builtins.attrNames (builtins.readDir ./nix))
-              )
-            else []
-          );
+          ++ lib.lists.flatten (map (module: module.packages or []) modules);
 
         shellHook = ''
           nushell_syntax="${nushell-syntax}/nushell.sublime-syntax"
