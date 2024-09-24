@@ -15,23 +15,30 @@
     nushell-syntax,
     ...
   }: let
-    supportedSystems = [
-      "x86_64-darwin"
-      "x86_64-linux"
-    ];
-
     forEachSupportedSystem = f:
       nixpkgs.lib.genAttrs supportedSystems
       (system:
         f rec {
+          mergeModuleAttrs = {
+            attr,
+            nullValue,
+          }:
+            pkgs.lib.lists.flatten (map (module: module.${attr} or nullValue) modules);
+
           modules =
             map (module: (import ./nix/${module} {inherit pkgs;}))
             (builtins.attrNames (builtins.readDir ./nix));
 
           pkgs = import nixpkgs {inherit system;};
         });
+
+    supportedSystems = [
+      "x86_64-darwin"
+      "x86_64-linux"
+    ];
   in {
     devShells = forEachSupportedSystem ({
+      mergeModuleAttrs,
       modules,
       pkgs,
     }: {
@@ -66,20 +73,32 @@
             yaml-language-server
             yamlfmt
           ]
-          ++ lib.lists.flatten (map (module: module.packages or []) modules);
+          ++ mergeModuleAttrs {
+            attr = "packages";
+            nullValue = [];
+          };
 
-        shellHook = ''
-          nushell_syntax="${nushell-syntax}/nushell.sublime-syntax"
-          bat_config_dir=".config/bat"
-          bat_syntax_dir="''${bat_config_dir}/syntaxes"
-          bat_nushell_syntax="''${bat_syntax_dir}/nushell.sublime-syntax"
+        shellHook = with pkgs;
+          lib.concatLines (
+            [
+              ''
+                nushell_syntax="${nushell-syntax}/nushell.sublime-syntax"
+                bat_config_dir=".config/bat"
+                bat_syntax_dir="''${bat_config_dir}/syntaxes"
+                bat_nushell_syntax="''${bat_syntax_dir}/nushell.sublime-syntax"
 
-          mkdir -p "''${bat_syntax_dir}"
-          cp "''${nushell_syntax}" "''${bat_nushell_syntax}"
-          bat cache --build --source "''${bat_config_dir}"
+                mkdir -p "''${bat_syntax_dir}"
+                cp "''${nushell_syntax}" "''${bat_nushell_syntax}"
+                bat cache --build --source "''${bat_config_dir}"
 
-          pre-commit install --hook-type commit-msg
-        '';
+                pre-commit install --hook-type commit-msg
+              ''
+            ]
+            ++ mergeModuleAttrs {
+              attr = "shellHook";
+              nullValue = "";
+            }
+          );
       };
     });
   };
