@@ -15,9 +15,11 @@
       then
         with pkgs; [
           zlib.dev
-          darwin.apple_sdk.frameworks.CoreFoundation
-          darwin.apple_sdk.frameworks.CoreServices
-          darwin.apple_sdk.frameworks.SystemConfiguration
+          (with darwin.apple_sdk.frameworks; [
+            CoreFoundation
+            CoreServices
+            SystemConfiguration
+          ])
           darwin.IOKit
         ]
       else
@@ -31,4 +33,6 @@
           else []
         )
     );
+
+  RUST_BACKTRACE = 1;
 }
