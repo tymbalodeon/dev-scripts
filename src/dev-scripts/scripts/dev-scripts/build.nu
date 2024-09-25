@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
 def get_source_directory [environment: string] {
-  [src $environment] 
+  [src $environment]
   | path join
 }
 
@@ -178,7 +178,7 @@ def copy_source_files [
         |file|
 
         ($file | path basename) not-in [
-          .gitignore 
+          .gitignore
           .pre-commit-config.yaml
           flake.nix
           Justfile
@@ -283,7 +283,7 @@ def copy_justfile [
     print $"Updated ($build_justfile)"
 
     let environment_justfile_directory = (
-      $settings.build_directory 
+      $settings.build_directory
       | path join "just"
     )
 
@@ -503,7 +503,7 @@ def copy_flake [
     mkdir $nix_directory
 
     let build_environment_flake = (
-      $nix_directory 
+      $nix_directory
       | path join $environment_flake_filename
     )
 
@@ -556,7 +556,7 @@ export def get_deleted_files [
 
       if $environment == "dev-scripts" {
         (
-          "dev-scripts" 
+          "dev-scripts"
           | path join $file
         ) not-in $source_files
       } else {
@@ -591,10 +591,10 @@ def force_copy_files [
   skip_dev_flake: bool
 ] {
   (
-    remove_deleted_files 
+    remove_deleted_files
       $settings.environment
-      (get_source_files $settings) 
-      (get_build_files $settings) 
+      (get_source_files $settings)
+      (get_build_files $settings)
   )
 
   copy_source_files (get_environment_files $settings) $settings
@@ -628,7 +628,7 @@ export def get_outdated_files [
         $file.name
         | str replace "dev-scripts/" ""
       } else {
-        "build" 
+        "build"
         | path join $file.name
       }
 
@@ -644,7 +644,7 @@ export def get_outdated_files [
         true
       } else {
         let build_file_modified = (
-          $build_files          
+          $build_files
           | filter {|file| $file.name == $build_file_name}
           | first
           | get modified
@@ -672,7 +672,7 @@ def copy_outdated_files [
   remove_deleted_files $environment $source_files $build_files
 
   let outdated_files = (
-    get_outdated_files 
+    get_outdated_files
       $environment
       (get_filenames_and_modified $source_files)
       (get_filenames_and_modified $build_files)
@@ -693,7 +693,7 @@ def copy_outdated_files [
     } else if $basename == "Justfile" or $extension == "just" {
       copy_justfile $settings
     } else {
-      $source_files = ($source_files | append $file)      
+      $source_files = ($source_files | append $file)
     }
   }
 

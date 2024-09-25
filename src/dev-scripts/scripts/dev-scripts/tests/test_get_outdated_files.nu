@@ -138,7 +138,7 @@ let source_files_modified = (
   $source_files
   | wrap name
   | insert modified {
-      |row|    
+      |row|
 
       if $row.name == $new_file {
         $new

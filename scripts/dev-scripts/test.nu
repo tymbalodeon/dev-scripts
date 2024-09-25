@@ -40,6 +40,6 @@ def main [
       nu $test
 
       print $"(ansi green_bold)OK(ansi reset)"
-    } 
+    }
   }
 }

@@ -134,7 +134,7 @@ yamlfmt
 "
 
 let test_dependencies = [
-  { 
+  {
     actual: (merge_flake_dependencies $generic_flake)
     expected: "alejandra
 ansible-language-server
@@ -166,7 +166,7 @@ yamlfmt
 "
   }
 
-  { 
+  {
     actual: (merge_flake_dependencies $generic_flake $environment_flake)
     expected: "alejandra
 ansible-language-server

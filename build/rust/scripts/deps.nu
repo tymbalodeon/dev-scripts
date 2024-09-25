@@ -15,7 +15,7 @@ export def merge_flake_dependencies [...flakes: string] {
       |flake|
 
       get_flake_dependencies $flake
-    } 
+    }
   | flatten
   | uniq
   | sort
@@ -25,20 +25,43 @@ export def merge_flake_dependencies [...flakes: string] {
 # List dependencies
 def main [
   dependency?: string # Search for a dependency
+  --environment: string # List only dependencies for $environment
 ] {
+  let environment_files = (
+    "flake.nix" ++ (ls nix | get name)
+  )
+
+  let environment_files = if ($environment | is-empty) {
+    $environment_files
+  } else {
+    $environment_files
+    | filter {
+        |file|
+
+        (
+          $file
+          | path basename
+          | path parse
+          | get stem
+          | str replace --regex "^flake$" "generic"
+        ) == $environment
+      }
+  }
 
   let flakes = (
-    "flake.nix" ++ (ls nix | get name)  
+    $environment_files
     | each {|flake| open $flake}
   )
 
   let dependencies = (merge_flake_dependencies ...$flakes)
-   
+
   if ($dependency | is-empty) {
     $dependencies
     | table --index false
   } else {
-    $dependencies
-    | rg --color always $dependency
+    try {
+      $dependencies
+      | rg --color always $dependency
+    }
   }
 }
