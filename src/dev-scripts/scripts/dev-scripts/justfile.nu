@@ -4,7 +4,7 @@ use ./build.nu get_build_directory
 use ./build.nu get_justfile
 
 # Run an environment Justfile
-def main [
+def main --wrapped [
   environment?: string # The environment whose Justfile to run
   ...args: string # Arguments to pass to the Justfile
 ] {
