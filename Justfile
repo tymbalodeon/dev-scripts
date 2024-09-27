@@ -73,10 +73,6 @@ mod dev-scripts "just/dev-scripts.just"
 @justfile *args:
     just dev-scripts justfile {{ args }}
 
-# Alias for `dev-scripts list`
-@list *args:
-    just dev-scripts list {{ args }}
-
 # Alias for `dev-scripts test`
 @test *args:
     just dev-scripts test {{ args }}

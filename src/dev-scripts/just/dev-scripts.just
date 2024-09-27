@@ -12,11 +12,6 @@
 @justfile *args:
     ./scripts/dev-scripts/justfile.nu {{ args }}
 
-# List available environments and files
-[no-cd]
-@list *help:
-    ./scripts/dev-scripts/list.nu {{ help }}
-
 # Run tests
 [no-cd]
 @test *args:

@@ -6,8 +6,21 @@ def "main add" [] {
   print "Add environment from git repo"
 }
 
-def "main list" [] {
-  http get ([$base_url src] | path join)
+def "main list" [
+  environment?: string
+] {
+  let path = ([$base_url src] | path join)
+
+  let path = if ($environment | is-empty) {
+    $path
+  } else {
+    [$path $environment] 
+    | path join
+  }
+
+  # let files = (http get $path)
+
+  http get $path
   | get name
   | to text
 }
@@ -20,6 +33,4 @@ def "main update" [] {
   print "Update (environment)"
 }
 
-def main [] {
-  help main
-}
+def main [] {}
