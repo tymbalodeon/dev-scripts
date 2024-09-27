@@ -56,8 +56,7 @@ def main [
   let dependencies = (merge_flake_dependencies ...$flakes)
 
   if ($dependency | is-empty) {
-    $dependencies
-    | table --index false
+    print --no-newline $dependencies
   } else {
     try {
       $dependencies

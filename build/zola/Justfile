@@ -19,6 +19,10 @@
 @diff-env *args:
     ./scripts/diff-env.nu {{ args }}
 
+# Manage environment
+@environment *args:
+    ./scripts/environment.nu {{ args }}
+
 # Search available `just` recipes
 [no-cd]
 [no-exit-message]
