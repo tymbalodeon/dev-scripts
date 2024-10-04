@@ -7,30 +7,36 @@ def "main add" [] {
   print "Add environment from git repo"
 }
 
-def filter_by_type [contents: any type: string] {
-  $contents 
-  | filter {|item| $item.type == $type}
+def get_files [url: string] {
+  let contents = (http get $url)
+
+  $contents
+  | filter {|item| $item.type == "file"}
+  | append (
+      $contents
+      | filter {|item| $item.type == "dir"}
+      | par-each {|directory| get_files $directory.url}
+    )
+  | flatten
 }
 
 def "main list" [
   environment?: string
 ] {
-  let path = ([$base_url src] | path join)
+  let url = ([$base_url src] | path join)
 
-  let path = if ($environment | is-empty) {
-    $path
+  let url = if ($environment | is-empty) {
+    $url
   } else {
-    [$path $environment] 
+    [$url $environment] 
     | path join
   }
+  
+  # print (get_files $url)
 
-  let contents = (http get $path)
-  let files = (filter_by_type $contents file)
-  let directories = (filter_by_type $contents dir)
-
-  # http get $path
-  # | get name
-  # | to text
+  http get $url
+  | get name
+  | to text
 }
 
 def "main remove" [] {
