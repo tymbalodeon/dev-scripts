@@ -1,7 +1,8 @@
 #!/usr/bin/env nu
 
-const base_url = "
-https://api.github.com/repos/tymbalodeon/dev-scripts/contents"
+def get_base_url [] {
+  "https://api.github.com/repos/tymbalodeon/dev-scripts/contents"
+}
 
 def "main add" [] {
   print "Add environment from git repo"
@@ -23,20 +24,20 @@ def get_files [url: string] {
 def "main list" [
   environment?: string
 ] {
-  let url = ([$base_url src] | path join)
+  let url = ([(get_base_url) src] | path join)
 
-  let url = if ($environment | is-empty) {
-    $url
+  if ($environment | is-empty) {
+    http get $url
+    | get name
+    | to text
   } else {
-    [$url $environment] 
-    | path join
+    get_files (
+      [$url $environment] 
+      | path join
+    ) | get path
+    | str replace $"src/($environment)/" ""
+    | to text
   }
-  
-  # print (get_files $url)
-
-  http get $url
-  | get name
-  | to text
 }
 
 def "main remove" [] {
