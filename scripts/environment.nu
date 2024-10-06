@@ -7,11 +7,10 @@ def get_base_url [] {
 def "main add" [
   environment: string
 ] {
-
   print $"Adding ($environment) environment..."
 
   # TODO change me
-  open blah.json
+  open remove-me-later.json
   | update path {
       |row|
 
@@ -26,14 +25,19 @@ def "main add" [
       | is-not-empty
     }
   | select path download_url
+  | par-each {
+      |file|
 
-  # let settings = (get_settings $environment)
+      let parent = ($file.path | path parse | get parent)
 
-  # if $force {
-  #   force_copy_files $settings $skip_dev_flake
-  # } else {
-  #   copy_outdated_files $settings
-  # }
+      if ($parent | is-not-empty) {
+        mkdir $parent
+      }
+
+      http get $file.download_url
+      | save --force $file.path
+    }
+  | null
 }
 
 def get_files [url: string] {

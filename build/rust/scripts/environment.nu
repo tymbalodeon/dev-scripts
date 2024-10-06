@@ -25,6 +25,19 @@ def "main add" [
       | is-not-empty
     }
   | select path download_url
+  | par-each {
+      |file|
+
+      let parent = ($file.path | path parse | get parent)
+
+      if ($parent | is-not-empty) {
+        mkdir $parent
+      }
+
+      http get $file.download_url
+      | save --force $file.path
+    }
+  | null
 }
 
 def get_files [url: string] {
