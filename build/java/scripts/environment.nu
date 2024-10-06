@@ -4,8 +4,27 @@ def get_base_url [] {
   "https://api.github.com/repos/tymbalodeon/dev-scripts/contents"
 }
 
-def "main add" [] {
-  print "Add environment from git repo"
+def "main add" [
+  environment: string
+] {
+  print $"Adding ($environment) environment..."
+
+  # TODO change me
+  open remove-me-later.json
+  | update path {
+      |row|
+
+      $row.path
+      | str replace $"src/($environment)/" ""
+  } | filter {
+      |file|
+
+      $file.path
+      | path parse
+      | get parent
+      | is-not-empty
+    }
+  | select path download_url
 }
 
 def get_files [url: string] {
