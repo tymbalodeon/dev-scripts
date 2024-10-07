@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
 def get_base_url [] {
-  "https://api.github.com/repos/tymbalodeon/dev-scripts/contents"
+  "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/src"
 }
 
 def "main add" [
@@ -9,8 +9,11 @@ def "main add" [
 ] {
   print $"Adding ($environment) environment..."
 
-  # TODO change me
-  open remove-me-later.json
+  let environment_scripts_directory = ([scripts $environment] | path join)
+
+  rm -rf $environment_scripts_directory
+
+  get_files ([(get_base_url) $environment] | path join)
   | update path {
       |row|
 
@@ -34,10 +37,16 @@ def "main add" [
         mkdir $parent
       }
 
+      print $"Downloading ($file.path)..."
+
       http get $file.download_url
       | save --force $file.path
     }
-  | null
+
+  
+  # merge Justfile
+  # merge .gitignore
+  # direnv reload
 }
 
 def get_files [url: string] {
@@ -56,7 +65,7 @@ def get_files [url: string] {
 def "main list" [
   environment?: string
 ] {
-  let url = ([(get_base_url) src] | path join)
+  let url = (get_base_url)
 
   if ($environment | is-empty) {
     http get $url
