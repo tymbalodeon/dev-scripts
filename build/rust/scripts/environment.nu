@@ -4,51 +4,6 @@ def get_base_url [] {
   "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/src"
 }
 
-def "main add" [
-  environment: string
-] {
-  print $"Adding ($environment) environment..."
-
-  let environment_scripts_directory = ([scripts $environment] | path join)
-
-  rm -rf $environment_scripts_directory
-
-  get_files ([(get_base_url) $environment] | path join)
-  | update path {
-      |row|
-
-      $row.path
-      | str replace $"src/($environment)/" ""
-  } | filter {
-      |file|
-
-      $file.path
-      | path parse
-      | get parent
-      | is-not-empty
-    }
-  | select path download_url
-  | par-each {
-      |file|
-
-      let parent = ($file.path | path parse | get parent)
-
-      if ($parent | is-not-empty) {
-        mkdir $parent
-      }
-
-      print $"Downloading ($file.path)..."
-
-      http get $file.download_url
-      | save --force $file.path
-    }
-
-  
-  # merge Justfile
-  # merge .gitignore
-  # direnv reload
-}
-
 def get_files [url: string] {
   let contents = (http get $url)
 
@@ -60,6 +15,132 @@ def get_files [url: string] {
       | par-each {|directory| get_files $directory.url}
     )
   | flatten
+}
+
+def get_environment_files [environment: string] {
+  get_files ([(get_base_url) $environment] | path join)
+  | update path {
+      |row|
+
+      $row.path
+      | str replace $"src/($environment)/" ""
+  } 
+}
+
+def get_environment_file [environment_files: list file: string] {
+  try {
+    $environment_files
+    | where path == $file
+    | first
+  } catch {
+    null
+  }
+}
+
+# TODO adapt this to generic script version
+export def merge_justfiles [
+  environment: string
+  generic_justfile: string
+  environment_justfile: string
+] {
+  let unique_environment_recipes = (
+    get_recipes $environment_justfile
+    | filter {
+        |recipe|
+
+        $recipe not-in (
+          get_recipes $generic_justfile
+        )
+    }
+  )
+
+  open $generic_justfile
+  | append (
+      $"mod ($environment) \"just/($environment).just\""
+      | append (
+          $unique_environment_recipes
+          | each {
+              |recipe|
+
+              create_environment_recipe $environment $recipe
+            }
+        )
+    | str join "\n\n"
+    )
+  | to text
+}
+
+def "main add" [
+  environment: string
+] {
+  print $"Adding ($environment) environment..."
+
+  # let environment_scripts_directory = ([scripts $environment] | path join)
+
+  # rm -rf $environment_scripts_directory
+
+  let environment_files = (get_environment_files $environment)
+
+  # get_environment_files $environment 
+  # | filter {
+  #     |file|
+
+  #     $file.path
+  #     | path parse
+  #     | get parent
+  #     | is-not-empty
+  #   }
+  # | select path download_url
+  # | par-each {
+  #     |file|
+
+  #     let parent = ($file.path | path parse | get parent)
+
+  #     if ($parent | is-not-empty) {
+  #       mkdir $parent
+  #     }
+
+  #     print $"Downloading ($file.path)..."
+
+  #     http get $file.download_url
+  #     | save --force $file.path
+  #   }
+  
+  # merge Justfile
+
+  let environment_justfile_path = $"just/($environment).just"
+
+  let environment_justfile = (
+    http get (
+      get_environment_file $environment_files $environment_justfile_path
+      | get download_url
+    )
+  )
+  
+  if (
+    $environment_justfile
+    | is-not-empty
+  ) {
+    $environment_justfile
+    | save $environment_justfile_path
+
+    (
+      merge_justfiles
+        $environment
+        (open Justfile)
+        $environment_justfile
+    ) | save --force Justfile
+
+    print "Updated Justfile"
+
+    mkdir just
+    cp $environment_justfile just
+  }
+
+  print $"Updated Justfile"
+
+  # merge .gitignore
+  # direnv reload
 }
 
 def "main list" [
