@@ -151,8 +151,10 @@ def "main add" [
         $tmp_environment_justfile
     ) 
 
-    $merged_justfile 
-    | save --force Justfile
+    if ($merged_justfile | is-not-empty) {
+      $merged_justfile 
+      | save --force Justfile
+    }
 
     mkdir just
     cp $tmp_environment_justfile $environment_justfile_path
