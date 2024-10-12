@@ -71,6 +71,10 @@ def merge_justfiles [
     }
   )
 
+  if ($unique_environment_recips | is-empty) {
+    return
+  }
+
   open $generic_justfile
   | append (
       $"mod ($environment) \"just/($environment).just\""
