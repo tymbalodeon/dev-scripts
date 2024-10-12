@@ -37,8 +37,25 @@ def get_environment_file [environment_files: list file: string] {
   }
 }
 
-# TODO adapt this to generic script version
-export def merge_justfiles [
+def get_recipes [justfile: string] {
+  (
+    just
+      --justfile $justfile
+      --summary
+    | split row " "
+  )
+}
+
+def create_environment_recipe [environment: string recipe: string] {
+  let documentation = $"# Alias for `($environment) ($recipe)`"
+  let declaration = $"@($recipe) *args:"
+  let content = $"    just ($environment) ($recipe) {{ args }}"
+
+  [$documentation $declaration $content]
+  | str join "\n"
+}
+
+def merge_justfiles [
   environment: string
   generic_justfile: string
   environment_justfile: string
@@ -75,68 +92,69 @@ def "main add" [
 ] {
   print $"Adding ($environment) environment..."
 
-  # let environment_scripts_directory = ([scripts $environment] | path join)
+  let environment_scripts_directory = ([scripts $environment] | path join)
 
-  # rm -rf $environment_scripts_directory
+  rm -rf $environment_scripts_directory
 
   let environment_files = (get_environment_files $environment)
 
-  # get_environment_files $environment 
-  # | filter {
-  #     |file|
+  get_environment_files $environment 
+  | filter {
+      |file|
 
-  #     $file.path
-  #     | path parse
-  #     | get parent
-  #     | is-not-empty
-  #   }
-  # | select path download_url
-  # | par-each {
-  #     |file|
+      $file.path
+      | path parse
+      | get parent
+      | is-not-empty
+    }
+  | select path download_url
+  | par-each {
+      |file|
 
-  #     let parent = ($file.path | path parse | get parent)
+      let parent = ($file.path | path parse | get parent)
 
-  #     if ($parent | is-not-empty) {
-  #       mkdir $parent
-  #     }
+      if ($parent | is-not-empty) {
+        mkdir $parent
+      }
 
-  #     print $"Downloading ($file.path)..."
+      print $"Downloading ($file.path)..."
 
-  #     http get $file.download_url
-  #     | save --force $file.path
-  #   }
-  
-  # merge Justfile
+      http get $file.download_url
+      | save --force $file.path
+    }
 
   let environment_justfile_path = $"just/($environment).just"
+  let tmp_environment_justfile = (mktemp --tmpdir $"($environment)-XXX.just")
 
-  let environment_justfile = (
-    http get (
-      get_environment_file $environment_files $environment_justfile_path
-      | get download_url
-    )
-  )
+  http get (
+    get_environment_file $environment_files $environment_justfile_path
+    | get download_url
+  ) | save --force $tmp_environment_justfile
+
+  let environment_justfile = (open $tmp_environment_justfile)
   
   if (
     $environment_justfile
     | is-not-empty
   ) {
     $environment_justfile
-    | save $environment_justfile_path
+    | save --force $environment_justfile_path
 
-    (
+    let merged_justfile = (
       merge_justfiles
         $environment
-        (open Justfile)
-        $environment_justfile
-    ) | save --force Justfile
+        Justfile
+        $tmp_environment_justfile
+    ) 
 
-    print "Updated Justfile"
+    $merged_justfile 
+    | save --force Justfile
 
     mkdir just
-    cp $environment_justfile just
+    cp $tmp_environment_justfile $environment_justfile_path
   }
 
+  rm $tmp_environment_justfile
   print $"Updated Justfile"
 
   # merge .gitignore
