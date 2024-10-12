@@ -71,7 +71,7 @@ def merge_justfiles [
     }
   )
 
-  if ($unique_environment_recips | is-empty) {
+  if ($unique_environment_recipes | is-empty) {
     return
   }
 
