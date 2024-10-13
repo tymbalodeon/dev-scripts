@@ -32,9 +32,24 @@ def get_environment_file [environment_files: list file: string] {
     $environment_files
     | where path == $file
     | first
-  } catch {
-    null
+  } 
+}
+
+def get_temporary_environment_file [environment_files: list file: string] {
+  let filename = $"XXX-($file | str replace --all '/' '-')"
+  let temporary_file = (mktemp --tmpdir $filename)
+  let found_file = (get_environment_file $environment_files $file)
+
+  if ($found_file | is-empty) {
+    return
   }
+
+  http get (
+    $found_file
+    | get download_url
+  ) | save --force $temporary_file
+
+  $temporary_file
 }
 
 def get_recipes [justfile: string] {
@@ -91,7 +106,7 @@ def merge_justfiles [
   | to text
 }
 
-export def merge_gitignores [
+def merge_gitignores [
   generic_gitignore: string
   environment_gitignore: string
 ] {
@@ -140,16 +155,12 @@ def "main add" [
     }
 
   let environment_justfile_path = $"just/($environment).just"
-  let tmp_environment_justfile = (mktemp --tmpdir $"($environment)-XXX.just")
 
-  # TODO
-  # make a function to abstract this and return the tmp file
-  http get (
-    get_environment_file $environment_files $environment_justfile_path
-    | get download_url
-  ) | save --force $tmp_environment_justfile
+  let temporary_justfile = (
+    get_temporary_environment_file $environment_files $environment_justfile_path
+  )
 
-  let environment_justfile = (open $tmp_environment_justfile)
+  let environment_justfile = (open $temporary_justfile)
   
   if (
     $environment_justfile
@@ -162,7 +173,7 @@ def "main add" [
       merge_justfiles
         $environment
         Justfile
-        $tmp_environment_justfile
+        $temporary_justfile
     ) 
 
     if ($merged_justfile | is-not-empty) {
@@ -171,27 +182,43 @@ def "main add" [
     }
 
     mkdir just
-    cp $tmp_environment_justfile $environment_justfile_path
+    cp $temporary_justfile $environment_justfile_path
   }
 
-  rm $tmp_environment_justfile
+  rm $temporary_justfile
   print $"Updated Justfile"
 
   let tmp_environment_gitignore = (mktemp --tmpdir $"XXX.gitignore")
 
-  let gitignore = (
-    get_environment_file $environment_files ".gitignore"
+  let temporary_gitignore = (
+    get_temporary_environment_file $environment_files ".gitignore"
   )
 
-  (
-    merge_gitignores
-      ".gitignore"
-      (get_gitignore $settings.source_directory)
-  ) | save --force $build_gitignore
+  if ($temporary_gitignore | is-not-empty) {
+    (
+      merge_gitignores
+        (open .gitignore)
+        (open $temporary_gitignore)
+    ) | save --force .gitignore
+  }
 
-  print $"Updated ($build_gitignore)"
+  print $"Updated .gitignore"
 
-  # direnv reload
+  if (
+    $environment_files
+    | filter {
+        |file|
+
+        (
+          $file.name
+          | path parse
+          | get extension
+        ) == "nix"
+      }
+    | is-not-empty 
+  ) {
+    just init
+  }
 }
 
 def "main list" [
