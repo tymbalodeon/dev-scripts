@@ -243,11 +243,17 @@ def "main list" [
 }
 
 def "main remove" [] {
+  # TODO
+  # detect added environments (as in `just environment update`) and have `remove` get rid of everything except generic
   print "Remove environment"
 }
 
-def "main update" [] {
-  print "Update (environment)"
+def "main update" [
+  ...environments: string
+] {
+  # TODO
+  # detect added environments and make `just environment update` (no args) call `add` only on those
+  main add ...$environments
 }
 
 def main [
