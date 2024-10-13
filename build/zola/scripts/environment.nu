@@ -91,6 +91,18 @@ def merge_justfiles [
   | to text
 }
 
+export def merge_gitignores [
+  generic_gitignore: string
+  environment_gitignore: string
+] {
+  $generic_gitignore
+  | lines
+  | append ($environment_gitignore | lines)
+  | uniq
+  | sort
+  | to text
+}
+
 def "main add" [
   environment: string
 ] {
@@ -102,7 +114,7 @@ def "main add" [
 
   let environment_files = (get_environment_files $environment)
 
-  get_environment_files $environment 
+  $environment_files
   | filter {
       |file|
 
@@ -130,6 +142,8 @@ def "main add" [
   let environment_justfile_path = $"just/($environment).just"
   let tmp_environment_justfile = (mktemp --tmpdir $"($environment)-XXX.just")
 
+  # TODO
+  # make a function to abstract this and return the tmp file
   http get (
     get_environment_file $environment_files $environment_justfile_path
     | get download_url
@@ -163,7 +177,20 @@ def "main add" [
   rm $tmp_environment_justfile
   print $"Updated Justfile"
 
-  # merge .gitignore
+  let tmp_environment_gitignore = (mktemp --tmpdir $"XXX.gitignore")
+
+  let gitignore = (
+    get_environment_file $environment_files ".gitignore"
+  )
+
+  (
+    merge_gitignores
+      ".gitignore"
+      (get_gitignore $settings.source_directory)
+  ) | save --force $build_gitignore
+
+  print $"Updated ($build_gitignore)"
+
   # direnv reload
 }
 
