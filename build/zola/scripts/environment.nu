@@ -119,105 +119,107 @@ def merge_gitignores [
 }
 
 def "main add" [
-  environment: string
+  ...environments: string
 ] {
-  print $"Adding ($environment) environment..."
+  for environment in $environments {
+    print $"Adding ($environment) environment..."
 
-  let environment_scripts_directory = ([scripts $environment] | path join)
+    let environment_scripts_directory = ([scripts $environment] | path join)
 
-  rm -rf $environment_scripts_directory
+    rm -rf $environment_scripts_directory
 
-  let environment_files = (get_environment_files $environment)
+    let environment_files = (get_environment_files $environment)
 
-  $environment_files
-  | filter {
-      |file|
-
-      $file.path
-      | path parse
-      | get parent
-      | is-not-empty
-    }
-  | select path download_url
-  | par-each {
-      |file|
-
-      let parent = ($file.path | path parse | get parent)
-
-      if ($parent | is-not-empty) {
-        mkdir $parent
-      }
-
-      print $"Downloading ($file.path)..."
-
-      http get $file.download_url
-      | save --force $file.path
-    }
-
-  let environment_justfile_path = $"just/($environment).just"
-
-  let temporary_justfile = (
-    get_temporary_environment_file $environment_files $environment_justfile_path
-  )
-
-  let environment_justfile = (open $temporary_justfile)
-  
-  if (
-    $environment_justfile
-    | is-not-empty
-  ) {
-    $environment_justfile
-    | save --force $environment_justfile_path
-
-    let merged_justfile = (
-      merge_justfiles
-        $environment
-        Justfile
-        $temporary_justfile
-    ) 
-
-    if ($merged_justfile | is-not-empty) {
-      $merged_justfile 
-      | save --force Justfile
-    }
-
-    mkdir just
-    cp $temporary_justfile $environment_justfile_path
-  }
-
-  rm $temporary_justfile
-  print $"Updated Justfile"
-
-  let tmp_environment_gitignore = (mktemp --tmpdir $"XXX.gitignore")
-
-  let temporary_gitignore = (
-    get_temporary_environment_file $environment_files ".gitignore"
-  )
-
-  if ($temporary_gitignore | is-not-empty) {
-    (
-      merge_gitignores
-        (open .gitignore)
-        (open $temporary_gitignore)
-    ) | save --force .gitignore
-  }
-
-  print $"Updated .gitignore"
-
-  if (
     $environment_files
     | filter {
         |file|
 
-        (
-          $file.name
-          | path parse
-          | get extension
-        ) == "nix"
+        $file.path
+        | path parse
+        | get parent
+        | is-not-empty
       }
-    | is-not-empty 
-  ) {
-    just init
+    | select path download_url
+    | par-each {
+        |file|
+
+        let parent = ($file.path | path parse | get parent)
+
+        if ($parent | is-not-empty) {
+          mkdir $parent
+        }
+
+        print $"Downloading ($file.path)..."
+
+        http get $file.download_url
+        | save --force $file.path
+      }
+
+    let environment_justfile_path = $"just/($environment).just"
+
+    let temporary_justfile = (
+      get_temporary_environment_file $environment_files $environment_justfile_path
+    )
+
+    let environment_justfile = (open $temporary_justfile)
+  
+    if (
+      $environment_justfile
+      | is-not-empty
+    ) {
+      $environment_justfile
+      | save --force $environment_justfile_path
+
+      let merged_justfile = (
+        merge_justfiles
+          $environment
+          Justfile
+          $temporary_justfile
+      ) 
+
+      if ($merged_justfile | is-not-empty) {
+        $merged_justfile 
+        | save --force Justfile
+      }
+
+      mkdir just
+      cp $temporary_justfile $environment_justfile_path
+    }
+
+    rm $temporary_justfile
+    print $"Updated Justfile"
+
+    let tmp_environment_gitignore = (mktemp --tmpdir $"XXX.gitignore")
+
+    let temporary_gitignore = (
+      get_temporary_environment_file $environment_files ".gitignore"
+    )
+
+    if ($temporary_gitignore | is-not-empty) {
+      (
+        merge_gitignores
+          (open .gitignore)
+          (open $temporary_gitignore)
+      ) | save --force .gitignore
+    }
+
+    print $"Updated .gitignore"
+
+    if (
+      $environment_files
+      | filter {
+          |file|
+
+          (
+            $file.name
+            | path parse
+            | get extension
+          ) == "nix"
+        }
+      | is-not-empty 
+    ) {
+      just init
+    }
   }
 }
 
