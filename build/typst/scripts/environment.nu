@@ -24,7 +24,21 @@ def get_environment_files [environment: string] {
 
       $row.path
       | str replace $"src/($environment)/" ""
-  } 
+    } 
+  | filter {
+      |row|
+
+      if $row.name in [.gitignore .pre-commit-config.yaml] {
+        return false
+      }
+
+      let path = ($row.path | path parse)
+
+      $path.extension != "lock" and "tests" not-in (
+        $path
+        | get parent
+      )
+  }
 }
 
 def get_environment_file [environment_files: list file: string] {
@@ -131,14 +145,6 @@ def "main add" [
     let environment_files = (get_environment_files $environment)
 
     $environment_files
-    | filter {
-        |file|
-
-        $file.path
-        | path parse
-        | get parent
-        | is-not-empty
-      }
     | select path download_url
     | par-each {
         |file|
@@ -153,9 +159,13 @@ def "main add" [
 
         http get $file.download_url
         | save --force $file.path
-      }
+    }
 
-    let environment_justfile_path = $"just/($environment).just"
+    let environment_justfile_path = if $environment == "generic" {
+      "Justfile"
+    } else {
+      $"just/($environment).just"
+    }
 
     let temporary_justfile = (
       get_temporary_environment_file $environment_files $environment_justfile_path
@@ -221,6 +231,12 @@ def "main add" [
       just init
     }
   }
+}
+
+def "main create" [
+  environment?: string
+] {
+  # Is this necessary?
 }
 
 def "main list" [
