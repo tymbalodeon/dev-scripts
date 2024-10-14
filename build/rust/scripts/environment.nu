@@ -236,14 +236,9 @@ def "main add" [
   }
 }
 
-def "main create" [
-  environment?: string
-] {
-  # Is this necessary?
-}
-
 def "main list" [
   environment?: string
+  path?: string
 ] {
   let url = (get_base_url)
 
@@ -252,10 +247,38 @@ def "main list" [
     | get name
     | to text
   } else {
-    get_files (
-      [$url $environment] 
-      | path join
-    ) | get path
+    let files = (
+      get_files (
+        [$url $environment] 
+        | path join
+      )
+    )
+
+    let full_path = (
+      [src $environment $path] 
+      | path join   
+    )
+
+    if $full_path in ($files | get path) {
+      let file_url = (
+        $files
+        | where path == $full_path
+        | get download_url  
+        | first
+      )
+
+      return (http get $file_url)
+    } 
+    
+    let files = if ($path | is-not-empty) {
+      $files
+      | where path =~ $path
+    } else {
+      $files
+    }
+
+    $files
+    | get path
     | str replace $"src/($environment)/" ""
     | to text
   }
