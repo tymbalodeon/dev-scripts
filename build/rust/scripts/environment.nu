@@ -28,10 +28,6 @@ def get_environment_files [environment: string] {
   | filter {
       |row|
 
-      if $row.name in [.gitignore .pre-commit-config.yaml] {
-        return false
-      }
-
       let path = ($row.path | path parse)
 
       $path.extension != "lock" and "tests" not-in (
@@ -145,6 +141,13 @@ def "main add" [
     let environment_files = (get_environment_files $environment)
 
     $environment_files
+    | filter {
+        |row|
+
+        if $row.name in [.gitignore .pre-commit-config.yaml] {
+          return false
+        }
+      }
     | select path download_url
     | par-each {
         |file|
@@ -268,8 +271,12 @@ def "main update" [
   ...environments: string
 ] {
   # TODO
-  # detect added environments and make `just environment update` (no args) call `add` only on those
-  main add ...$environments
+  if ($environments | is-empty) {
+    # detect added environments and make `just environment update` (no args) call `add` only on those
+    main add generic
+  } else {
+    main add ...$environments
+  }
 }
 
 def main [
