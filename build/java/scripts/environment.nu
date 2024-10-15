@@ -262,6 +262,15 @@ def "main list" [
     )
   )
 
+  if ($path | is-empty) {
+    return (
+      $files
+      | get path
+      | str replace $"src/($environment)/" ""
+      | to text
+    )
+  }
+
   let full_path = (
     [src $environment $path] 
     | path join   
@@ -278,14 +287,8 @@ def "main list" [
     return (http get $file_url)
   } 
   
-  let files = if ($path | is-not-empty) {
-    $files
-    | where path =~ $path
-  } else {
-    $files
-  }
-
   $files
+  | where path =~ $path
   | get path
   | str replace $"src/($environment)/" ""
   | to text
