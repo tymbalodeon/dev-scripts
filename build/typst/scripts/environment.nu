@@ -87,6 +87,23 @@ def merge_justfiles [
 ] {
   # TODO
   # Handle when environment is generic
+
+  # FIXME .......
+
+  let generic_justfile = if $environment == "generic" {
+    let temporary_justfile = (mktemp --tmpdir $"XXX.just")
+
+    open $generic_justfile
+    | split row "mod"
+    | first
+    | str replace "\n\n" ""
+    | save --force $temporary_justfile
+
+    $temporary_justfile
+  } else {
+    $generic_justfile
+  }
+
   let unique_environment_recipes = (
     get_recipes $environment_justfile
     | filter {
@@ -99,23 +116,35 @@ def merge_justfiles [
   )
 
   if ($unique_environment_recipes | is-empty) {
+    if $environment == "generic" {
+      rm $generic_justfile      
+    }
+
     return
   }
 
-  open $generic_justfile
-  | append (
-      $"mod ($environment) \"just/($environment).just\""
-      | append (
-          $unique_environment_recipes
-          | each {
-              |recipe|
+  let merged_justfile = (
+    open $generic_justfile
+    | append (
+        $"mod ($environment) \"just/($environment).just\""
+        | append (
+            $unique_environment_recipes
+            | each {
+                |recipe|
 
-              create_environment_recipe $environment $recipe
-            }
-        )
-    | str join "\n\n"
-    )
-  | to text
+                create_environment_recipe $environment $recipe
+              }
+          )
+      | str join "\n\n"
+      )
+    | to text
+  )
+
+  if $environment == "generic" {
+    rm $generic_justfile      
+  }
+
+  $merged_justfile
 }
 
 def merge_gitignores [
@@ -300,20 +329,29 @@ def "main remove" [] {
   print "Remove environment"
 }
 
+def get_installed_environments [] {
+  ls nix
+  | get name
+  | path parse
+  | get stem
+  | to text
+}
+
 def "main update" [
   ...environments: string
 ] {
-  # TODO
-  if ($environments | is-empty) {
-    # detect added environments and make `just environment update` (no args) call `add` only on those
-    main add generic
+  let environments = if ($environments | is-empty) {
+    generic 
+    | append (get_installed_environments)
   } else {
-    main add ...$environments
+    $environments
   }
+
+  main add ...$environments
 }
 
 def main [
   environment?: string
 ] {
-  main list $environment
+  get_installed_environments
 }
