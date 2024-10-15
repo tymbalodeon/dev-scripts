@@ -85,6 +85,8 @@ def merge_justfiles [
   generic_justfile: string
   environment_justfile: string
 ] {
+  # TODO
+  # Handle when environment is generic
   let unique_environment_recipes = (
     get_recipes $environment_justfile
     | filter {
@@ -218,6 +220,9 @@ def "main add" [
 
     print $"Updated .gitignore"
 
+    # TODO
+    # Handle pre-commit-config
+
     if (
       $environment_files
       | filter {
@@ -243,45 +248,47 @@ def "main list" [
   let url = (get_base_url)
 
   if ($environment | is-empty) {
-    http get $url
-    | get name
-    | to text
-  } else {
-    let files = (
-      get_files (
-        [$url $environment] 
-        | path join
-      )
+    return (
+      http get $url
+      | get name
+      | to text
+    )
+  } 
+
+  let files = (
+    get_files (
+      [$url $environment] 
+      | path join
+    )
+  )
+
+  let full_path = (
+    [src $environment $path] 
+    | path join   
+  )
+
+  if $full_path in ($files | get path) {
+    let file_url = (
+      $files
+      | where path == $full_path
+      | get download_url  
+      | first
     )
 
-    let full_path = (
-      [src $environment $path] 
-      | path join   
-    )
-
-    if $full_path in ($files | get path) {
-      let file_url = (
-        $files
-        | where path == $full_path
-        | get download_url  
-        | first
-      )
-
-      return (http get $file_url)
-    } 
-    
-    let files = if ($path | is-not-empty) {
-      $files
-      | where path =~ $path
-    } else {
-      $files
-    }
-
+    return (http get $file_url)
+  } 
+  
+  let files = if ($path | is-not-empty) {
     $files
-    | get path
-    | str replace $"src/($environment)/" ""
-    | to text
+    | where path =~ $path
+  } else {
+    $files
   }
+
+  $files
+  | get path
+  | str replace $"src/($environment)/" ""
+  | to text
 }
 
 def "main remove" [] {
