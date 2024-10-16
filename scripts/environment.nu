@@ -310,10 +310,21 @@ def "main list" [
   | to text
 }
 
-def "main remove" [] {
-  # TODO
-  # detect added environments (as in `just environment update`) and have `remove` get rid of everything except generic
-  print "Remove environment"
+def get_environments [environments: list<string>] {
+  if ($environments | is-empty) {
+    "generic"
+    | append (get_installed_environments)
+  } else {
+    $environments
+  }
+}
+
+def "main remove" [...environments: string] {
+  let environments = (get_environments $environments)
+
+  for environment in $environments {
+    print $"Removing ($environment)..."
+  }
 }
 
 def get_installed_environments [] {
@@ -321,18 +332,14 @@ def get_installed_environments [] {
   | get name
   | path parse
   | get stem
+  | filter {|environment| $environment in (main list)}
   | to text
 }
 
 def "main update" [
   ...environments: string
 ] {
-  let environments = if ($environments | is-empty) {
-    generic 
-    | append (get_installed_environments)
-  } else {
-    $environments
-  }
+  let environments = (get_environments $environments)
 
   main add ...$environments
 }
