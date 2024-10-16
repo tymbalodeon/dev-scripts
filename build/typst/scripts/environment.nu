@@ -45,9 +45,17 @@ def get_environment_file [environment_files: list file: string] {
   } 
 }
 
-def get_temporary_environment_file [environment_files: list file: string] {
-  let filename = $"XXX-($file | str replace --all '/' '-')"
-  let temporary_file = (mktemp --tmpdir $filename)
+def get_temporary_environment_file [
+  environment_files: list 
+  file: string 
+  extension?: string
+] {
+  let temporary_file = if ($extension | is-not-empty) {
+    mktemp --tmpdir --suffix $".($extension)"
+  } else {
+    mktemp --tmpdir 
+  }
+
   let found_file = (get_environment_file $environment_files $file)
 
   if ($found_file | is-empty) {
@@ -86,44 +94,48 @@ def merge_justfiles [
   environment_justfile: string
 ] {
   if $environment == "generic" {
-    open $environment_justfile
-    | append (
-      open $generic_justfile  
-      | split row "mod"
-      | drop nth 0
+    return (
+      open $environment_justfile
+      | append (
+          open $generic_justfile  
+          | split row "mod"
+          | drop nth 0
+          | prepend mod
+          | str join
+        )
       | to text
     )
-  } else {
-    let unique_environment_recipes = (
-      get_recipes $environment_justfile
-      | filter {
-          |recipe|
-
-          $recipe not-in (
-            get_recipes $generic_justfile
-          )
-      }
-    )
-
-    if ($unique_environment_recipes | is-empty) {
-      return
-    }
-
-    open $generic_justfile
-    | append (
-        $"mod ($environment) \"just/($environment).just\""
-        | append (
-            $unique_environment_recipes
-            | each {
-                |recipe|
-
-                create_environment_recipe $environment $recipe
-              }
-          )
-      | str join "\n\n"
-      )
-    | to text
   }
+
+  let unique_environment_recipes = (
+    get_recipes $environment_justfile
+    | filter {
+        |recipe|
+
+        $recipe not-in (
+          get_recipes $generic_justfile
+        )
+    }
+  )
+
+  if ($unique_environment_recipes | is-empty) {
+    return
+  }
+
+  open $generic_justfile
+  | append (
+      $"mod ($environment) \"just/($environment).just\""
+      | append (
+          $unique_environment_recipes
+          | each {
+              |recipe|
+
+              create_environment_recipe $environment $recipe
+            }
+        )
+      | str join "\n\n"
+    )
+  | to text
 }
 
 def merge_gitignores [
@@ -154,7 +166,7 @@ def "main add" [
     | filter {
         |row|
 
-        if $row.name in [.gitignore .pre-commit-config.yaml] {
+        if $row.name in [.gitignore .pre-commit-config.yaml Justfile] {
           return false
         }
       }
@@ -174,7 +186,7 @@ def "main add" [
         | save --force $file.path
     }
 
-    let environment_justfile_path = if $environment == "generic" {
+    let environment_justfile_name = if $environment == "generic" {
       "Justfile"
     } else {
       $"just/($environment).just"
@@ -183,7 +195,7 @@ def "main add" [
     let environment_justfile_file = (
       get_temporary_environment_file 
         $environment_files 
-        $environment_justfile_path
+        $environment_justfile_name
     )
 
     let environment_justfile = (open $environment_justfile_file)
@@ -192,9 +204,6 @@ def "main add" [
       $environment_justfile
       | is-not-empty
     ) {
-      $environment_justfile
-      | save --force $environment_justfile_path
-
       let merged_justfile = (
         merge_justfiles
           $environment
@@ -206,9 +215,6 @@ def "main add" [
         $merged_justfile 
         | save --force Justfile
       }
-
-      mkdir just
-      cp $environment_justfile_file $environment_justfile_path
     }
 
     rm $environment_justfile_file
