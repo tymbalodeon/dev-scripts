@@ -314,6 +314,7 @@ def get_environments [environments: list<string>] {
   if ($environments | is-empty) {
     "generic"
     | append (get_installed_environments)
+    | filter {|environment| $environment | is-not-empty}
   } else {
     $environments
   }
