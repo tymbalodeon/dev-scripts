@@ -37,15 +37,26 @@ def get_environment_files [environment: string] {
   }
 }
 
-def get_environment_file [environment_files: list file: string] {
+def get_environment_file_url [environment_files: list file: string] {
   try {
     $environment_files
     | where path == $file
     | first
+    | get download_url
   } 
 }
 
-def get_temporary_environment_file [
+def get_environment_file [environment_files: list file: string] {
+  let url = (get_environment_file_url $environment_files $file)
+
+  if ($url | is-empty) {
+    return ""
+  }
+
+  http get $url
+}
+
+def download_environment_file [
   environment_files: list 
   file: string 
   extension?: string
@@ -56,16 +67,12 @@ def get_temporary_environment_file [
     mktemp --tmpdir 
   }
 
-  let found_file = (get_environment_file $environment_files $file)
+  let file_contents = (
+    get_environment_file $environment_files $file
+  )
 
-  if ($found_file | is-empty) {
-    return
-  }
-
-  http get (
-    $found_file
-    | get download_url
-  ) | save --force $temporary_file
+  $file_contents
+  | save --force $temporary_file
 
   $temporary_file
 }
@@ -150,6 +157,58 @@ def merge_gitignores [
   | to text
 }
 
+def get_pre_commit_config_repos [config: record<repos: list<any>>] {
+  $config
+  | get repos
+}
+
+def merge_records_by_key [a: list b: list key: string] {
+  mut records = []
+
+  for b_record in $b {
+    if ($b_record | get $key) in ($a | get $key) {
+      let a_record = (
+        $a
+        | filter {
+            |a_record|
+
+            ($a_record | get $key) == ($b_record | get $key)
+          }
+        | first
+      )
+
+      if $key == "repo" {
+        let a_hooks = $a_record.hooks
+        let b_hooks = $b_record.hooks
+        let hooks = (merge_records_by_key $a_hooks $b_hooks "id")
+
+        $records = (
+          $records
+          | append ($b_record | update hooks $hooks)
+        )
+      } else {
+        $records = (
+          $records
+          | append ($a_record | merge $b_record)
+        )
+      }
+    } else {
+      $records = (
+        $records
+        | append $b_record
+      )
+    }
+  }
+
+  for a_record in $a {
+    if not (($a_record | get $key) in ($records | get $key)) {
+      $records = ($records | append $a_record)
+    }
+  }
+
+  $records
+}
+
 def "main add" [
   ...environments: string
 ] {
@@ -193,7 +252,7 @@ def "main add" [
     }
 
     let environment_justfile_file = (
-      get_temporary_environment_file 
+      download_environment_file 
         $environment_files 
         $environment_justfile_name
     )
@@ -220,24 +279,31 @@ def "main add" [
     rm $environment_justfile_file
     print $"Updated Justfile"
 
-    let tmp_environment_gitignore = (mktemp --tmpdir $"XXX.gitignore")
-
-    let temporary_gitignore = (
-      get_temporary_environment_file $environment_files ".gitignore"
+    let environment_gitignore = (
+      get_environment_file $environment_files ".gitignore"
     )
 
-    if ($temporary_gitignore | is-not-empty) {
+    if ($environment_gitignore | is-not-empty) {
       (
         merge_gitignores
           (open .gitignore)
-          (open $temporary_gitignore)
+          $environment_gitignore
       ) | save --force .gitignore
     }
 
     print $"Updated .gitignore"
 
-    # TODO
-    # Handle pre-commit-config
+    let generic_config = (
+      get_pre_commit_config_repos (open .pre-commit-config.yaml)
+    )
+
+    let environment_config = (
+      get_pre_commit_config_repos (
+        get_environment_file $environment_files ".pre-commit-config.yaml"
+      )
+    )
+
+    merge_records_by_key $generic_config $environment_config repo
 
     if (
       $environment_files
