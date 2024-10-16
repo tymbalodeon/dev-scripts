@@ -85,45 +85,30 @@ def merge_justfiles [
   generic_justfile: string
   environment_justfile: string
 ] {
-  # TODO
-  # Handle when environment is generic
-
-  # FIXME .......
-
-  let generic_justfile = if $environment == "generic" {
-    let temporary_justfile = (mktemp --tmpdir $"XXX.just")
-
-    open $generic_justfile
-    | split row "mod"
-    | first
-    | str replace "\n\n" ""
-    | save --force $temporary_justfile
-
-    $temporary_justfile
+  if $environment == "generic" {
+    open $environment_justfile
+    | append (
+      open $generic_justfile  
+      | split row "mod"
+      | drop nth 0
+      | to text
+    )
   } else {
-    $generic_justfile
-  }
+    let unique_environment_recipes = (
+      get_recipes $environment_justfile
+      | filter {
+          |recipe|
 
-  let unique_environment_recipes = (
-    get_recipes $environment_justfile
-    | filter {
-        |recipe|
+          $recipe not-in (
+            get_recipes $generic_justfile
+          )
+      }
+    )
 
-        $recipe not-in (
-          get_recipes $generic_justfile
-        )
-    }
-  )
-
-  if ($unique_environment_recipes | is-empty) {
-    if $environment == "generic" {
-      rm $generic_justfile      
+    if ($unique_environment_recipes | is-empty) {
+      return
     }
 
-    return
-  }
-
-  let merged_justfile = (
     open $generic_justfile
     | append (
         $"mod ($environment) \"just/($environment).just\""
@@ -138,13 +123,7 @@ def merge_justfiles [
       | str join "\n\n"
       )
     | to text
-  )
-
-  if $environment == "generic" {
-    rm $generic_justfile      
   }
-
-  $merged_justfile
 }
 
 def merge_gitignores [
@@ -201,11 +180,13 @@ def "main add" [
       $"just/($environment).just"
     }
 
-    let temporary_justfile = (
-      get_temporary_environment_file $environment_files $environment_justfile_path
+    let environment_justfile_file = (
+      get_temporary_environment_file 
+        $environment_files 
+        $environment_justfile_path
     )
 
-    let environment_justfile = (open $temporary_justfile)
+    let environment_justfile = (open $environment_justfile_file)
   
     if (
       $environment_justfile
@@ -218,7 +199,7 @@ def "main add" [
         merge_justfiles
           $environment
           Justfile
-          $temporary_justfile
+          $environment_justfile_file
       ) 
 
       if ($merged_justfile | is-not-empty) {
@@ -227,10 +208,10 @@ def "main add" [
       }
 
       mkdir just
-      cp $temporary_justfile $environment_justfile_path
+      cp $environment_justfile_file $environment_justfile_path
     }
 
-    rm $temporary_justfile
+    rm $environment_justfile_file
     print $"Updated Justfile"
 
     let tmp_environment_gitignore = (mktemp --tmpdir $"XXX.gitignore")
