@@ -7,7 +7,7 @@ def main [
 ] {
   let tests = try {
     let files = if ($environment | is-empty) {
-      "src/**/tests/test_*.nu"
+      "scripts/dev-scripts/tests/test_*.nu"
     } else if ($file | is-empty) {
       $"src/($environment)/**/tests/test_*.nu"
     } else {
