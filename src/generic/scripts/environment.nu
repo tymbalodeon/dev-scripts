@@ -209,117 +209,135 @@ def merge_records_by_key [a: list b: list key: string] {
   $records
 }
 
+def copy_files [environment: string environment_files: list] {
+  let environment_scripts_directory = ([scripts $environment] | path join)
+
+  rm -rf $environment_scripts_directory
+
+  $environment_files
+  | filter {
+      |row|
+
+      if $row.name in [.gitignore .pre-commit-config.yaml Justfile] {
+        return false
+      }
+    }
+  | select path download_url
+  | par-each {
+      |file|
+
+      let parent = ($file.path | path parse | get parent)
+
+      if ($parent | is-not-empty) {
+        mkdir $parent
+      }
+
+      print $"Downloading ($file.path)..."
+
+      http get $file.download_url
+      | save --force $file.path
+  }
+}
+
+def copy_justfile [environment: string environment_files: list] {
+  let environment_justfile_name = if $environment == "generic" {
+    "Justfile"
+  } else {
+    $"just/($environment).just"
+  }
+
+  let environment_justfile_file = (
+    download_environment_file 
+      $environment_files 
+      $environment_justfile_name
+  )
+
+  let environment_justfile = (open $environment_justfile_file)
+
+  if (
+    $environment_justfile
+    | is-not-empty
+  ) {
+    let merged_justfile = (
+      merge_justfiles
+        $environment
+        Justfile
+        $environment_justfile_file
+    ) 
+
+    if ($merged_justfile | is-not-empty) {
+      $merged_justfile 
+      | save --force Justfile
+    }
+  }
+
+  rm $environment_justfile_file
+  print $"Updated Justfile"
+}
+
+def copy_gitignore [environment_files: list] {
+  let environment_gitignore = (
+    get_environment_file $environment_files ".gitignore"
+  )
+
+  if ($environment_gitignore | is-not-empty) {
+    (
+      merge_gitignores
+        (open .gitignore)
+        $environment_gitignore
+    ) | save --force .gitignore
+  }
+
+  print $"Updated .gitignore"
+}
+
+def copy_pre_commit_config [environment_files: list] {
+  let generic_config = (
+    get_pre_commit_config_repos (open .pre-commit-config.yaml)
+  )
+
+  let environment_config = (
+    get_pre_commit_config_repos (
+      get_environment_file $environment_files ".pre-commit-config.yaml"
+    )
+  )
+
+  merge_records_by_key $generic_config $environment_config repo
+  print $"Updated .pre-commit-config.yaml"
+}
+
+def reload_environment [environment_files: list] {
+  if (
+    $environment_files
+    | filter {
+        |file|
+
+        (
+          $file.name
+          | path parse
+          | get extension
+        ) == "nix"
+      }
+    | is-not-empty 
+  ) {
+    just init
+  }
+}
+
 def "main add" [
   ...environments: string
 ] {
   for environment in $environments {
     print $"Adding ($environment) environment..."
 
-    let environment_scripts_directory = ([scripts $environment] | path join)
-
-    rm -rf $environment_scripts_directory
-
     let environment_files = (get_environment_files $environment)
 
-    $environment_files
-    | filter {
-        |row|
+    copy_files $environment $environment_files
+    copy_justfile $environment $environment_files
+    copy_gitignore $environment_files
+    copy_pre_commit_config $environment_files
 
-        if $row.name in [.gitignore .pre-commit-config.yaml Justfile] {
-          return false
-        }
-      }
-    | select path download_url
-    | par-each {
-        |file|
-
-        let parent = ($file.path | path parse | get parent)
-
-        if ($parent | is-not-empty) {
-          mkdir $parent
-        }
-
-        print $"Downloading ($file.path)..."
-
-        http get $file.download_url
-        | save --force $file.path
-    }
-
-    let environment_justfile_name = if $environment == "generic" {
-      "Justfile"
-    } else {
-      $"just/($environment).just"
-    }
-
-    let environment_justfile_file = (
-      download_environment_file 
-        $environment_files 
-        $environment_justfile_name
-    )
-
-    let environment_justfile = (open $environment_justfile_file)
-  
-    if (
-      $environment_justfile
-      | is-not-empty
-    ) {
-      let merged_justfile = (
-        merge_justfiles
-          $environment
-          Justfile
-          $environment_justfile_file
-      ) 
-
-      if ($merged_justfile | is-not-empty) {
-        $merged_justfile 
-        | save --force Justfile
-      }
-    }
-
-    rm $environment_justfile_file
-    print $"Updated Justfile"
-
-    let environment_gitignore = (
-      get_environment_file $environment_files ".gitignore"
-    )
-
-    if ($environment_gitignore | is-not-empty) {
-      (
-        merge_gitignores
-          (open .gitignore)
-          $environment_gitignore
-      ) | save --force .gitignore
-    }
-
-    print $"Updated .gitignore"
-
-    let generic_config = (
-      get_pre_commit_config_repos (open .pre-commit-config.yaml)
-    )
-
-    let environment_config = (
-      get_pre_commit_config_repos (
-        get_environment_file $environment_files ".pre-commit-config.yaml"
-      )
-    )
-
-    merge_records_by_key $generic_config $environment_config repo
-
-    if (
-      $environment_files
-      | filter {
-          |file|
-
-          (
-            $file.name
-            | path parse
-            | get extension
-          ) == "nix"
-        }
-      | is-not-empty 
-    ) {
-      just init
-    }
+    reload_environment $environment_files
   }
 }
 
