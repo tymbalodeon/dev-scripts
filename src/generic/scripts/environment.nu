@@ -402,6 +402,14 @@ def get_environments [environments: list<string>] {
   }
 }
 
+def remove_environment_file [environment: string type: string] {
+  rm $"($type)/($environment).($type)"
+
+  if (ls $type | length) == 0 {
+    rm $type
+  }
+}
+
 def "main remove" [...environments: string] {
   let environments = (
     get_environments $environments
@@ -410,6 +418,12 @@ def "main remove" [...environments: string] {
 
   for environment in $environments {
     print $"Removing ($environment)..."
+
+    for type in [just nix] {
+      remove_environment_file $environment $type
+    }
+
+    rm -rf $"scripts/($environment)"
   }
 }
 
