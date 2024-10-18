@@ -24,7 +24,7 @@ def get_environment_files [environment: string] {
 
       $row.path
       | str replace $"src/($environment)/" ""
-    } 
+    }
   | filter {
       |row|
 
@@ -43,7 +43,7 @@ def get_environment_file_url [environment_files: list file: string] {
     | where path == $file
     | first
     | get download_url
-  } 
+  }
 }
 
 def get_environment_file [environment_files: list file: string] {
@@ -57,14 +57,14 @@ def get_environment_file [environment_files: list file: string] {
 }
 
 def download_environment_file [
-  environment_files: list 
-  file: string 
+  environment_files: list
+  file: string
   extension?: string
 ] {
   let temporary_file = if ($extension | is-not-empty) {
     mktemp --tmpdir --suffix $".($extension)"
   } else {
-    mktemp --tmpdir 
+    mktemp --tmpdir
   }
 
   let file_contents = (
@@ -104,7 +104,7 @@ def merge_justfiles [
     return (
       open $environment_justfile
       | append (
-          open $generic_justfile  
+          open $generic_justfile
           | split row "mod"
           | drop nth 0
           | prepend mod
@@ -245,8 +245,8 @@ def copy_justfile [environment: string environment_files: list] {
   }
 
   let environment_justfile_file = (
-    download_environment_file 
-      $environment_files 
+    download_environment_file
+      $environment_files
       $environment_justfile_name
   )
 
@@ -261,10 +261,10 @@ def copy_justfile [environment: string environment_files: list] {
         $environment
         Justfile
         $environment_justfile_file
-    ) 
+    )
 
     if ($merged_justfile | is-not-empty) {
-      $merged_justfile 
+      $merged_justfile
       | save --force Justfile
     }
   }
@@ -316,7 +316,7 @@ def reload_environment [environment_files: list] {
           | get extension
         ) == "nix"
       }
-    | is-not-empty 
+    | is-not-empty
   ) {
     just init
   }
@@ -351,11 +351,11 @@ def "main list" [
       | get name
       | to text
     )
-  } 
+  }
 
   let files = (
     get_files (
-      [$url $environment] 
+      [$url $environment]
       | path join
     )
   )
@@ -370,21 +370,21 @@ def "main list" [
   }
 
   let full_path = (
-    [src $environment $path] 
-    | path join   
+    [src $environment $path]
+    | path join
   )
 
   if $full_path in ($files | get path) {
     let file_url = (
       $files
       | where path == $full_path
-      | get download_url  
+      | get download_url
       | first
     )
 
     return (http get $file_url)
-  } 
-  
+  }
+
   $files
   | where path =~ $path
   | get path
@@ -438,7 +438,7 @@ def remove_justfile [environment: string] {
     )
 
     $filtered_justfile
-    | lines 
+    | lines
     | str join "\n"
     | save --force Justfile
   }
@@ -458,7 +458,7 @@ def remove_gitignore [environment_files: list] {
         |line|
 
         $line not-in ($environment_gitignore | lines)
-      } 
+      }
     | to text
   )
 
