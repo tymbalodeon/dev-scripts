@@ -218,9 +218,7 @@ def copy_files [environment: string environment_files: list] {
   | filter {
       |row|
 
-      if $row.name in [.gitignore .pre-commit-config.yaml Justfile] {
-        return false
-      }
+      $row.name not-in [.gitignore .pre-commit-config.yaml Justfile]
     }
   | select path download_url
   | par-each {
