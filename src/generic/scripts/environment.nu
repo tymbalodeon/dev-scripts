@@ -405,7 +405,10 @@ def get_environments [environments: list<string>] {
 }
 
 def "main remove" [...environments: string] {
-  let environments = (get_environments $environments)
+  let environments = (
+    get_environments $environments
+    | filter {|environment| $environment != "generic"}
+  )
 
   for environment in $environments {
     print $"Removing ($environment)..."
