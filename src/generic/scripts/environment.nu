@@ -392,11 +392,19 @@ def "main list" [
   | to text
 }
 
+def get_installed_environments [] {
+  ls nix
+  | get name
+  | path parse
+  | get stem
+  | filter {|environment| $environment in (main list)}
+  | to text
+}
+
 def get_environments [environments: list<string>] {
   if ($environments | is-empty) {
     "generic"
-    | append (get_installed_environments)
-    | filter {|environment| $environment | is-not-empty}
+    | append (get_installed_environments | lines)
   } else {
     $environments
   }
@@ -425,15 +433,6 @@ def "main remove" [...environments: string] {
 
     rm -rf $"scripts/($environment)"
   }
-}
-
-def get_installed_environments [] {
-  ls nix
-  | get name
-  | path parse
-  | get stem
-  | filter {|environment| $environment in (main list)}
-  | to text
 }
 
 def "main update" [
