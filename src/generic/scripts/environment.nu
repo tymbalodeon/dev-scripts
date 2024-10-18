@@ -411,11 +411,64 @@ def get_environments [environments: list<string>] {
 }
 
 def remove_environment_file [environment: string type: string] {
-  rm $"($type)/($environment).($type)"
+  rm -f $"($type)/($environment).($type)"
 
   if (ls $type | length) == 0 {
     rm $type
   }
+}
+
+def remove_justfile [environment: string] {
+  try {
+    let environment_mod = (
+      "mod "
+      | append (
+          open Justfile
+          | split row "mod"
+          | str trim
+          | filter {|recipes| $recipes | str starts-with $environment}
+          | first
+        )
+      | str join
+    )
+
+    let filtered_justfile = (
+      open Justfile
+      | str replace $environment_mod ""
+    )
+
+    $filtered_justfile
+    | lines 
+    | str join "\n"
+    | save --force Justfile
+  }
+
+  remove_environment_file $environment just
+}
+
+def remove_gitignore [environment_files: list] {
+  let environment_gitignore = (
+    get_environment_file $environment_files ".gitignore"
+  )
+
+  let filtered_gitignore = (
+    open .gitignore
+    | lines
+    | filter {
+        |line|
+
+        $line not-in ($environment_gitignore | lines)
+      } 
+    | to text
+  )
+
+  $filtered_gitignore
+  | save --force .gitignore
+}
+
+def remove_files [environment: string] {
+  remove_environment_file $environment nix
+  rm -rf $"scripts/($environment)"
 }
 
 def "main remove" [...environments: string] {
@@ -427,52 +480,12 @@ def "main remove" [...environments: string] {
   for environment in $environments {
     print $"Removing ($environment)..."
 
+    remove_justfile $environment
+
     let environment_files = (get_environment_files $environment)
 
-    try {
-      let filtered_justfile = (
-        open Justfile
-        | str replace (
-            "mod "
-            | append (
-                open Justfile
-                | split row "mod"
-                | str trim
-                | filter {|recipes| $recipes | str starts-with $environment}
-                | first
-              )
-            | append "\n"
-            | str join
-          ) ""
-      )
-
-      $filtered_justfile
-      | save --force Justfile
-    }
-
-    let environment_gitignore = (
-      get_environment_file $environment_files ".gitignore"
-    )
-
-    let filtered_gitignore = (
-      open .gitignore
-      | lines
-      | filter {
-          |line|
-
-          $line not-in ($environment_gitignore | lines)
-        } 
-      | to text
-    )
-
-    $filtered_gitignore
-    | save --force .gitignore
-
-    for type in [just nix] {
-      remove_environment_file $environment $type
-    }
-
-    rm -rf $"scripts/($environment)"
+    remove_gitignore $environment_files
+    remove_files $environment
   }
 }
 
