@@ -406,6 +406,7 @@ def copy_pre_commit_config [
   )
 
   merge_records_by_key $generic_config $environment_config repo
+
   print $"Updated .pre-commit-config.yaml"
 }
 
