@@ -349,9 +349,20 @@ def copy_justfile [
 }
 
 def copy_gitignore [
-    environment_files: table<
-      
-    >
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >
 ] {
   let environment_gitignore = (
     get_environment_file $environment_files ".gitignore"
@@ -369,9 +380,20 @@ def copy_gitignore [
 }
 
 def copy_pre_commit_config [
-    environment_files: table<
-      
-    >
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >
 ] {
   let generic_config = (
     get_pre_commit_config_repos (open .pre-commit-config.yaml)
@@ -388,9 +410,20 @@ def copy_pre_commit_config [
 }
 
 def reload_environment [
-    environment_files: table<
-      
-    >
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >
 ] {
   if (
     $environment_files

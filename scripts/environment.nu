@@ -37,7 +37,22 @@ def get_environment_files [environment: string] {
   }
 }
 
-def get_environment_file_url [environment_files: list file: string] {
+def get_environment_file_url [
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >    
+  file: string] {
   try {
     $environment_files
     | where path == $file
@@ -46,7 +61,22 @@ def get_environment_file_url [environment_files: list file: string] {
   }
 }
 
-def get_environment_file [environment_files: list file: string] {
+def get_environment_file [
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >    
+  file: string] {
   let url = (get_environment_file_url $environment_files $file)
 
   if ($url | is-empty) {
@@ -57,7 +87,20 @@ def get_environment_file [environment_files: list file: string] {
 }
 
 def download_environment_file [
-  environment_files: list
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >    
   file: string
   extension?: string
 ] {
@@ -209,7 +252,23 @@ def merge_records_by_key [a: list b: list key: string] {
   $records
 }
 
-def copy_files [environment: string environment_files: list] {
+def copy_files [
+  environment: string 
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >
+] {
   let environment_scripts_directory = ([scripts $environment] | path join)
 
   rm -rf $environment_scripts_directory
@@ -237,7 +296,23 @@ def copy_files [environment: string environment_files: list] {
   }
 }
 
-def copy_justfile [environment: string environment_files: list] {
+def copy_justfile [
+  environment: string 
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >
+] {
   let environment_justfile_name = if $environment == "generic" {
     "Justfile"
   } else {
@@ -273,7 +348,22 @@ def copy_justfile [environment: string environment_files: list] {
   print $"Updated Justfile"
 }
 
-def copy_gitignore [environment_files: list] {
+def copy_gitignore [
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >
+] {
   let environment_gitignore = (
     get_environment_file $environment_files ".gitignore"
   )
@@ -289,7 +379,22 @@ def copy_gitignore [environment_files: list] {
   print $"Updated .gitignore"
 }
 
-def copy_pre_commit_config [environment_files: list] {
+def copy_pre_commit_config [
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >
+] {
   let generic_config = (
     get_pre_commit_config_repos (open .pre-commit-config.yaml)
   )
@@ -304,7 +409,22 @@ def copy_pre_commit_config [environment_files: list] {
   print $"Updated .pre-commit-config.yaml"
 }
 
-def reload_environment [environment_files: list] {
+def reload_environment [
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >
+] {
   if (
     $environment_files
     | filter {
@@ -418,6 +538,11 @@ def remove_environment_file [environment: string type: string] {
   }
 }
 
+def remove_files [environment: string] {
+  remove_environment_file $environment nix
+  rm -rf $"scripts/($environment)"
+}
+
 def remove_justfile [environment: string] {
   try {
     let environment_mod = (
@@ -446,7 +571,22 @@ def remove_justfile [environment: string] {
   remove_environment_file $environment just
 }
 
-def remove_gitignore [environment_files: list] {
+def remove_gitignore [
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >
+] {
   let environment_gitignore = (
     get_environment_file $environment_files ".gitignore"
   )
@@ -466,9 +606,33 @@ def remove_gitignore [environment_files: list] {
   | save --force .gitignore
 }
 
-def remove_files [environment: string] {
-  remove_environment_file $environment nix
-  rm -rf $"scripts/($environment)"
+def remove_pre_commit_config [
+  environment_files: table<
+    name: string, 
+    path: string, 
+    sha: string, 
+    size: int, 
+    url: string, 
+    html_url: string, 
+    git_url: string, 
+    download_url: string, 
+    type: string, 
+    self: string, 
+    git: string, 
+    html: string
+  >
+] {
+  let environment_pre_commit_config = (
+    get_environment_file $environment_files ".pre-commit-config.yaml"
+  )
+
+  let filtered_pre_commit_config = (
+    # TODO implement me!
+    # open .pre-commit-config.yaml
+  )
+
+  # $filtered_pre_commit_config
+  # | save --force .pre-commit-config.yaml
 }
 
 def "main remove" [...environments: string] {
