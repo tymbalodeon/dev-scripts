@@ -447,8 +447,6 @@ def "main add" [
   ...environments: string
 ] {
   for environment in $environments {
-    print $"Adding ($environment) environment..."
-
     let environment_files = (get_environment_files $environment)
 
     copy_files $environment $environment_files
@@ -457,6 +455,8 @@ def "main add" [
     copy_pre_commit_config $environment_files
 
     reload_environment $environment_files
+
+    print $"Added ($environment) environment..."
   }
 }
 
