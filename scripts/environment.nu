@@ -205,7 +205,7 @@ def get_pre_commit_config_repos [config: record<repos: list<any>>] {
   | get repos
 }
 
-def merge_records_by_key [a: list b: list key: string] {
+def merge_pre_commit_configs [a: list b: list key: string] {
   mut records = []
 
   for b_record in $b {
@@ -223,7 +223,7 @@ def merge_records_by_key [a: list b: list key: string] {
       if $key == "repo" {
         let a_hooks = $a_record.hooks
         let b_hooks = $b_record.hooks
-        let hooks = (merge_records_by_key $a_hooks $b_hooks "id")
+        let hooks = (merge_pre_commit_configs $a_hooks $b_hooks "id")
 
         $records = (
           $records
@@ -405,7 +405,8 @@ def copy_pre_commit_config [
     )
   )
 
-  merge_records_by_key $generic_config $environment_config repo
+  merge_pre_commit_configs $generic_config $environment_config repo
+
   print $"Updated .pre-commit-config.yaml"
 }
 
