@@ -223,7 +223,7 @@ def merge_pre_commit_configs [a: list b: list key: string] {
       if $key == "repo" {
         let a_hooks = $a_record.hooks
         let b_hooks = $b_record.hooks
-        let hooks = (merge_records_by_key $a_hooks $b_hooks "id")
+        let hooks = (merge_pre_commit_configs $a_hooks $b_hooks "id")
 
         $records = (
           $records
