@@ -221,9 +221,9 @@ def merge_pre_commit_configs [a: list b: list key: string] {
       )
 
       if $key == "repo" {
-        let a_hooks = $a_record.hooks
-        let b_hooks = $b_record.hooks
-        let hooks = (merge_pre_commit_configs $a_hooks $b_hooks "id")
+        let hooks = (
+          merge_pre_commit_configs $a_record.hooks $b_record.hooks "id"
+        )
 
         $records = (
           $records
@@ -244,7 +244,7 @@ def merge_pre_commit_configs [a: list b: list key: string] {
   }
 
   for a_record in $a {
-    if not (($a_record | get $key) in ($records | get $key)) {
+    if (($a_record | get $key) not-in ($records | get $key)) {
       $records = ($records | append $a_record)
     }
   }
