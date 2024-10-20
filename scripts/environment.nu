@@ -39,19 +39,19 @@ def get_environment_files [environment: string] {
 
 def get_environment_file_url [
   environment_files: table<
-    name: string, 
-    path: string, 
-    sha: string, 
-    size: int, 
-    url: string, 
-    html_url: string, 
-    git_url: string, 
-    download_url: string, 
-    type: string, 
-    self: string, 
-    git: string, 
+    name: string,
+    path: string,
+    sha: string,
+    size: int,
+    url: string,
+    html_url: string,
+    git_url: string,
+    download_url: string,
+    type: string,
+    self: string,
+    git: string,
     html: string
-  >    
+  >
   file: string] {
   try {
     $environment_files
@@ -63,19 +63,19 @@ def get_environment_file_url [
 
 def get_environment_file [
   environment_files: table<
-    name: string, 
-    path: string, 
-    sha: string, 
-    size: int, 
-    url: string, 
-    html_url: string, 
-    git_url: string, 
-    download_url: string, 
-    type: string, 
-    self: string, 
-    git: string, 
+    name: string,
+    path: string,
+    sha: string,
+    size: int,
+    url: string,
+    html_url: string,
+    git_url: string,
+    download_url: string,
+    type: string,
+    self: string,
+    git: string,
     html: string
-  >    
+  >
   file: string] {
   let url = (get_environment_file_url $environment_files $file)
 
@@ -88,19 +88,19 @@ def get_environment_file [
 
 def download_environment_file [
   environment_files: table<
-    name: string, 
-    path: string, 
-    sha: string, 
-    size: int, 
-    url: string, 
-    html_url: string, 
-    git_url: string, 
-    download_url: string, 
-    type: string, 
-    self: string, 
-    git: string, 
+    name: string,
+    path: string,
+    sha: string,
+    size: int,
+    url: string,
+    html_url: string,
+    git_url: string,
+    download_url: string,
+    type: string,
+    self: string,
+    git: string,
     html: string
-  >    
+  >
   file: string
   extension?: string
 ] {
@@ -253,19 +253,19 @@ def merge_pre_commit_configs [a: list b: list key: string] {
 }
 
 def copy_files [
-  environment: string 
+  environment: string
   environment_files: table<
-    name: string, 
-    path: string, 
-    sha: string, 
-    size: int, 
-    url: string, 
-    html_url: string, 
-    git_url: string, 
-    download_url: string, 
-    type: string, 
-    self: string, 
-    git: string, 
+    name: string,
+    path: string,
+    sha: string,
+    size: int,
+    url: string,
+    html_url: string,
+    git_url: string,
+    download_url: string,
+    type: string,
+    self: string,
+    git: string,
     html: string
   >
 ] {
@@ -297,19 +297,19 @@ def copy_files [
 }
 
 def copy_justfile [
-  environment: string 
+  environment: string
   environment_files: table<
-    name: string, 
-    path: string, 
-    sha: string, 
-    size: int, 
-    url: string, 
-    html_url: string, 
-    git_url: string, 
-    download_url: string, 
-    type: string, 
-    self: string, 
-    git: string, 
+    name: string,
+    path: string,
+    sha: string,
+    size: int,
+    url: string,
+    html_url: string,
+    git_url: string,
+    download_url: string,
+    type: string,
+    self: string,
+    git: string,
     html: string
   >
 ] {
@@ -350,17 +350,17 @@ def copy_justfile [
 
 def copy_gitignore [
   environment_files: table<
-    name: string, 
-    path: string, 
-    sha: string, 
-    size: int, 
-    url: string, 
-    html_url: string, 
-    git_url: string, 
-    download_url: string, 
-    type: string, 
-    self: string, 
-    git: string, 
+    name: string,
+    path: string,
+    sha: string,
+    size: int,
+    url: string,
+    html_url: string,
+    git_url: string,
+    download_url: string,
+    type: string,
+    self: string,
+    git: string,
     html: string
   >
 ] {
@@ -381,17 +381,17 @@ def copy_gitignore [
 
 def copy_pre_commit_config [
   environment_files: table<
-    name: string, 
-    path: string, 
-    sha: string, 
-    size: int, 
-    url: string, 
-    html_url: string, 
-    git_url: string, 
-    download_url: string, 
-    type: string, 
-    self: string, 
-    git: string, 
+    name: string,
+    path: string,
+    sha: string,
+    size: int,
+    url: string,
+    html_url: string,
+    git_url: string,
+    download_url: string,
+    type: string,
+    self: string,
+    git: string,
     html: string
   >
 ] {
@@ -412,17 +412,17 @@ def copy_pre_commit_config [
 
 def reload_environment [
   environment_files: table<
-    name: string, 
-    path: string, 
-    sha: string, 
-    size: int, 
-    url: string, 
-    html_url: string, 
-    git_url: string, 
-    download_url: string, 
-    type: string, 
-    self: string, 
-    git: string, 
+    name: string,
+    path: string,
+    sha: string,
+    size: int,
+    url: string,
+    html_url: string,
+    git_url: string,
+    download_url: string,
+    type: string,
+    self: string,
+    git: string,
     html: string
   >
 ] {
@@ -574,17 +574,17 @@ def remove_justfile [environment: string] {
 
 def remove_gitignore [
   environment_files: table<
-    name: string, 
-    path: string, 
-    sha: string, 
-    size: int, 
-    url: string, 
-    html_url: string, 
-    git_url: string, 
-    download_url: string, 
-    type: string, 
-    self: string, 
-    git: string, 
+    name: string,
+    path: string,
+    sha: string,
+    size: int,
+    url: string,
+    html_url: string,
+    git_url: string,
+    download_url: string,
+    type: string,
+    self: string,
+    git: string,
     html: string
   >
 ] {
@@ -607,34 +607,68 @@ def remove_gitignore [
   | save --force .gitignore
 }
 
-def remove_pre_commit_config [
-  environment_files: table<
-    name: string, 
-    path: string, 
-    sha: string, 
-    size: int, 
-    url: string, 
-    html_url: string, 
-    git_url: string, 
-    download_url: string, 
-    type: string, 
-    self: string, 
-    git: string, 
-    html: string
-  >
-] {
-  let environment_pre_commit_config = (
-    get_environment_file $environment_files ".pre-commit-config.yaml"
-  )
+# TODO
+# def remove_records [a: list b: list key: string] {
+#   mut records = []
 
-  let filtered_pre_commit_config = (
-    # TODO implement me!
-    # open .pre-commit-config.yaml
-  )
+#   for a_record in $a {
+#     if ($a_record | get $key) in ($b | get $key) {
+#       let b_record = (
+#         $b
+#         | filter {
+#             |b_record|
 
-  # $filtered_pre_commit_config
-  # | save --force .pre-commit-config.yaml
-}
+#             ($b_record | get $key) == ($a_record | get $key)
+#           }
+#         | first
+#       )
+
+#       if $key == "repo" {
+#         remove_records $a_record.hooks $b_record.hooks id
+#       } else {
+#         print ($a_record | table --expand)
+#         print ($b_record | table --expand)
+#       }
+
+#     } else {
+#       $records = (
+#         $records
+#         | append $a_record
+#       )
+#     }
+#   }
+
+#   print $records
+# }
+
+# TODO implement me!
+# def remove_pre_commit_config [
+#   environment_files: table<
+#     name: string,
+#     path: string,
+#     sha: string,
+#     size: int,
+#     url: string,
+#     html_url: string,
+#     git_url: string,
+#     download_url: string,
+#     type: string,
+#     self: string,
+#     git: string,
+#     html: string
+#   >
+# ] {
+#   let environment_pre_commit_config = (
+#     get_environment_file $environment_files ".pre-commit-config.yaml"
+#   )
+
+#   let filtered_pre_commit_config = (
+#   open .pre-commit-config.yaml
+#   )
+
+#   $filtered_pre_commit_config
+#   | save --force .pre-commit-config.yaml
+# }
 
 def "main remove" [...environments: string] {
   let environments = (
