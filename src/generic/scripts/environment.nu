@@ -630,13 +630,26 @@ def remove_gitignore [
 #       )
 
 #       if $key == "repo" {
+#         mut hooks = []
+
 #         for a_hook in $a_record.hooks {
-          
+#           if ($a_hook.id in $b_record.hooks.id) {
+#             let b_hook = ($b_record.hooks | where id == $a_hook.id | first)
+
+#             let hook = if ($a_hook | reject id) == ($b_hook | reject id) {
+#               $a_hook | 
+#               merge $b_hook
+#             } else {
+#               $a_hook
+#             }
+
+#             $hooks = ($hooks | append $hook)
+#           }
 #         }
 
 #         $records = (
 #           $records
-#           | append (remove_records $a_record.hooks $b_record.hooks id)
+#           | append ($a_record | update hooks $hooks)
 #         )
 #       } else if $key == "id" {
 #         if ($a_record | values) != ($b_record | values) {
