@@ -626,12 +626,20 @@ def remove_gitignore [
 #       )
 
 #       if $key == "repo" {
-#         remove_records $a_record.hooks $b_record.hooks id
-#       } else {
-#         print ($a_record | table --expand)
-#         print ($b_record | table --expand)
+#         $records = (
+#           $records
+#           | append (remove_records $a_record.hooks $b_record.hooks id)
+#         )
+#       } else if $key == "id" {
+#         if ($a_record | values) != ($b_record | values) {
+#           $records = ($records | append $a_record)
+#         } else {
+#           $records = (
+#             $records 
+#             | append ($a_record | merge $b_record)
+#           )
+#         }
 #       }
-
 #     } else {
 #       $records = (
 #         $records
@@ -640,7 +648,7 @@ def remove_gitignore [
 #     }
 #   }
 
-#   print $records
+#   $records
 # }
 
 # TODO implement me!
