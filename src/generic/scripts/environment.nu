@@ -635,7 +635,7 @@ def remove_gitignore [
 #           $records = ($records | append $a_record)
 #         } else {
 #           $records = (
-#             $records 
+#             $records
 #             | append ($a_record | merge $b_record)
 #           )
 #         }
