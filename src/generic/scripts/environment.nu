@@ -52,7 +52,8 @@ def get_environment_file_url [
     git: string,
     html: string
   >
-  file: string] {
+  file: string
+] {
   try {
     $environment_files
     | where path == $file
@@ -76,7 +77,8 @@ def get_environment_file [
     git: string,
     html: string
   >
-  file: string] {
+  file: string
+] {
   let url = (get_environment_file_url $environment_files $file)
 
   if ($url | is-empty) {
