@@ -613,93 +613,161 @@ def remove_gitignore [
   | save --force .gitignore
 }
 
-# TODO
-# def remove_records [a: list b: list key: string] {
-#   mut records = []
+def remove_records [main_config: list environment_config: list key: string] {
+  mut records = []
 
-#   for a_record in $a {
-#     if ($a_record | get $key) in ($b | get $key) {
-#       let b_record = (
-#         $b
-#         | filter {
-#             |b_record|
+  for main_repo in $main_config {
+    if ($main_repo | get $key) in ($environment_config | get $key) {
+      let environment_repo = (
+        $environment_config
+        | filter {
+            |environment_repo|
 
-#             ($b_record | get $key) == ($a_record | get $key)
-#           }
-#         | first
-#       )
+            ($environment_repo | get $key) == ($main_repo | get $key)
+          }
+        | first
+      )
 
-#       if $key == "repo" {
-#         mut hooks = []
+      if $key == "repo" {
+        mut hooks = []
 
-#         for a_hook in $a_record.hooks {
-#           if ($a_hook.id in $b_record.hooks.id) {
-#             let b_hook = ($b_record.hooks | where id == $a_hook.id | first)
+        for main_hook in $main_repo.hooks {
+          let hook = if ($main_hook.id in $environment_repo.hooks.id) {
+            let environment_hook = (
+              $environment_repo.hooks 
+              | where id == $main_hook.id 
+              | first
+            )
 
-#             let hook = if ($a_hook | reject id) == ($b_hook | reject id) {
-#               $a_hook | 
-#               merge $b_hook
-#             } else {
-#               $a_hook
-#             }
+            if ($main_hook | reject id) == ($environment_hook | reject id) {
+              $main_hook  
+              | merge $environment_hook
+            } else {
+              $main_hook
+            }
+          } else {
+            $main_hook
+          }
 
-#             $hooks = ($hooks | append $hook)
-#           }
-#         }
+          $hooks = ($hooks | append $hook)
+        }
 
-#         $records = (
-#           $records
-#           | append ($a_record | update hooks $hooks)
-#         )
-#       } else if $key == "id" {
-#         if ($a_record | values) != ($b_record | values) {
-#           $records = ($records | append $a_record)
-#         } else {
-#           $records = (
-#             $records
-#             | append ($a_record | merge $b_record)
-#           )
-#         }
-#       }
-#     } else {
-#       $records = (
-#         $records
-#         | append $a_record
-#       )
-#     }
-#   }
+        $records = (
+          $records
+          | append ($main_repo | update hooks $hooks)
+        )
+      } else if $key == "id" {
+        if ($main_repo | values) != ($environment_repo | values) {
+          $records = ($records | append $main_repo)
+        } else {
+          $records = (
+            $records
+            | append ($main_repo | merge $environment_repo)
+          )
+        }
+      }
+    } else {
+      $records = (
+        $records
+        | append $main_repo
+      )
+    }
+  }
 
-#   $records
-# }
+  $records
+}
 
-# TODO implement me!
-# def remove_pre_commit_config [
-#   environment_files: table<
-#     name: string,
-#     path: string,
-#     sha: string,
-#     size: int,
-#     url: string,
-#     html_url: string,
-#     git_url: string,
-#     download_url: string,
-#     type: string,
-#     self: string,
-#     git: string,
-#     html: string
-#   >
-# ] {
-#   let environment_pre_commit_config = (
-#     get_environment_file $environment_files ".pre-commit-config.yaml"
-#   )
+def remove_pre_commit_config [
+  environment_files: table<
+    name: string,
+    path: string,
+    sha: string,
+    size: int,
+    url: string,
+    html_url: string,
+    git_url: string,
+    download_url: string,
+    type: string,
+    self: string,
+    git: string,
+    html: string
+  >
+] {
+  let environment_config = (
+    get_environment_file $environment_files ".pre-commit-config.yaml"
+  )
 
-#   let filtered_pre_commit_config = (
-#   open .pre-commit-config.yaml
-#   )
+  let main_config = (
+    open .pre-commit-config.yaml
+    | get repos
+  )
 
-#   $filtered_pre_commit_config
-#   | save --force .pre-commit-config.yaml
-# }
+  mut filtered_pre_commit_config = []
+
+  for main_repo in $main_config {
+    if ($main_repo | get repo) in ($environment_config | get repo) {
+      let environment_repo = (
+        $environment_config
+        | filter {
+            |environment_repo|
+
+            ($environment_repo | get repo) == ($main_repo | get repo)
+          }
+        | first
+      )
+
+      if repo == "repo" {
+        mut hooks = []
+
+        for main_hook in $main_repo.hooks {
+          let hook = if ($main_hook.id in $environment_repo.hooks.id) {
+            let environment_hook = (
+              $environment_repo.hooks 
+              | where id == $main_hook.id 
+              | first
+            )
+
+            if ($main_hook | reject id) == ($environment_hook | reject id) {
+              $main_hook  
+              | merge $environment_hook
+            } else {
+              $main_hook
+            }
+          } else {
+            $main_hook
+          }
+
+          $hooks = ($hooks | append $hook)
+        }
+
+        $filtered_pre_commit_config = (
+          $filtered_pre_commit_config
+          | append ($main_repo | update hooks $hooks)
+        )
+      } else if repo == "id" {
+        if ($main_repo | values) != ($environment_repo | values) {
+          $filtered_pre_commit_config = (
+            $filtered_pre_commit_config 
+            | append $main_repo
+          )
+        } else {
+          $filtered_pre_commit_config = (
+            $filtered_pre_commit_config
+            | append ($main_repo | merge $environment_repo)
+          )
+        }
+      }
+    } else {
+      $filtered_pre_commit_config = (
+        $filtered_pre_commit_config
+        | append $main_repo
+      )
+    }
+  }
+
+  $filtered_pre_commit_config
+  | save --force .pre-commit-config.yaml
+}
 
 def "main remove" [...environments: string] {
   let environments = (
@@ -710,12 +778,12 @@ def "main remove" [...environments: string] {
   for environment in $environments {
     print $"Removing ($environment)..."
 
-    remove_justfile $environment
-
     let environment_files = (get_environment_files $environment)
 
-    remove_gitignore $environment_files
     remove_files $environment
+    remove_justfile $environment
+    remove_gitignore $environment_files
+    remove_pre_commit_config $environment_files
   }
 }
 
