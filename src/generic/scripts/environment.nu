@@ -142,14 +142,14 @@ def create_environment_recipe [environment: string recipe: string] {
 
 def merge_justfiles [
   environment: string
-  generic_justfile: string
+  main_justfile: string
   environment_justfile: string
 ] {
   if $environment == "generic" {
     return (
       open $environment_justfile
       | append (
-          open $generic_justfile
+          open $main_justfile
           | split row "mod"
           | drop nth 0
           | prepend mod
@@ -165,7 +165,7 @@ def merge_justfiles [
         |recipe|
 
         $recipe not-in (
-          get_recipes $generic_justfile
+          get_recipes $main_justfile
         )
     }
   )
@@ -174,7 +174,7 @@ def merge_justfiles [
     return
   }
 
-  open $generic_justfile
+  open $main_justfile
   | append (
       $"mod ($environment) \"just/($environment).just\""
       | append (
@@ -191,10 +191,10 @@ def merge_justfiles [
 }
 
 def merge_gitignores [
-  generic_gitignore: string
+  main_gitignore: string
   environment_gitignore: string
 ] {
-  $generic_gitignore
+  $main_gitignore
   | lines
   | append ($environment_gitignore | lines)
   | uniq
@@ -207,47 +207,51 @@ def get_pre_commit_config_repos [config: record<repos: list<any>>] {
   | get repos
 }
 
-def merge_pre_commit_configs [a: list b: list key: string] {
+def merge_pre_commit_configs [
+  main_config: list 
+  environment_config: list 
+  key: string
+] {
   mut records = []
 
-  for b_record in $b {
-    if ($b_record | get $key) in ($a | get $key) {
+  for environment_item in $environment_config {
+    if ($environment_item | get $key) in ($main_config | get $key) {
       let a_record = (
-        $a
+        $main_config
         | filter {
-            |a_record|
+            |main_item|
 
-            ($a_record | get $key) == ($b_record | get $key)
+            ($main_item | get $key) == ($environment_item | get $key)
           }
         | first
       )
 
       if $key == "repo" {
         let hooks = (
-          merge_pre_commit_configs $a_record.hooks $b_record.hooks "id"
+          merge_pre_commit_configs $a_record.hooks $environment_item.hooks id
         )
 
         $records = (
           $records
-          | append ($b_record | update hooks $hooks)
+          | append ($environment_item | update hooks $hooks)
         )
       } else {
         $records = (
           $records
-          | append ($a_record | merge $b_record)
+          | append ($a_record | merge $environment_item)
         )
       }
     } else {
       $records = (
         $records
-        | append $b_record
+        | append $environment_item
       )
     }
   }
 
-  for a_record in $a {
-    if (($a_record | get $key) not-in ($records | get $key)) {
-      $records = ($records | append $a_record)
+  for main_item in $main_config {
+    if (($main_item | get $key) not-in ($records | get $key)) {
+      $records = ($records | append $main_item)
     }
   }
 
@@ -397,7 +401,7 @@ def copy_pre_commit_config [
     html: string
   >
 ] {
-  let generic_config = (
+  let main_config = (
     get_pre_commit_config_repos (open .pre-commit-config.yaml)
   )
 
@@ -407,7 +411,7 @@ def copy_pre_commit_config [
     )
   )
 
-  merge_pre_commit_configs $generic_config $environment_config repo
+  merge_pre_commit_configs $main_config $environment_config repo
 
   print $"Updated .pre-commit-config.yaml"
 }
@@ -591,7 +595,7 @@ def remove_gitignore [
   >
 ] {
   let environment_gitignore = (
-    get_environment_file $environment_files ".gitignore"
+    get_environment_file $environment_files .gitignore
   )
 
   let filtered_gitignore = (
@@ -626,6 +630,10 @@ def remove_gitignore [
 #       )
 
 #       if $key == "repo" {
+#         for a_hook in $a_record.hooks {
+          
+#         }
+
 #         $records = (
 #           $records
 #           | append (remove_records $a_record.hooks $b_record.hooks id)
