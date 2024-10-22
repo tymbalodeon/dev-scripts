@@ -109,8 +109,8 @@ def copy_gitignore [] {
 
 def copy_pre_commit_config [] {
   (
-    merge_pre_commit_configs 
-      (open .pre-commit-config.yaml) 
+    merge_pre_commit_configs
+      (open .pre-commit-config.yaml)
       (open src/generic/.pre-commit-config.yaml)
   ) | save --force .pre-commit-config.yaml
 
@@ -122,7 +122,7 @@ def copy_pre_commit_config [] {
 def force_copy_files [skip_dev_flake: bool] {
   copy_files (get_environment_files)
   copy_justfile
-  copy_gitignore 
+  copy_gitignore
   copy_pre_commit_config
 }
 
@@ -136,7 +136,7 @@ def get_outdated_files [] {
   get_environment_files
   | wrap environment
   | insert local {
-      |$file| 
+      |$file|
 
       $file.environment | str replace "src/generic/" ""
     }
@@ -161,7 +161,7 @@ def copy_outdated_files [] {
     } else if $basename == ".pre-commit-config.yaml" {
       copy_pre_commit_config
     } else if $basename == "Justfile" {
-      copy_justfile 
+      copy_justfile
     } else {
       $source_files = ($source_files | append $file)
     }
