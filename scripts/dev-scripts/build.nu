@@ -134,42 +134,49 @@ def force_copy_files [skip_dev_flake: bool] {
   copy_pre_commit_config
 }
 
-# TODO fix this!
-# def copy_outdated_files [] {
-#   # let source_files = (get_source_files $settings)
-#   # let build_files = (get_build_files $settings)
-#   # let environment = $settings.environment
+def get_modified [file: string] {
+  ls $file
+  | first
+  | get modified
+}
 
-#   # remove_deleted_files $environment $source_files $build_files
+def get_outdated_files [] {
+  get_environment_files
+  | wrap environment
+  | insert local {
+      |$file| 
 
-#   let outdated_files = (
-#     get_outdated_files
-#       $environment
-#       (get_filenames_and_modified $source_files)
-#       (get_filenames_and_modified $build_files)
-#   )
+      $file.environment | str replace "src/generic/" ""
+    }
+  | filter {
+      |file|
 
-#   mut source_files = []
+      (get_modified $file.environment) > (get_modified $file.local)
+  }
+}
 
-#   for file in $outdated_files {
-#     let basename = ($file | path basename)
-#     let extension = ($basename | path parse | get extension)
+def copy_outdated_files [] {
+  let outdated_files = (get_outdated_files).environment
 
-#     if $basename == ".gitignore" {
-#       copy_gitignore $settings
-#     } else if $basename == ".pre-commit-config.yaml" {
-#       copy_pre_commit_config $settings
-#     } else if $extension == "nix" {
-#       copy_flake $settings
-#     } else if $basename == "Justfile" or $extension == "just" {
-#       copy_justfile $settings
-#     } else {
-#       $source_files = ($source_files | append $file)
-#     }
-#   }
+  mut source_files = []
 
-#   copy_source_files $source_files $settings
-# }
+  for file in $outdated_files {
+    let basename = ($file | path basename)
+    let extension = ($basename | path parse | get extension)
+
+    if $basename == ".gitignore" {
+      copy_gitignore
+    } else if $basename == ".pre-commit-config.yaml" {
+      copy_pre_commit_config
+    } else if $basename == "Justfile" {
+      copy_justfile 
+    } else {
+      $source_files = ($source_files | append $file)
+    }
+  }
+
+  copy_files $source_files
+}
 
 # Build dev environment
 def main [
@@ -179,6 +186,6 @@ def main [
   if $force {
     force_copy_files $skip_dev_flake
   } else {
-    # copy_outdated_files
+    copy_outdated_files
   }
 }
