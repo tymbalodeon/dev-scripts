@@ -208,8 +208,8 @@ def get_pre_commit_config_repos [config: record<repos: list<any>>] {
 }
 
 def merge_pre_commit_configs [
-  main_config: list 
-  environment_config: list 
+  main_config: list
+  environment_config: list
   key: string
 ] {
   mut records = []
@@ -634,13 +634,13 @@ def remove_records [main_config: list environment_config: list key: string] {
         for main_hook in $main_repo.hooks {
           let hook = if ($main_hook.id in $environment_repo.hooks.id) {
             let environment_hook = (
-              $environment_repo.hooks 
-              | where id == $main_hook.id 
+              $environment_repo.hooks
+              | where id == $main_hook.id
               | first
             )
 
             if ($main_hook | reject id) == ($environment_hook | reject id) {
-              $main_hook  
+              $main_hook
               | merge $environment_hook
             } else {
               $main_hook
@@ -722,13 +722,13 @@ def remove_pre_commit_config [
         for main_hook in $main_repo.hooks {
           let hook = if ($main_hook.id in $environment_repo.hooks.id) {
             let environment_hook = (
-              $environment_repo.hooks 
-              | where id == $main_hook.id 
+              $environment_repo.hooks
+              | where id == $main_hook.id
               | first
             )
 
             if ($main_hook | reject id) == ($environment_hook | reject id) {
-              $main_hook  
+              $main_hook
               | merge $environment_hook
             } else {
               $main_hook
@@ -747,7 +747,7 @@ def remove_pre_commit_config [
       } else if repo == "id" {
         if ($main_repo | values) != ($environment_repo | values) {
           $filtered_pre_commit_config = (
-            $filtered_pre_commit_config 
+            $filtered_pre_commit_config
             | append $main_repo
           )
         } else {
