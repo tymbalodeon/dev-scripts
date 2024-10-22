@@ -1,37 +1,8 @@
 #!/usr/bin/env nu
 
-# def get_source_directory [environment: string] {
-#   [src $environment]
-#   | path join
-# }
-
-# export def get_settings [environment: string] {
-#   {
-#     environment: $environment
-#     generic_source_directory: (get_source_directory generic)
-#     generic_build_directory: (get_build_directory generic)
-#     source_directory: (get_source_directory $environment)
-#     build_directory: (get_build_directory $environment)
-#   }
-# }
-
-# def get_modified [
-#   environment: string
-#   --generated
-# ] {
-#   let base_directory = if $generated {
-#     if $environment == "dev-scripts" {
-#       pwd
-#     } else {
-#       get_build_directory $environment
-#     }
-#   } else {
-#     get_source_directory $environment
-#   }
-
-#   ls --directory $base_directory
-#   | get modified
-# }
+use ../environment.nu merge_gitignores
+use ../environment.nu merge_justfiles
+use ../environment.nu merge_pre_commit_configs
 
 def get_environment_files [] {
   fd --hidden --ignore --exclude .git "" src/generic
@@ -84,7 +55,7 @@ def get_source_directories [source_files: list<string>] {
   | uniq
 }
 
-def copy_source_files [source_files: list<string>] {
+def copy_files [source_files: list<string>] {
   let directories = (get_source_directories $source_files)
 
   for directory in $directories {
@@ -115,391 +86,41 @@ def copy_source_files [source_files: list<string>] {
   }
 }
 
-# export def get_justfile [base_directory: string] {
-#   $base_directory
-#   | path join Justfile
-# }
+def copy_justfile [] {
+  (
+    merge_justfiles
+      generic
+      Justfile
+      src/generic/Justfile
+  ) | save --force Justfile
 
-# def get_recipes [justfile: string] {
-#   (
-#     just
-#       --justfile $justfile
-#       --summary
-#     | split row " "
-#   )
-# }
+  print $"Updated Justfile"
+}
 
-# def create_environment_recipe [environment: string recipe: string] {
-#   let documentation = $"# Alias for `($environment) ($recipe)`"
-#   let declaration = $"@($recipe) *args:"
-#   let content = $"    just ($environment) ($recipe) {{ args }}"
+def copy_gitignore [] {
+  (
+    merge_gitignores
+      (open .gitignore)
+      (open src/generic/.gitignore)
+  ) | save --force .gitignore
 
-#   [$documentation $declaration $content]
-#   | str join "\n"
-# }
+  print $"Updated .gitignore"
+}
 
-# export def merge_justfiles [
-#   environment: string
-#   generic_justfile: string
-#   environment_justfile: string
-# ] {
-#   let unique_environment_recipes = (
-#     get_recipes $environment_justfile
-#     | filter {
-#         |recipe|
+def copy_pre_commit_config [] {
+  (
+    merge_pre_commit_configs 
+      (open .pre-commit-config.yaml) 
+      (open src/generic/.pre-commit-config.yaml)
+  ) | save --force .pre-commit-config.yaml
 
-#         $recipe not-in (
-#           get_recipes $generic_justfile
-#         )
-#     }
-#   )
+  yamlfmt .pre-commit-config.yaml
 
-#   open $generic_justfile
-#   | append (
-#       $"mod ($environment) \"just/($environment).just\""
-#       | append (
-#           $unique_environment_recipes
-#           | each {
-#               |recipe|
-
-#               create_environment_recipe $environment $recipe
-#             }
-#         )
-#     | str join "\n\n"
-#     )
-#   | to text
-# }
-
-# def copy_justfile [
-#   settings: record<
-#     environment: string
-#     generic_source_directory: string
-#     generic_build_directory: string
-#     source_directory: string
-#     build_directory: string
-#   >
-# ] {
-#   let generic_justfile = (get_justfile $settings.generic_source_directory)
-
-#   let environment_justfile = (
-#     $settings.source_directory
-#     | path join $"just/($settings.environment).just"
-#   )
-
-#   if (
-#     $environment_justfile
-#     | path exists
-#   ) {
-#     let build_justfile = (get_justfile $settings.build_directory)
-
-#     (
-#       merge_justfiles
-#         $settings.environment
-#         $generic_justfile
-#         $environment_justfile
-#     ) | save --force $build_justfile
-
-#     print $"Updated ($build_justfile)"
-
-#     let environment_justfile_directory = (
-#       $settings.build_directory
-#       | path join "just"
-#     )
-
-#     mkdir $environment_justfile_directory
-#     cp $environment_justfile $environment_justfile_directory
-
-#     print $"Updated (get_build_path $settings.environment $environment_justfile)"
-#   } else {
-#     let build_path = ($settings.build_directory | path join Justfile)
-
-#     cp $generic_justfile $build_path
-
-#     print $"Updated ($build_path)"
-#   }
-# }
-
-# def get_gitignore [source_directory: string] {
-#   let path = (
-#     $source_directory
-#     | path join .gitignore
-#   )
-
-#   if (
-#     $path
-#     | path exists
-#   ) {
-#     open $path
-#   } else {
-#     ""
-#   }
-# }
-
-# export def merge_gitignores [
-#   generic_gitignore: string
-#   environment_gitignore: string
-# ] {
-#   $generic_gitignore
-#   | lines
-#   | append ($environment_gitignore | lines)
-#   | uniq
-#   | sort
-#   | to text
-# }
-
-# def copy_gitignore [
-#   settings: record<
-#     environment: string
-#     generic_source_directory: string
-#     generic_build_directory: string
-#     source_directory: string
-#     build_directory: string
-#   >
-# ] {
-#   let build_gitignore = (
-#     $settings.build_directory
-#     | path join ".gitignore"
-#   )
-
-#   (
-#     merge_gitignores
-#       (get_gitignore $settings.generic_source_directory)
-#       (get_gitignore $settings.source_directory)
-#   ) | save --force $build_gitignore
-
-#   print $"Updated ($build_gitignore)"
-# }
-
-# def update_pre_commit_update [environment: string] {
-#   let directory = (get_source_directory $environment)
-
-#   try {
-#     cd $directory
-#     pdm run pre-commit-update out+err> /dev/null
-#   }
-# }
-
-# def merge_records_by_key [a: list b: list key: string] {
-#   mut records = []
-
-#   for b_record in $b {
-#     if ($b_record | get $key) in ($a | get $key) {
-#       let a_record = (
-#         $a
-#         | filter {
-#             |a_record|
-
-#             ($a_record | get $key) == ($b_record | get $key)
-#           }
-#         | first
-#       )
-
-#       if $key == "repo" {
-#         let a_hooks = $a_record.hooks
-#         let b_hooks = $b_record.hooks
-#         let hooks = (merge_records_by_key $a_hooks $b_hooks "id")
-
-#         $records = (
-#           $records
-#           | append ($b_record | update hooks $hooks)
-#         )
-#       } else {
-#         $records = (
-#           $records
-#           | append ($a_record | merge $b_record)
-#         )
-#       }
-#     } else {
-#       $records = (
-#         $records
-#         | append $b_record
-#       )
-#     }
-#   }
-
-#   for a_record in $a {
-#     if not (($a_record | get $key) in ($records | get $key)) {
-#       $records = ($records | append $a_record)
-#     }
-#   }
-
-#   $records
-# }
-
-# def get_pre_commit_config_repos [config: string] {
-#   $config
-#   | from yaml
-#   | get repos
-# }
-
-# export def get_pre_commit_config_yaml [config: list<any>] {
-#   {repos: $config}
-#   | to yaml
-# }
-
-# export def merge_pre_commit_configs [
-#   generic_config: string
-#   environment_config: string
-# ] {
-#   let generic_config = (get_pre_commit_config_repos $generic_config)
-#   let environment_config = (get_pre_commit_config_repos $environment_config)
-
-#   merge_records_by_key $generic_config $environment_config repo
-# }
-
-# def copy_pre_commit_config [
-#   settings: record<
-#     environment: string
-#     generic_source_directory: string
-#     generic_build_directory: string
-#     source_directory: string
-#     build_directory: string
-#   >
-# ] {
-#   let pre_commit_config_filename = ".pre-commit-config.yaml"
-
-#   let environment_config_path = (
-#     $settings.source_directory
-#     | path join $pre_commit_config_filename
-#   )
-
-#   let generic_config = (
-#     open --raw (
-#       $settings.generic_source_directory
-#       | path join $pre_commit_config_filename
-#     )
-#   )
-
-#   let build_pre_commit_config = (
-#     $settings.build_directory
-#     | path join ".pre-commit-config.yaml"
-#   )
-
-#   update_pre_commit_update generic
-
-#   let repos = if ($environment_config_path | path exists) {
-#     update_pre_commit_update $settings.environment
-
-#     let environment_config = (open --raw $environment_config_path)
-
-#     merge_pre_commit_configs $generic_config $environment_config
-#   } else {
-#     get_pre_commit_config_repos $generic_config
-#   }
-
-#   get_pre_commit_config_yaml $repos
-#   | save --force $build_pre_commit_config
-
-#   print $"Updated ($build_pre_commit_config)"
-# }
-
-# def copy_flake [
-#   settings: record<
-#     environment: string
-#     generic_source_directory: string
-#     generic_build_directory: string
-#     source_directory: string
-#     build_directory: string
-#   >
-# ] {
-#   let generic_flake = ($settings.generic_source_directory | path join flake.nix)
-#   let environment_flake_filename =  $"($settings.environment).nix"
-
-#   let environment_flake = (
-#     [$settings.source_directory nix $environment_flake_filename]
-#     | path join
-#   )
-
-#   let build_flake = ($settings.build_directory | path join flake.nix)
-
-#   cp $generic_flake $build_flake
-
-#   print $"Updated ($build_flake)"
-
-#   if ($environment_flake | path exists) {
-#     let nix_directory = ($settings.build_directory | path join nix)
-
-#     mkdir $nix_directory
-
-#     let build_environment_flake = (
-#       $nix_directory
-#       | path join $environment_flake_filename
-#     )
-
-#     cp $environment_flake $build_environment_flake
-
-#     print $"Updated ($build_environment_flake)"
-#   }
-# }
-
-# def get_source_files [
-#   settings: record<
-#     environment: string
-#     generic_source_directory: string
-#     generic_build_directory: string
-#     source_directory: string
-#     build_directory: string
-#   >
-# ] {
-#   get_environment_files $settings
-#   | filter {|file| ($file | path type) != "dir"}
-# }
-
-# def get_build_files [
-#   settings: record<
-#     environment: string
-#     generic_source_directory: string
-#     generic_build_directory: string
-#     source_directory: string
-#     build_directory: string
-#   >
-# ] {
-#   get_environment_files --build $settings
-#   | filter {|file| ($file | path type) != "dir"}
-# }
-
-# export def get_deleted_files [
-#   $environment: string
-#   $source_files: list<string>
-#   $build_files: list<string>
-# ] {
-#   let source_files = (
-#     $source_files
-#     | str replace "src/" ""
-#     | str replace $"generic/" $"($environment)/"
-#   )
-
-#   $build_files
-#   | filter {
-#       |file|
-
-#       if $environment == "dev-scripts" {
-#         (
-#           "dev-scripts"
-#           | path join $file
-#         ) not-in $source_files
-#       } else {
-#         (
-#           $file
-#           | str replace "build/" ""
-#         ) not-in $source_files
-#       }
-#     }
-# }
-
-# def remove_deleted_files [
-#   $environment: string
-#   $source_files: list<string>
-#   $build_files: list<string>
-# ] {
-#   for file in (get_deleted_files $environment $source_files $build_files) {
-#     rm $file
-
-#     print $"Removed deleted file: ($file)"
-#   }
-# }
+  print $"Updated .pre-commit-config.yaml"
+}
 
 def force_copy_files [skip_dev_flake: bool] {
+  # TODO determine if this still makes sense for new system
   # (
   #   remove_deleted_files
   #     dev-scripts
@@ -507,79 +128,19 @@ def force_copy_files [skip_dev_flake: bool] {
   #     (get_build_files $settings)
   # )
 
-  copy_source_files (get_environment_files)
-  # copy_justfile $settings
-  # copy_gitignore $settings
-  # copy_pre_commit_config $settings
-
-  # if $settings.environment != "dev-scripts" or not $skip_dev_flake {
-  #   copy_flake $settings
-  # }
+  copy_files (get_environment_files)
+  copy_justfile
+  copy_gitignore 
+  copy_pre_commit_config
 }
 
-# def get_filenames_and_modified [files: list<string>] {
-#   $files
-#   | each {|file| ls $file}
-#   | flatten
-#   | select name modified
-# }
+# TODO fix this!
+# def copy_outdated_files [] {
+#   # let source_files = (get_source_files $settings)
+#   # let build_files = (get_build_files $settings)
+#   # let environment = $settings.environment
 
-# export def get_outdated_files [
-#   environment: string
-#   source_files: list<table<name: string modified: datetime>>
-#   build_files: list<table<name: string modified: datetime>>
-# ] {
-#   $source_files
-#   | update name {|row| $row.name | str replace "src/" ""}
-#   | filter {
-#       |file|
-
-#       let build_file_name = if $environment == "dev-scripts" {
-#         $file.name
-#         | str replace "dev-scripts/" ""
-#       } else {
-#         "build"
-#         | path join $file.name
-#       }
-
-#       let build_file_name = if $environment == "dev-scripts" {
-#         $build_file_name
-#         | str replace "generic/" ""
-#       } else {
-#         $build_file_name
-#         | str replace "generic/" $"($environment)/"
-#       }
-
-#       if $build_file_name not-in $build_files.name {
-#         true
-#       } else {
-#         let build_file_modified = (
-#           $build_files
-#           | filter {|file| $file.name == $build_file_name}
-#           | first
-#           | get modified
-#         )
-
-#         $file.modified > $build_file_modified
-#       }
-#     }
-#   | each {|file| [src $file.name] | path join}
-# }
-
-# def copy_outdated_files [
-#   settings: record<
-#     environment: string
-#     generic_source_directory: string
-#     generic_build_directory: string
-#     source_directory: string
-#     build_directory: string
-#   >
-# ] {
-#   let source_files = (get_source_files $settings)
-#   let build_files = (get_build_files $settings)
-#   let environment = $settings.environment
-
-#   remove_deleted_files $environment $source_files $build_files
+#   # remove_deleted_files $environment $source_files $build_files
 
 #   let outdated_files = (
 #     get_outdated_files

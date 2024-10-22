@@ -37,6 +37,50 @@ def get_environment_files [environment: string] {
   }
 }
 
+def copy_files [
+  environment: string
+  environment_files: table<
+    name: string,
+    path: string,
+    sha: string,
+    size: int,
+    url: string,
+    html_url: string,
+    git_url: string,
+    download_url: string,
+    type: string,
+    self: string,
+    git: string,
+    html: string
+  >
+] {
+  let environment_scripts_directory = ([scripts $environment] | path join)
+
+  rm -rf $environment_scripts_directory
+
+  $environment_files
+  | filter {
+      |row|
+
+      $row.name not-in [.gitignore .pre-commit-config.yaml Justfile]
+    }
+  | select path download_url
+  | par-each {
+      |file|
+
+      let parent = ($file.path | path parse | get parent)
+
+      if ($parent | is-not-empty) {
+        mkdir $parent
+      }
+
+      print $"Downloading ($file.path)..."
+
+      http get $file.download_url
+      | save --force $file.path
+  }
+}
+
 def get_environment_file_url [
   environment_files: table<
     name: string,
@@ -140,7 +184,7 @@ def create_environment_recipe [environment: string recipe: string] {
   | str join "\n"
 }
 
-def merge_justfiles [
+export def merge_justfiles [
   environment: string
   main_justfile: string
   environment_justfile: string
@@ -188,118 +232,6 @@ def merge_justfiles [
       | str join "\n\n"
     )
   | to text
-}
-
-def merge_gitignores [
-  main_gitignore: string
-  environment_gitignore: string
-] {
-  $main_gitignore
-  | lines
-  | append ($environment_gitignore | lines)
-  | uniq
-  | sort
-  | to text
-}
-
-def get_pre_commit_config_repos [config: record<repos: list<any>>] {
-  $config
-  | get repos
-}
-
-def merge_pre_commit_configs [
-  main_config: list
-  environment_config: list
-  key: string
-] {
-  mut records = []
-
-  for environment_item in $environment_config {
-    if ($environment_item | get $key) in ($main_config | get $key) {
-      let a_record = (
-        $main_config
-        | filter {
-            |main_item|
-
-            ($main_item | get $key) == ($environment_item | get $key)
-          }
-        | first
-      )
-
-      if $key == "repo" {
-        let hooks = (
-          merge_pre_commit_configs $a_record.hooks $environment_item.hooks id
-        )
-
-        $records = (
-          $records
-          | append ($environment_item | update hooks $hooks)
-        )
-      } else {
-        $records = (
-          $records
-          | append ($a_record | merge $environment_item)
-        )
-      }
-    } else {
-      $records = (
-        $records
-        | append $environment_item
-      )
-    }
-  }
-
-  for main_item in $main_config {
-    if (($main_item | get $key) not-in ($records | get $key)) {
-      $records = ($records | append $main_item)
-    }
-  }
-
-  $records
-}
-
-def copy_files [
-  environment: string
-  environment_files: table<
-    name: string,
-    path: string,
-    sha: string,
-    size: int,
-    url: string,
-    html_url: string,
-    git_url: string,
-    download_url: string,
-    type: string,
-    self: string,
-    git: string,
-    html: string
-  >
-] {
-  let environment_scripts_directory = ([scripts $environment] | path join)
-
-  rm -rf $environment_scripts_directory
-
-  $environment_files
-  | filter {
-      |row|
-
-      $row.name not-in [.gitignore .pre-commit-config.yaml Justfile]
-    }
-  | select path download_url
-  | par-each {
-      |file|
-
-      let parent = ($file.path | path parse | get parent)
-
-      if ($parent | is-not-empty) {
-        mkdir $parent
-      }
-
-      print $"Downloading ($file.path)..."
-
-      http get $file.download_url
-      | save --force $file.path
-  }
 }
 
 def copy_justfile [
@@ -351,7 +283,20 @@ def copy_justfile [
   }
 
   rm $environment_justfile_file
+
   print $"Updated Justfile"
+}
+
+export def merge_gitignores [
+  main_gitignore: string
+  environment_gitignore: string
+] {
+  $main_gitignore
+  | lines
+  | append ($environment_gitignore | lines)
+  | uniq
+  | sort
+  | to text
 }
 
 def copy_gitignore [
@@ -385,6 +330,73 @@ def copy_gitignore [
   print $"Updated .gitignore"
 }
 
+def get_pre_commit_config_repos [config: record<repos: list>] {
+  $config
+  | get repos
+}
+
+def merge_records [
+  main_config: list
+  environment_config: list
+  key: string
+] {
+  mut records = []
+
+  for environment_item in $environment_config {
+    if ($environment_item | get $key) in ($main_config | get $key) {
+      let a_record = (
+        $main_config
+        | filter {
+            |main_item|
+
+            ($main_item | get $key) == ($environment_item | get $key)
+          }
+        | first
+      )
+
+      if $key == "repo" {
+        let hooks = (
+          merge_records $a_record.hooks $environment_item.hooks id
+        )
+
+        $records = (
+          $records
+          | append ($environment_item | update hooks $hooks)
+        )
+      } else {
+        $records = (
+          $records
+          | append ($a_record | merge $environment_item)
+        )
+      }
+    } else {
+      $records = (
+        $records
+        | append $environment_item
+      )
+    }
+  }
+
+  for main_item in $main_config {
+    if (($main_item | get $key) not-in ($records | get $key)) {
+      $records = ($records | append $main_item)
+    }
+  }
+
+  $records
+}
+
+export def merge_pre_commit_configs [
+  main_config: record<repos: list>
+  environment_config: record<repos: list>
+] {
+  let main_config = (get_pre_commit_config_repos $main_config)
+  let environment_config = (get_pre_commit_config_repos $environment_config)
+
+  { repos: (merge_records $main_config $environment_config repo) }
+  | to yaml
+}
+
 def copy_pre_commit_config [
   environment_files: table<
     name: string,
@@ -401,17 +413,16 @@ def copy_pre_commit_config [
     html: string
   >
 ] {
-  let main_config = (
-    get_pre_commit_config_repos (open .pre-commit-config.yaml)
-  )
+  let main_config = (open .pre-commit-config.yaml)
 
   let environment_config = (
-    get_pre_commit_config_repos (
       get_environment_file $environment_files ".pre-commit-config.yaml"
-    )
   )
 
-  merge_pre_commit_configs $main_config $environment_config repo
+  merge_pre_commit_configs $main_config $environment_config
+  | save --force .pre-commit-config.yaml
+
+  yamlfmt .pre-commit-config.yaml
 
   print $"Updated .pre-commit-config.yaml"
 }
