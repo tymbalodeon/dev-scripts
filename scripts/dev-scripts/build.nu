@@ -120,14 +120,6 @@ def copy_pre_commit_config [] {
 }
 
 def force_copy_files [skip_dev_flake: bool] {
-  # TODO determine if this still makes sense for new system
-  # (
-  #   remove_deleted_files
-  #     dev-scripts
-  #     (get_source_files $settings)
-  #     (get_build_files $settings)
-  # )
-
   copy_files (get_environment_files)
   copy_justfile
   copy_gitignore 
