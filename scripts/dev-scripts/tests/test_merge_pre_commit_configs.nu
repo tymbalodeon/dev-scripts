@@ -1,7 +1,6 @@
 use std assert
 
-use ../build.nu get_pre_commit_config_yaml
-use ../build.nu merge_pre_commit_configs
+use ../../environment.nu merge_pre_commit_configs
 
 let generic_pre_commit_config = "repos:
   - repo: https://gitlab.com/vojko.pribudic.foss/pre-commit-update
@@ -101,11 +100,10 @@ let environment_pre_commit_config = "repos:
 "
 
 let actual_pre_commit_conifg = (
-    get_pre_commit_config_yaml (
-      merge_pre_commit_configs
-        $generic_pre_commit_config
-        $environment_pre_commit_config
-    )
+  # FIXME ??
+  merge_pre_commit_configs
+    ($generic_pre_commit_config | from yaml)
+    ($environment_pre_commit_config | from yaml)
 )
 
 let expected_pre_commit_config = "repos:

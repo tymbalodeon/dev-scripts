@@ -1,6 +1,6 @@
 use std assert
 
-use ../build.nu merge_justfiles
+use ../../environment.nu merge_justfiles
 
 let generic_justfile = ($env.FILE_PWD | path join generic-justfile.just)
 let environment_justfile = ($env.FILE_PWD | path join environment-justfile.just)

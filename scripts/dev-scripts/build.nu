@@ -132,7 +132,7 @@ def get_modified [file: string] {
   | get modified
 }
 
-def get_outdated_files [] {
+def get_files_and_modified [] {
   get_environment_files
   | wrap environment
   | insert local {
@@ -140,15 +140,35 @@ def get_outdated_files [] {
 
       $file.environment | str replace "src/generic/" ""
     }
-  | filter {
-      |file|
+  | insert environment_modified {
+      |row|
 
-      (get_modified $file.environment) > (get_modified $file.local)
+      get_modified $row.environment
+    }
+  | insert local_modified {
+      |row|
+
+      get_modified $row.local
   }
 }
 
+export def get_outdated_files [
+  files: table<
+    environment: string,
+    local: string
+  >
+] {
+  $files
+  | filter {
+      |file|
+
+      $file.environment_modified > $file.local_modified
+    }
+  | get environment
+}
+
 def copy_outdated_files [] {
-  let outdated_files = (get_outdated_files).environment
+  let outdated_files = (get_outdated_files (get_files_and_modified))
 
   mut source_files = []
 
