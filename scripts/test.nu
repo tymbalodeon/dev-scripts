@@ -7,7 +7,7 @@ def main [
 
   let tests = try {
     let glob = (
-      "scripts/dev-scripts/tests"
+      "**/tests"
       | path join (
         if ($file | is-empty) {
           "test_*.nu"

@@ -54,6 +54,10 @@
 @stats *help:
     ./scripts/stats.nu {{ help }}
 
+# Run tests
+@test *args:
+    ./scripts/test.nu {{ args }}
+
 # Update dependencies
 @update-deps *help:
     ./scripts/update-deps.nu {{ help }}
@@ -72,7 +76,3 @@ mod dev-scripts "just/dev-scripts.just"
 # Alias for `dev-scripts justfile`
 @justfile *args:
     just dev-scripts justfile {{ args }}
-
-# Alias for `dev-scripts test`
-@test *args:
-    just dev-scripts test {{ args }}

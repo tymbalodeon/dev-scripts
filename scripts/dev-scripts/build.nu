@@ -127,9 +127,11 @@ def force_copy_files [skip_dev_flake: bool] {
 }
 
 def get_modified [file: string] {
-  ls $file
-  | first
-  | get modified
+  try {
+    ls $file
+    | first
+    | get modified
+  }
 }
 
 def get_files_and_modified [] {
@@ -152,17 +154,14 @@ def get_files_and_modified [] {
   }
 }
 
-export def get_outdated_files [
-  files: table<
-    environment: string,
-    local: string
-  >
-] {
+export def get_outdated_files [files: list] {
   $files
   | filter {
       |file|
 
-      $file.environment_modified > $file.local_modified
+      ($file.local_modified == null) or (
+        $file.environment_modified > $file.local_modified
+      )
     }
   | get environment
 }

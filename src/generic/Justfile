@@ -54,6 +54,10 @@
 @stats *help:
     ./scripts/stats.nu {{ help }}
 
+# Run tests
+@test *args:
+    ./scripts/test.nu {{ args }}
+
 # Update dependencies
 @update-deps *help:
     ./scripts/update-deps.nu {{ help }}
