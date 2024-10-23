@@ -8,76 +8,53 @@ def get_environment_files [] {
   fd --hidden --ignore --exclude .git "" src/generic
   | lines
   | filter {
-      |line|
-
-      not ($line | str ends-with "/")
-    }
-  | each {
-      |line|
-
-      $line
-      | str replace --regex "^./" ""
-    }
-  | filter {
       |file|
 
-      for item in [
-        CHANGELOG.md
-        flake.lock
-        pdm.lock
-      ] {
-        if ($item | str ends-with "/") and (
-            $item in ($file | path parse | get parent)
-        ) or ($item in $file) {
-          return false
-        }
-      }
+      let path = ($file | path parse)
 
-      true
+      (
+        ($file | path type) == "file" 
+        and "tests" not-in $path.parent
+        and $path.extension != "lock"
+      )
     }
-  | filter {|file| "/tests" not-in $file}
 }
 
 def get_build_path [path: string] {
-  "./"
-  | path join (
-    $path
-    | str replace --regex "src/[a-zA-Z-_]+/" ""
-  )
+  $path
+  | str replace --regex "src/[a-zA-Z-_]+/" ""
 }
 
-def get_source_directories [source_files: list<string>] {
-  $source_files
-  | path dirname
+def get_environment_directories [environment_files: list<string>] {
+  $environment_files
+  | path parse
+  | get parent
   | uniq
-  | filter {|directory| $directory != "generic"}
-  | each {|directory| get_build_path $directory}
-  | uniq
+  | str replace "src/generic" ""
+  | filter {|directory| $directory | is-not-empty}
+  | str replace "/" ""
+  
 }
 
-def copy_files [source_files: list<string>] {
-  let directories = (get_source_directories $source_files)
-
-  for directory in $directories {
+def copy_files [environment_files: list<string>] {
+  for directory in (get_environment_directories $environment_files) {
     mkdir $directory
   }
 
-  let source_files = (
-    $source_files
+  let environment_files = (
+    $environment_files
     | filter {
         |file|
 
         ($file | path basename) not-in [
           .gitignore
           .pre-commit-config.yaml
-          flake.nix
           Justfile
         ] and ($file | path parse | get extension) != "just"
       }
-    | filter {|item| ($item | path type) != dir}
   )
 
-  for file in $source_files {
+  for file in $environment_files {
     let build_path = (get_build_path $file)
 
     cp $file $build_path
@@ -119,7 +96,7 @@ def copy_pre_commit_config [] {
   print $"Updated .pre-commit-config.yaml"
 }
 
-def force_copy_files [skip_dev_flake: bool] {
+def force_copy_files [] {
   copy_files (get_environment_files)
   copy_justfile
   copy_gitignore
@@ -169,7 +146,7 @@ export def get_outdated_files [files: list] {
 def copy_outdated_files [] {
   let outdated_files = (get_outdated_files (get_files_and_modified))
 
-  mut source_files = []
+  mut environment_files = []
 
   for file in $outdated_files {
     let basename = ($file | path basename)
@@ -182,20 +159,19 @@ def copy_outdated_files [] {
     } else if $basename == "Justfile" {
       copy_justfile
     } else {
-      $source_files = ($source_files | append $file)
+      $environment_files = ($environment_files | append $file)
     }
   }
 
-  copy_files $source_files
+  copy_files $environment_files
 }
 
 # Build dev environment
 def main [
   --force # Build environment even if up-to-date
-  --skip-dev-flake # Skip building the dev flake.nix to avoid triggering direnv
 ] {
   if $force {
-    force_copy_files $skip_dev_flake
+    force_copy_files
   } else {
     copy_outdated_files
   }
