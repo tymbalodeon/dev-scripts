@@ -1,6 +1,6 @@
 use std assert
 
-use ../../build.nu get_outdated_files
+use ../build.nu get_outdated_files
 
 let files = (
   [
