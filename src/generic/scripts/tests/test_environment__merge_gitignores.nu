@@ -1,6 +1,6 @@
 use std assert
 
-use ../../environment.nu merge_gitignores
+use ../environment.nu merge_gitignores
 
 let generic_gitignore = ".config
 .direnv
