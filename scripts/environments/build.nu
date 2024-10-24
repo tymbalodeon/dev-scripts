@@ -13,7 +13,7 @@ def get_environment_files [] {
       let path = ($file | path parse)
 
       (
-        ($file | path type) == "file" 
+        ($file | path type) == "file"
         and "tests" not-in $path.parent
         and $path.extension != "lock"
       )
@@ -33,7 +33,7 @@ def get_environment_directories [environment_files: list<string>] {
   | str replace "src/generic" ""
   | filter {|directory| $directory | is-not-empty}
   | str replace "/" ""
-  
+
 }
 
 def copy_files [environment_files: list<string>] {

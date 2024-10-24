@@ -5,7 +5,7 @@ use ../environment.nu merge_justfiles
 let generic_justfile = ($env.FILE_PWD | path join mocks/generic-justfile.just)
 
 let environment_justfile = (
-    $env.FILE_PWD 
+    $env.FILE_PWD
     | path join mocks/environment-justfile.just
 )
 
