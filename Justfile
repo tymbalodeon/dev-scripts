@@ -67,12 +67,12 @@
 @view-source *recipe:
     ./scripts/view-source.nu {{ recipe }}
 
-mod dev-scripts "just/dev-scripts.just"
+mod environments "just/environments.just"
 
-# Alias for `dev-scripts build`
+# Alias for `environments build`
 @build *args:
-    just dev-scripts build {{ args }}
+    just environments build {{ args }}
 
-# Alias for `dev-scripts justfile`
+# Alias for `environments justfile`
 @justfile *args:
-    just dev-scripts justfile {{ args }}
+    just environments justfile {{ args }}

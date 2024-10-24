@@ -3,15 +3,15 @@ use std assert
 use ../domain.nu parse_git_origin
 
 let origins = [
-  "git@github.com:tymbalodeon/dev-scripts.git"
-  "http://github.com:tymbalodeon/dev-scripts.git"
-  "https://github.com:tymbalodeon/dev-scripts.git"
-  "ssh://git@github.com/tymbalodeon/dev-scripts.git"
+  "git@github.com:tymbalodeon/environments.git"
+  "http://github.com:tymbalodeon/environments.git"
+  "https://github.com:tymbalodeon/environments.git"
+  "ssh://git@github.com/tymbalodeon/environments.git"
 ]
 
 let expected_domain = "github"
 let expected_owner = "tymbalodeon"
-let expected_repo = "dev-scripts"
+let expected_repo = "environments"
 
 for origin in $origins {
   let actual_origin = (parse_git_origin $origin)
@@ -31,7 +31,7 @@ for origin in $origins {
   }
 }
 
-let invalid_origin = "github.com/tymbalodeon/dev-scripts"
+let invalid_origin = "github.com/tymbalodeon/environments"
 let actual_invalid_origin = (parse_git_origin --quiet $invalid_origin)
 
 assert equal ($actual_invalid_origin | get domain) null

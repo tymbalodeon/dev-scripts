@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-const base_url = "https://raw.githubusercontent.com/tymbalodeon/dev-scripts/trunk"
+const base_url = "https://raw.githubusercontent.com/tymbalodeon/environments/trunk"
 
 def main [
   type?: string

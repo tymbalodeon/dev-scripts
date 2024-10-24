@@ -1,9 +1,13 @@
 use std assert
 
-use ../../environment.nu merge_justfiles
+use ../environment.nu merge_justfiles
 
-let generic_justfile = ($env.FILE_PWD | path join generic-justfile.just)
-let environment_justfile = ($env.FILE_PWD | path join environment-justfile.just)
+let generic_justfile = ($env.FILE_PWD | path join mocks/generic-justfile.just)
+
+let environment_justfile = (
+    $env.FILE_PWD 
+    | path join mocks/environment-justfile.just
+)
 
 let actual_justfile = (
   merge_justfiles python $generic_justfile $environment_justfile

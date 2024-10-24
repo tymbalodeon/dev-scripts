@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
 def get_base_url [] {
-  "https://api.github.com/repos/tymbalodeon/dev-scripts/contents/src"
+  "https://api.github.com/repos/tymbalodeon/environments/contents/src"
 }
 
 def get_files [url: string] {
