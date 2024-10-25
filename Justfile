@@ -76,3 +76,7 @@ mod environments "just/environments.just"
 # Alias for `environments justfile`
 @justfile *args:
     just environments justfile {{ args }}
+
+# Alias for `environments pre-commit-update`
+@pre-commit-update *help:
+    just environments pre-commit-update {{ help }}
